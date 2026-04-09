@@ -268,7 +268,12 @@ export default function ProfessionalShell({
       </div>
 
       {/* Workspace tabs */}
-      <div className="spx-workspaces">
+      <div className="spx-workspaces" ref={el => {
+        if (el) {
+          const active = el.querySelector('.spx-workspace.active');
+          if (active) active.scrollIntoView({ block: 'nearest', inline: 'center' });
+        }
+      }}>
         {WORKSPACES.map((ws) => (
           <button key={ws} type="button"
             className={`spx-workspace${ws === activeWorkspace ? " active" : ""}`}
