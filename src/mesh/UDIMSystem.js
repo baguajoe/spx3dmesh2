@@ -170,3 +170,65 @@ export function exportUDIMTile(textureSet, tileId, channel = 'albedo') {
 }
 
 export default UDIMTextureSet;
+
+// ── Legacy exports for App.jsx compatibility ──────────────────────────────────
+export function createUDIMLayout(geometry) { return getUDIMLayout(geometry); }
+export function createUDIMTileCanvas(tileId, size = 1024) {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#111';
+  ctx.fillRect(0, 0, size, size);
+  ctx.strokeStyle = '#333';
+  ctx.strokeRect(0, 0, size, size);
+  ctx.fillStyle = '#555';
+  ctx.font = '48px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(`UDIM ${tileId}`, size/2, size/2);
+  return canvas;
+}
+export function paintUDIM(canvas, x, y, radius, color, opacity = 1) {
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.globalAlpha = opacity;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+}
+export function fillUDIMTile(canvas, color) {
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+export function exportAllUDIMTiles(textureSet, channel = 'albedo') {
+  const result = {};
+  textureSet.listTiles().forEach(id => {
+    result[id] = exportUDIMTile(textureSet, id, channel);
+  });
+  return result;
+}
+export function buildUDIMAtlas(textureSet, channel = 'albedo', tileSize = 512) {
+  const tiles = textureSet.listTiles();
+  if (!tiles.length) return null;
+  const canvas = document.createElement('canvas');
+  canvas.width = tileSize * 10;
+  canvas.height = tileSize * Math.ceil(tiles.length / 10);
+  const ctx = canvas.getContext('2d');
+  tiles.forEach(id => {
+    const tile = textureSet.getTile(id);
+    const tex = tile?.[channel];
+    if (!tex?.image) return;
+    const idx = id - 1001;
+    const tx = (idx % 10) * tileSize;
+    const ty = Math.floor(idx / 10) * tileSize;
+    ctx.drawImage(tex.image, tx, ty, tileSize, tileSize);
+  });
+  return canvas;
+}
+export function getUDIMStats(textureSet) {
+  const tiles = textureSet.listTiles();
+  return { tileCount: tiles.length, tiles, channels: ['albedo','normal','roughness','metalness','ao'] };
+}
