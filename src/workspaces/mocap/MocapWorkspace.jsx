@@ -593,7 +593,7 @@ function LiveCaptureTab({ onExportGlb }) {
           Live Avatar Preview
           {isPlaying && <span className="mw-avatar-sub"> — playback {recordedFrames?.length} frames</span>}
           {multiPerson && multiSkeletons.length > 1 && <span className="mw-avatar-sub"> — {personCount} people</span>}
-          {depthEnabled && depthReady && <span className="mw-avatar-sub" style={{color:'#4fc3f7'}}> — depth 3D</span>}
+          {depthEnabled && depthReady && <span className="mw-avatar-sub" className="mw-badge-blue"> — depth 3D</span>}
         </div>
         <div className="mw-avatar-viewport">
           {avatarUrl ? (
@@ -664,12 +664,12 @@ function PlaybackTab({ onExportGlb }) {
         <SectionLabel>Load Session</SectionLabel>
         <label className="mw-btn mw-btn--ghost mw-file-btn">
           📂 Import JSON
-          <input type="file" accept=".json" style={{ display: 'none' }} onChange={loadFile} />
+          <input type="file" accept=".json" className="spx-hidden" onChange={loadFile} />
         </label>
 
         {sessions.length > 0 && (
           <>
-            <SectionLabel style={{ marginTop: '12px' }}>Saved Sessions</SectionLabel>
+            <SectionLabel className="mw-section-mt">Saved Sessions</SectionLabel>
             <div className="mw-session-list">
               {sessions.map(s => (
                 <button key={s.id} className={`mw-session-item ${activeId === s.id ? 'mw-session-item--active' : ''}`} onClick={() => loadSession(s.id)}>
@@ -683,14 +683,14 @@ function PlaybackTab({ onExportGlb }) {
 
         {frames && (
           <>
-            <SectionLabel style={{ marginTop: '12px' }}>Playback</SectionLabel>
+            <SectionLabel className="mw-section-mt">Playback</SectionLabel>
             <div className="mw-btn-row">
               <button className="mw-btn mw-btn--primary" onClick={() => setIsPlaying(p => !p)}>
                 {isPlaying ? '⏸ Pause' : '▶ Play'}
               </button>
               <button className="mw-btn" onClick={() => { setIsPlaying(false); setPlayIdx(0); }}>⏮</button>
             </div>
-            <div style={{ marginTop: '8px' }}>
+            <div className="mw-mt">
               <div className="mw-frame-label">Frame {playIdx} / {frames.length - 1}</div>
               <input type="range" className="mw-range" min={0} max={frames.length - 1} value={playIdx}
                 onChange={e => { setIsPlaying(false); setPlayIdx(Number(e.target.value)); }} />
@@ -702,15 +702,15 @@ function PlaybackTab({ onExportGlb }) {
               <option value={1}>1×</option>
               <option value={2}>2×</option>
             </select>
-            <button className="mw-btn" style={{marginTop:6,width:'100%'}}
+            <button className="mw-btn mw-btn--full mw-btn--mt"
               onClick={() => downloadBVH(frames, `session_${activeId}_${Date.now()}.bvh`)}>
               📐 Export BVH
             </button>
-            {onExportGlb && <button className="mw-btn mw-btn--ghost" style={{ marginTop: '4px',width:'100%' }} onClick={onExportGlb}>📦 Export GLB</button>}
+            {onExportGlb && <button className="mw-btn mw-btn--ghost mw-btn--full mw-btn--mt-sm" onClick={onExportGlb}>📦 Export GLB</button>}
           </>
         )}
 
-        <SectionLabel style={{ marginTop: '16px' }}>Avatar GLB</SectionLabel>
+        <SectionLabel className="mw-section-mt">Avatar GLB</SectionLabel>
         <input className="mw-input" value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} />
       </div>
 
@@ -754,7 +754,7 @@ export default function MocapWorkspace({ open = false, onClose = null, onExportG
         </div>
         <div className="mw-body">
           {tab === 'live'     && <LiveCaptureTab onExportGlb={onExportGlb} />}
-          {tab === 'video'    && <div style={{ height: '100%', overflow: 'auto', padding: '16px' }}><VideoMocapSystem /></div>}
+          {tab === 'video'    && <div className="mw-tab-content"><VideoMocapSystem /></div>}
           {tab === 'playback' && <PlaybackTab onExportGlb={onExportGlb} />}
         </div>
       </div>

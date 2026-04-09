@@ -518,7 +518,7 @@ const VideoMocapSystem = ({
 
           <div className="vmocap__toolbar-group">
             <span className="vmocap__toolbar-label">File:</span>
-            <span style={{ fontSize: '12px', color: '#4ade80' }}>{videoFile?.name}</span>
+            <span className="vms-filename">{videoFile?.name}</span>
             <button
               className="vmocap__btn vmocap__btn--ghost"
               onClick={() => {
@@ -528,7 +528,7 @@ const VideoMocapSystem = ({
                 setIsComplete(false);
               }}
               disabled={isProcessing}
-              style={{ padding: '4px 10px', fontSize: '11px' }}
+              className="vms-btn-sm"
             >
               ✕ Clear
             </button>
@@ -619,7 +619,7 @@ const VideoMocapSystem = ({
                   <div className="vmocap__progress-track">
                     <div
                       className="vmocap__progress-fill"
-                      style={{ width: `${progress * 100}%` }}
+                      className="vms-progress-fill" style={{ width: `${progress * 100}%` }}
                     />
                   </div>
                   <div className="vmocap__progress-stats">

@@ -280,14 +280,7 @@ const LiveMoCapAvatar = ({
       <div className="lmc-controls">
         <button
           onClick={toggleCamera}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: isRunning ? '#dc3545' : '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
+          className={`lmc-btn${isRunning?' lmc-btn--danger':' lmc-btn--success'}`}
         >
           {isRunning ? '⏹ Stop Camera' : '▶ Start Camera'}
         </button>
@@ -296,14 +289,7 @@ const LiveMoCapAvatar = ({
           <>
             <button
               onClick={recording ? stopRecording : startRecording}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: recording ? '#ffc107' : '#007bff',
-                color: recording ? 'black' : 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
+              className={`lmc-btn${recording?' lmc-btn--warn':' lmc-btn--info'}`}
             >
               {recording ? '⏹ Stop Recording' : '⏺ Record'}
             </button>
@@ -311,14 +297,7 @@ const LiveMoCapAvatar = ({
             {recordedFrames.length > 0 && !recording && (
               <button
                 onClick={downloadRecording}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#17a2b8',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
+                className="lmc-btn lmc-btn--teal"
               >
                 💾 Download ({recordedFrames.length} frames)
               </button>
@@ -339,26 +318,14 @@ const LiveMoCapAvatar = ({
           <div className="lmc-video-wrap">
             <video
               ref={videoRef}
-              style={{
-                width: videoWidth,
-                height: videoWidth * 0.75,
-                backgroundColor: '#000',
-                borderRadius: '8px',
-              }}
+              className="lmc-video" style={{ width: videoWidth, height: videoWidth * 0.75 }}
               autoPlay
               muted
               playsInline
             />
             {!isRunning && (
               <div
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  color: 'white',
-                  textAlign: 'center',
-                }}
+                className="lmc-video-overlay"
               >
                 Click "Start Camera" to begin
               </div>
@@ -368,14 +335,7 @@ const LiveMoCapAvatar = ({
 
         {/* 3D Avatar */}
         <div
-          style={{
-            flex: 1,
-            minWidth: '400px',
-            height: '400px',
-            borderRadius: '8px',
-            overflow: 'hidden',
-            border: '1px solid #ddd',
-          }}
+          className="lmc-avatar-wrap"
         >
           <Canvas camera={{ position: [0, 1.5, 3], fov: 50 }}>
             <ambientLight intensity={0.6} />

@@ -229,7 +229,7 @@ const MotionCaptureWithRecording = ({ userId, socket, onPoseFrame, fullWidth = f
 
   return (
     <div>
-      {status && <p style={{ color: '#888', fontSize: '13px' }}>{status}</p>}
+      {status && <p className="mcr-status">{status}</p>}
 
       <video
         ref={videoRef}
@@ -241,7 +241,7 @@ const MotionCaptureWithRecording = ({ userId, socket, onPoseFrame, fullWidth = f
 
       <div ref={avatarRef} className="spx-hidden" />
 
-      <div style={{
+      <div className="mcr-row" style={{
         display: 'flex',
         gap: '8px',
         flexWrap: 'wrap',
@@ -269,7 +269,7 @@ const MotionCaptureWithRecording = ({ userId, socket, onPoseFrame, fullWidth = f
             href={convertedUrl}
             target="_blank"
             rel="noreferrer"
-            style={{ textDecoration: 'none' }}
+            className="mcr-link"
           >
             🎬 View MP4
           </a>
@@ -277,7 +277,7 @@ const MotionCaptureWithRecording = ({ userId, socket, onPoseFrame, fullWidth = f
       </div>
 
       {saveStatus && (
-        <p style={{
+        <p className="mcr-hint" style={{
           marginTop: '8px',
           fontSize: '13px',
           color: saveStatus.includes('🎉') || saveStatus.includes('complete')

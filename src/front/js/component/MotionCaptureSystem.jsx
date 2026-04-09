@@ -187,29 +187,29 @@ const MotionCaptureSystem = ({
   const resolvedAvatarUrl = avatarUrl.startsWith('http') || avatarUrl.startsWith('blob:') ? avatarUrl : `${BACKEND}${avatarUrl}`;
 
   return (
-    <div style={{ display:'flex', gap:'16px', height:'100%', minHeight:'600px', padding:'16px', backgroundColor:'#0a0a0f', color:'#e0e0e0' }}>
-      <div style={{ width:'360px', flexShrink:0, display:'flex', flexDirection:'column', gap:'12px' }}>
+    <div className="mcs-root">
+      <div className="mcs-sidebar">
         {showWebcam && (
-          <div style={{ position:'relative', borderRadius:'12px', overflow:'hidden', backgroundColor:'#111', border:'1px solid #1a1a2e' }}>
-            <video ref={videoRef} style={{ width:'100%', borderRadius:'12px', transform:'scaleX(-1)' }} autoPlay muted playsInline />
+          <div className="mcs-video-wrap">
+            <video ref={videoRef} className="mcs-video mw-mirror" autoPlay muted playsInline />
             {isCapturing && (
-              <div style={{ position:'absolute', top:'8px', left:'8px', right:'8px', display:'flex', gap:'8px', alignItems:'center', fontSize:'11px', color:'#aaa', backgroundColor:'rgba(0,0,0,0.6)', padding:'4px 8px', borderRadius:'6px' }}>
-                <span style={{ width:'8px', height:'8px', borderRadius:'50%', backgroundColor: landmarkCount > 20 ? '#4ade80' : '#f87171' }} />
+              <div className="mcs-overlay-bar">
+                <span className={`mcs-dot${landmarkCount>20?' mcs-dot--on':' mcs-dot--off'}`} />
                 <span>{fps} FPS</span><span>{landmarkCount}/33</span>
-                {isRecording && <span style={{ color:'#f87171' }}>● REC</span>}
+                {isRecording && <span className="mcs-rec">● REC</span>}
               </div>
             )}
-            {!isCapturing && <div style={{ width:'100%', height:'270px', display:'flex', alignItems:'center', justifyContent:'center', color:'#555' }}>Press Start to begin</div>}
+            {!isCapturing && <div className="mcs-placeholder">Press Start to begin</div>}
           </div>
         )}
-        <div style={{ display:'flex', flexWrap:'wrap', gap:'8px' }}>
-          {!isCapturing ? <button onClick={startCapture} style={{ padding:'8px 16px', background:'#7c3aed', color:'#fff', border:'none', borderRadius:'8px', cursor:'pointer' }}>▶ Start Capture</button>
-                        : <button onClick={stopCapture}  style={{ padding:'8px 16px', background:'#dc2626', color:'#fff', border:'none', borderRadius:'8px', cursor:'pointer' }}>■ Stop</button>}
-          {isCapturing && !isRecording && <button onClick={startRecording} style={{ padding:'8px 16px', background:'#b91c1c', color:'#fff', border:'none', borderRadius:'8px', cursor:'pointer' }}>⏺ Record</button>}
-          {isRecording && <button onClick={stopRecording} style={{ padding:'8px 16px', background:'#dc2626', color:'#fff', border:'none', borderRadius:'8px', cursor:'pointer' }}>⏹ Stop Recording</button>}
+        <div className="mcs-btns">
+          {!isCapturing ? <button onClick={startCapture} className="mcs-btn mcs-btn--start">▶ Start Capture</button>
+                        : <button onClick={stopCapture}  className="mcs-btn mcs-btn--stop">■ Stop</button>}
+          {isCapturing && !isRecording && <button onClick={startRecording} className="mcs-btn mcs-btn--rec">⏺ Record</button>}
+          {isRecording && <button onClick={stopRecording} className="mcs-btn mcs-btn--stop">⏹ Stop Recording</button>}
           {recordedFrames?.length > 0 && <>
-            <button onClick={() => setIsPlaying(p => !p)} style={{ padding:'6px 12px', background:'#1e1e2e', color:'#ccc', border:'1px solid #333', borderRadius:'8px', cursor:'pointer' }}>{isPlaying ? '⏹ Stop Playback' : '▶ Play Recording'}</button>
-            <button onClick={exportRecording} style={{ padding:'6px 12px', background:'#1e1e2e', color:'#ccc', border:'1px solid #333', borderRadius:'8px', cursor:'pointer' }}>💾 Export JSON</button>
+            <button onClick={() => setIsPlaying(p => !p)} className="mcs-btn mcs-btn--ghost">{isPlaying ? '⏹ Stop Playback' : '▶ Play Recording'}</button>
+            <button onClick={exportRecording} className="mcs-btn mcs-btn--ghost">💾 Export JSON</button>
             <button onClick={saveToBackend} style={{ padding:'6px 12px', background:'#1e1e2e', color:'#ccc', border:'1px solid #333', borderRadius:'8px', cursor:'pointer' }}>☁ Save</button>
             {downloadUrl && <a href={downloadUrl} download="mocap_video.webm" style={{ padding:'6px 12px', background:'#1e1e2e', color:'#ccc', border:'1px solid #333', borderRadius:'8px', cursor:'pointer', textDecoration:'none' }}>📹 Download Video</a>}
           </>}
