@@ -1,0 +1,171 @@
+/* ── Mocap Retarget Panel ───────────────────────────────────────────── */
+.mrt-panel {
+  width: 260px;
+  max-height: 680px;
+}
+
+.mrt-dot {
+  background: #ff88ff;
+  box-shadow: 0 0 6px #ff88ff;
+}
+
+.mrt-title {
+  color: #ff88ff;
+}
+
+.mrt-status {
+  padding: 5px 12px;
+  font-size: 9px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font);
+}
+
+.mrt-frames {
+  font-size: 9px;
+  color: var(--teal);
+  margin-top: 4px;
+}
+
+.mrt-scan-btn {
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 5px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.mrt-skeleton-item {
+  padding: 4px 8px;
+  margin-bottom: 3px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 9px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--bg);
+  font-family: var(--font);
+}
+
+.mrt-skeleton-item--active {
+  border-color: var(--teal);
+  color: var(--teal);
+  background: rgba(0,255,200,0.08);
+}
+
+.mrt-bind-btn {
+  width: 100%;
+  margin-top: 4px;
+  padding: 5px;
+  background: rgba(0,255,200,0.1);
+  border: 1px solid var(--teal);
+  border-radius: var(--radius);
+  color: var(--teal);
+  font-family: var(--font);
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mrt-scrubber {
+  margin-bottom: 4px;
+}
+
+.mrt-frame-count {
+  font-size: 9px;
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 6px;
+  font-family: var(--font);
+}
+
+.mrt-playback-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.mrt-play-btn {
+  padding: 6px 0;
+  background: rgba(255,136,255,0.1);
+  border: 1px solid #ff88ff;
+  border-radius: var(--radius);
+  color: #ff88ff;
+  font-family: var(--font);
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mrt-stop-btn {
+  padding: 6px 0;
+  background: rgba(255,102,0,0.1);
+  border: 1px solid var(--orange);
+  border-radius: var(--radius);
+  color: var(--orange);
+  font-family: var(--font);
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mrt-reset-btn {
+  padding: 6px 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: 9px;
+  cursor: pointer;
+}
+
+/* ── Toggle ─────────────────────────────────────────────────────────── */
+.mrt-toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.mrt-toggle-label {
+  font-size: 9px;
+  color: var(--muted);
+  font-family: var(--font);
+}
+
+.mrt-toggle {
+  width: 32px;
+  height: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  background: var(--border);
+  border: none;
+  flex-shrink: 0;
+}
+
+.mrt-toggle--on {
+  background: var(--teal);
+}
+
+.mrt-toggle__dot {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #555;
+  transition: left 0.15s;
+}
+
+.mrt-toggle__dot--on {
+  left: 16px;
+  background: var(--bg);
+}

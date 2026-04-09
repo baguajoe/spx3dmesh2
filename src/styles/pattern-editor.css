@@ -1,0 +1,123 @@
+.pattern-panel-float{
+  position:fixed;
+  top:90px;
+  right:18px;
+  z-index:12300;
+}
+
+.pattern-panel{
+  width:860px;
+  background:#0e1319;
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 16px 36px rgba(0,0,0,0.35);
+}
+
+.pattern-panel-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 12px;
+  background:#151b22;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.pattern-sub{
+  color:#97a3b6;
+  font-size:12px;
+}
+
+.pattern-toolbar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  padding:10px 12px;
+  background:#121820;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.pattern-body{
+  display:grid;
+  grid-template-columns:220px 1fr;
+  min-height:580px;
+}
+
+.pattern-sidebar{
+  padding:12px;
+  border-right:1px solid rgba(255,255,255,0.08);
+  background:#121820;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.pattern-sidebar-title{
+  color:#9fb4d7;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  margin-top:4px;
+}
+
+.pattern-list-item{
+  appearance:none;
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  border:1px solid rgba(255,255,255,0.10);
+  background:#18212c;
+  color:#e8edf5;
+  padding:8px 10px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+.pattern-list-item.is-active{
+  background:#21314b;
+  border-color:#4a8cff;
+}
+
+.pattern-canvas-wrap{
+  padding:12px;
+}
+
+.pattern-canvas{
+  display:block;
+  width:100%;
+  max-width:600px;
+  height:auto;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:#10151c;
+  cursor:crosshair;
+  user-select:none;
+}
+
+.pattern-btn{
+  appearance:none;
+  border:1px solid rgba(255,255,255,0.12);
+  background:#1b2430;
+  color:#e8edf5;
+  padding:8px 10px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+.pattern-btn:hover{
+  border-color:#4a8cff;
+}
+
+.pattern-btn.is-active{
+  background:#4a8cff;
+  border-color:#4a8cff;
+  color:#fff;
+}
+
+.pattern-btn-danger{
+  border-color:#6a2a2a;
+}

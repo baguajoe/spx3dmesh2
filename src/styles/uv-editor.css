@@ -1,0 +1,93 @@
+/* ── UV Editor ─────────────────────────────────────────────────────── */
+.uv-editor {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font);
+}
+
+.uv-editor__header {
+  height: 40px;
+  background: #0a0e1a;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+.uv-editor__title {
+  color: var(--teal);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.uv-editor__count {
+  color: var(--dim);
+  font-size: 10px;
+}
+
+.uv-editor__spacer {
+  flex: 1;
+}
+
+.uv-editor__zoom-wrap {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.uv-editor__zoom-label {
+  color: #666;
+  font-size: 10px;
+}
+
+.uv-editor__zoom-slider {
+  width: 80px;
+}
+
+.uv-editor__zoom-val {
+  color: var(--teal);
+  font-size: 10px;
+  width: 24px;
+}
+
+.uv-editor__close {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.uv-editor__canvas {
+  display: block;
+  cursor: crosshair;
+}
+
+.uv-editor__footer {
+  padding: 6px 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.uv-editor__footer-hint {
+  color: var(--dim);
+  font-size: 9px;
+}
+
+.uv-editor__hov-tri {
+  color: var(--orange);
+  font-size: 9px;
+}

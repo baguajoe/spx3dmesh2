@@ -1,0 +1,132 @@
+
+.autorig-panel-float{
+  position:fixed;
+  top:154px;
+  right:18px;
+  z-index:12700;
+}
+
+.autorig-panel{
+  width:420px;
+  background:#0e1319;
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 16px 36px rgba(0,0,0,0.35);
+}
+
+.autorig-panel-wide{
+  width:920px;
+}
+
+.autorig-panel-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 12px;
+  background:#151b22;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.autorig-panel-sub{
+  color:#97a3b6;
+  font-size:12px;
+}
+
+.autorig-body{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:12px;
+}
+
+.autorig-visual-layout{
+  display:grid;
+  grid-template-columns: 1.25fr 0.75fr;
+  gap:12px;
+  padding:12px;
+}
+
+.autorig-guide-wrap,
+.autorig-controls{
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:10px;
+  background:#121820;
+  padding:12px;
+}
+
+.autorig-guide-title{
+  color:#dbe6f5;
+  font-size:13px;
+  font-weight:600;
+  margin-bottom:10px;
+}
+
+.autorig-guide-canvas{
+  display:block;
+  width:100%;
+  height:auto;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:#10151c;
+}
+
+.autorig-guide-line{
+  stroke:rgba(125,185,255,0.65);
+  stroke-width:2;
+}
+
+.autorig-guide-point{
+  fill:#4a8cff;
+  stroke:#d8e7ff;
+  stroke-width:2;
+  cursor:grab;
+}
+
+.autorig-guide-label{
+  fill:#b7d3ff;
+  font-size:11px;
+}
+
+.autorig-field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  color:#d9e2ef;
+  font-size:12px;
+  margin-bottom:10px;
+}
+
+.autorig-input{
+  padding:8px 10px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:#0f141a;
+  color:#e8edf5;
+}
+
+.autorig-btn{
+  appearance:none;
+  border:1px solid rgba(255,255,255,0.12);
+  background:#1b2430;
+  color:#e8edf5;
+  padding:8px 10px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+.autorig-btn:hover{
+  border-color:#4a8cff;
+}
+
+.autorig-btn.is-active{
+  background:#21548f;
+  border-color:#69a6ff;
+  color:#fff;
+}
+
+.autorig-build-btn{
+  margin-top:8px;
+  font-weight:700;
+}

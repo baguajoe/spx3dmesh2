@@ -1,0 +1,125 @@
+/* ═══════════════════════════════════════════════════════════════
+   SPX WORKSPACE TOOLS STRIP — Sub-toolbar
+   Sits below main tabs, shows context tools for active workspace
+   ═══════════════════════════════════════════════════════════════ */
+
+.workspace-tools-strip {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  pointer-events: none;
+  height: 32px;
+}
+
+.workspace-tools-strip-inner {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 8px;
+  background: #0a0f1a;
+  border-bottom: 1px solid #21262d;
+  pointer-events: auto;
+  overflow: hidden;
+  gap: 3px;
+}
+
+.workspace-tools-tabs {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  width: 100%;
+  height: 100%;
+}
+
+.workspace-tools-tabs::-webkit-scrollbar { display: none; }
+
+.workspace-tab-btn {
+  appearance: none;
+  border: 1px solid #21262d;
+  background: transparent;
+  color: #8b949e;
+  border-radius: 4px;
+  padding: 3px 10px;
+  min-width: fit-content;
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  line-height: 1;
+  height: 22px;
+  white-space: nowrap;
+  transition: all 0.1s;
+}
+
+.workspace-tab-btn:hover {
+  border-color: #00ffc8;
+  color: #00ffc8;
+  background: rgba(0,255,200,0.06);
+}
+
+.workspace-tab-btn.is-active {
+  background: rgba(0,255,200,0.12);
+  border-color: #00ffc8;
+  color: #00ffc8;
+}
+
+.workspace-tab-label {
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.workspace-tab-hint { display: none; }
+
+/* Generator sub-tabs — horizontal row */
+.spx-gen-tabs {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 100%;
+}
+
+.spx-gen-tab {
+  appearance: none;
+  border: 1px solid #21262d;
+  background: transparent;
+  color: #8b949e;
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  transition: all 0.1s;
+}
+
+.spx-gen-tab:hover {
+  border-color: #FF6600;
+  color: #FF6600;
+}
+
+.spx-gen-tab.is-active {
+  background: rgba(255,102,0,0.12);
+  border-color: #FF6600;
+  color: #FF6600;
+}
+
+@media (max-width: 1400px) {
+  .workspace-tab-btn { padding: 3px 7px; font-size: 8px; }
+}

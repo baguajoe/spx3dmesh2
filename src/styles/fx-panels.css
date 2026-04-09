@@ -1,0 +1,424 @@
+/* ═══════════════════════════════════════════════════════════════════
+   SPX FX Panels — Cloth, Fluid, Weather, Destruction, Physics
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Shared Knob ────────────────────────────────────────────────────── */
+.fx-knob-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 54px;
+}
+
+.fx-knob-ring {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: ns-resize;
+  border: 2px solid #1a2030;
+  user-select: none;
+}
+
+.fx-knob-inner {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--panel);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fx-knob-val {
+  font-size: 7px;
+  font-weight: 700;
+  font-family: var(--font);
+  text-align: center;
+  line-height: 1.1;
+}
+
+.fx-knob-label {
+  font-size: 7px;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  text-align: center;
+  font-family: var(--font);
+  max-width: 54px;
+}
+
+.fx-knob-wrap--lg .fx-knob-ring  { width: 48px; height: 48px; }
+.fx-knob-wrap--lg .fx-knob-inner { width: 32px; height: 32px; }
+.fx-knob-wrap--lg .fx-knob-val   { font-size: 9px; }
+.fx-knob-wrap--lg .fx-knob-label { font-size: 8px; min-width: 60px; }
+
+/* ── Shared FX Panel Container ──────────────────────────────────────── */
+.fx-panel {
+  background: var(--panel);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  font-family: var(--font);
+  color: var(--text);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.8);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.fx-panel--cloth  { width: 250px; max-height: 700px; }
+.fx-panel--fluid  { width: 340px; max-height: 720px; }
+.fx-panel--weather{ width: 320px; max-height: 700px; }
+.fx-panel--destruct{ width: 300px; max-height: 580px; }
+.fx-panel--physics { width: 300px; max-height: 600px; }
+
+.fx-header {
+  background: linear-gradient(135deg, #0a1020, var(--bg2));
+  border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+.fx-header__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.fx-header__dot--cloth   { background: #88ffaa; box-shadow: 0 0 10px #88ffaa; }
+.fx-header__dot--fluid   { background: #2288ff; box-shadow: 0 0 10px #2288ff; }
+.fx-header__dot--weather { background: #88ccff; box-shadow: 0 0 10px #88ccff; }
+.fx-header__dot--destruct{ background: #ff4400; box-shadow: 0 0 10px #ff4400; }
+.fx-header__dot--physics { background: #ff8844; box-shadow: 0 0 10px #ff8844; }
+
+.fx-header__title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.fx-header__title--cloth   { color: #88ffaa; }
+.fx-header__title--fluid   { color: #2288ff; }
+.fx-header__title--weather { color: #88ccff; }
+.fx-header__title--destruct{ color: #ff4400; }
+.fx-header__title--physics { color: #ff8844; }
+
+.fx-header__right {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.fx-header__stats {
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.fx-header__stats--active { color: var(--teal); }
+
+.fx-header__close {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 14px;
+  background: none;
+  border: none;
+  line-height: 1;
+}
+
+.fx-status {
+  padding: 6px 12px;
+  font-size: 9px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  font-family: var(--font);
+}
+
+.fx-status--active { color: #88ffaa; }
+.fx-status--ready  { color: var(--teal); }
+
+.fx-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px;
+}
+
+/* ── Section Label ──────────────────────────────────────────────────── */
+.fx-sec-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+/* ── Preset Grid ────────────────────────────────────────────────────── */
+.fx-preset-grid {
+  display: grid;
+  gap: 3px;
+  margin-bottom: 12px;
+}
+
+.fx-preset-grid--2 { grid-template-columns: 1fr 1fr; }
+.fx-preset-grid--4 { grid-template-columns: repeat(4, 1fr); }
+.fx-preset-grid--5 { grid-template-columns: repeat(5, 1fr); }
+
+.fx-preset-card {
+  padding: 4px 6px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  text-align: center;
+  font-family: var(--font);
+  transition: border-color 0.1s, color 0.1s;
+}
+
+.fx-preset-card:hover { border-color: #88ffaa; color: #88ffaa; }
+
+/* Fluid presets */
+.fx-fluid-preset {
+  padding: 6px 4px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: center;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  transition: border-color 0.1s, background 0.1s;
+}
+
+.fx-fluid-preset__dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  margin: 0 auto 3px;
+}
+
+.fx-fluid-preset__label {
+  font-size: 7px;
+  font-weight: 700;
+  color: var(--muted);
+  font-family: var(--font);
+}
+
+/* Weather presets */
+.fx-weather-preset {
+  padding: 8px 4px;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  text-align: center;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  transition: all 0.15s;
+}
+
+.fx-weather-preset__icon  { font-size: 16px; margin-bottom: 2px; }
+.fx-weather-preset__label { font-size: 7px; font-weight: 700; color: var(--muted); letter-spacing: 0.3px; font-family: var(--font); }
+
+/* ── Knob Row ───────────────────────────────────────────────────────── */
+.fx-knob-row {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.fx-knob-row--sm { margin-bottom: 12px; }
+
+/* ── Mode Toggle ────────────────────────────────────────────────────── */
+.fx-mode-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 3px;
+  background: #0a0f1a;
+  border-radius: var(--radius-lg);
+}
+
+.fx-mode-btn {
+  flex: 1;
+  padding: 5px 0;
+  text-align: center;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  font-family: var(--font);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+}
+
+.fx-mode-btn--active {
+  background: #1a2535;
+  color: var(--teal);
+  border-color: var(--teal);
+}
+
+/* ── Color + Max Row ────────────────────────────────────────────────── */
+.fx-color-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  background: #0a0f1a;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.fx-color-bar__label {
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+.fx-color-bar__input {
+  width: 32px;
+  height: 24px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  background: none;
+}
+
+.fx-color-bar__hex {
+  font-size: 9px;
+  color: var(--muted);
+  font-family: var(--font);
+}
+
+.fx-color-bar__right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.fx-max-chip {
+  padding: 3px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 8px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--bg);
+  font-family: var(--font);
+}
+
+.fx-max-chip--active {
+  border-color: var(--teal);
+  color: var(--teal);
+  background: rgba(0,255,200,0.08);
+}
+
+/* ── Particle Count Bar ─────────────────────────────────────────────── */
+.fx-parts-bar {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  background: #0a0f1a;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+}
+
+.fx-parts-bar__hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.fx-parts-bar__label { font-size: 9px; color: var(--muted); letter-spacing: 0.06em; }
+.fx-parts-bar__val   { font-size: 11px; color: var(--teal); font-weight: 700; font-family: var(--font); }
+
+.fx-parts-chips {
+  display: flex;
+  gap: 4px;
+}
+
+.fx-parts-chip {
+  flex: 1;
+  padding: 4px 0;
+  text-align: center;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 8px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--bg);
+  font-family: var(--font);
+}
+
+.fx-parts-chip--active {
+  border-color: var(--teal);
+  color: var(--teal);
+  background: rgba(0,255,200,0.08);
+}
+
+/* ── Control Buttons ────────────────────────────────────────────────── */
+.fx-ctrl-grid {
+  display: grid;
+  gap: 6px;
+}
+
+.fx-ctrl-grid--2 { grid-template-columns: 1fr 1fr; }
+.fx-ctrl-grid--3 { grid-template-columns: 1fr 1fr 1fr; }
+
+.fx-btn {
+  padding: 8px 0;
+  border-radius: var(--radius-md);
+  font-family: var(--font);
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+.fx-btn--sm { padding: 7px 0; font-size: 9px; }
+
+.fx-btn--play    { background: rgba(136,255,170,0.1); border: 1px solid #88ffaa; color: #88ffaa; }
+.fx-btn--play-bl { background: rgba(34,136,255,0.1);  border: 1px solid #2288ff; color: #2288ff; }
+.fx-btn--play-wt { background: rgba(136,204,255,0.1); border: 1px solid #88ccff; color: #88ccff; }
+.fx-btn--play-tl { background: rgba(0,255,200,0.08);  border: 1px solid var(--teal); color: var(--teal); }
+.fx-btn--stop    { background: rgba(255,102,0,0.1);   border: 1px solid var(--orange); color: var(--orange); }
+.fx-btn--muted   { background: var(--bg); border: 1px solid var(--border); color: var(--muted); }
+.fx-btn--init    { background: rgba(255,136,68,0.1);  border: 1px solid #ff8844; color: #ff8844; }
+.fx-btn--fract   { background: rgba(255,68,0,0.1);    border: 1px solid #ff4400; color: #ff4400; }
+.fx-btn--explode { background: rgba(255,102,0,0.1);   border: 1px solid var(--orange); color: var(--orange); }
+.fx-btn--explode2{ background: rgba(255,68,0,0.08);   border: 1px solid #ff4400; color: #ff4400; }
+.fx-btn--impulse { background: var(--bg); border: 1px solid var(--border); color: var(--muted); }
+
+.fx-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ── Body count ─────────────────────────────────────────────────────── */
+.fx-body-count {
+  font-size: 9px;
+  color: var(--muted);
+  margin-bottom: 10px;
+  text-align: center;
+  font-family: var(--font);
+}
+
+/* ── Margin helpers ─────────────────────────────────────────────────── */
+.fx-mb6  { margin-bottom: 6px; }
+.fx-mb10 { margin-bottom: 10px; }
+.fx-mb12 { margin-bottom: 12px; }
+.fx-mb14 { margin-bottom: 14px; }

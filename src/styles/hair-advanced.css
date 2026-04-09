@@ -1,0 +1,125 @@
+.hair-adv-panel-float{
+  position:fixed;
+  top:134px;
+  right:18px;
+  z-index:12500;
+}
+
+.hair-adv-panel{
+  width:980px;
+  background:#0e1319;
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 16px 36px rgba(0,0,0,0.35);
+}
+
+.hair-adv-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 12px;
+  background:#151b22;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.hair-adv-sub{
+  color:#97a3b6;
+  font-size:12px;
+}
+
+.hair-adv-toolbar{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  padding:10px 12px;
+  background:#121820;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.hair-adv-grid{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:12px;
+  padding:12px;
+}
+
+.hair-adv-card{
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:10px;
+  background:#121820;
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.hair-adv-title{
+  color:#dbe6f5;
+  font-size:13px;
+  font-weight:600;
+}
+
+.hair-adv-field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  color:#d9e2ef;
+  font-size:12px;
+}
+
+.hair-adv-input{
+  padding:8px 10px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:#0f141a;
+  color:#e8edf5;
+}
+
+.hair-adv-btn{
+  appearance:none;
+  border:1px solid rgba(255,255,255,0.12);
+  background:#1b2430;
+  color:#e8edf5;
+  padding:8px 10px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+.hair-adv-btn:hover{
+  border-color:#4a8cff;
+}
+
+.hair-adv-btn.is-active{
+  background:#4a8cff;
+  border-color:#4a8cff;
+  color:#fff;
+}
+
+.hair-adv-canvas{
+  display:block;
+  width:100%;
+  max-width:420px;
+  height:auto;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:#10151c;
+  cursor:crosshair;
+}
+
+.hair-adv-mask{
+  display:block;
+  width:256px;
+  height:256px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:#ffffff;
+  cursor:crosshair;
+}
+
+.hair-adv-note{
+  color:#9fb0c7;
+  font-size:12px;
+  line-height:1.4;
+}

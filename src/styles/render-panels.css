@@ -1,0 +1,888 @@
+/* ═══════════════════════════════════════════════════════════════════
+   SPX Render Panels — Cinematic Lighting, Film Camera, Volumetrics,
+   Path Tracer, Lighting & Camera
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Shared Toggle ──────────────────────────────────────────────────── */
+.rpnl-toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.rpnl-toggle-label {
+  font-size: 9px;
+  color: var(--muted);
+  font-family: var(--font);
+}
+
+.rpnl-toggle {
+  width: 32px;
+  height: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  border: none;
+  flex-shrink: 0;
+}
+
+.rpnl-toggle--off { background: var(--border); }
+.rpnl-toggle--on  { background: var(--teal); }
+
+.rpnl-toggle__dot {
+  position: absolute;
+  top: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transition: left 0.15s;
+}
+
+.rpnl-toggle__dot--off { left: 2px;  background: #555; }
+.rpnl-toggle__dot--on  { left: 16px; background: var(--bg); }
+
+/* ── Shared Color Row ───────────────────────────────────────────────── */
+.rpnl-color-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.rpnl-color-label {
+  font-size: 9px;
+  color: var(--muted);
+  flex: 1;
+}
+
+.rpnl-color-input {
+  width: 28px;
+  height: 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.rpnl-color-hex {
+  font-size: 9px;
+  color: var(--muted);
+}
+
+/* ── Cinematic Lighting Panel ───────────────────────────────────────── */
+.cin-panel {
+  width: 260px;
+  max-height: 680px;
+}
+
+.cin-dot {
+  background: #ffdd44;
+  box-shadow: 0 0 6px #ffdd44;
+}
+
+.cin-title { color: #ffdd44; }
+
+.cin-rig-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.cin-rig-card {
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  transition: border-color 0.1s, background 0.1s;
+}
+
+.cin-rig-card:hover       { border-color: #ffdd44; }
+.cin-rig-card--active     { border-color: #ffdd44; background: rgba(255,221,68,0.08); }
+
+.cin-rig-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cin-rig-name {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.cin-rig-name--active { color: #ffdd44; }
+
+.cin-rig-count {
+  font-size: 8px;
+  color: var(--muted);
+}
+
+.cin-rig-desc {
+  font-size: 8px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.cin-rig-swatches {
+  display: flex;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.cin-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid #333;
+}
+
+.cin-shadow-quality {
+  font-size: 9px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.cin-shadow-chips {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 6px;
+}
+
+.cin-shadow-chip {
+  flex: 1;
+  padding: 3px;
+  text-align: center;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 8px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--bg);
+  font-family: var(--font);
+}
+
+.cin-shadow-chip--active {
+  border-color: var(--teal);
+  color: var(--teal);
+  background: rgba(0,255,200,0.08);
+}
+
+.cin-clear-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: 9px;
+  cursor: pointer;
+}
+
+/* ── Film Camera Panel ──────────────────────────────────────────────── */
+.fcam-panel { width: 250px; max-height: 680px; }
+.fcam-dot   { background: #ffaa00; box-shadow: 0 0 6px #ffaa00; }
+.fcam-title { color: #ffaa00; }
+
+.fcam-focal-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-bottom: 8px;
+}
+
+.fcam-chip {
+  padding: 3px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--bg);
+  font-family: var(--font);
+}
+
+.fcam-chip--active-gold   { border-color: #ffaa00; color: #ffaa00; background: rgba(255,170,0,0.1); }
+.fcam-chip--active-purple { border-color: #aaaaff; color: #aaaaff; background: rgba(170,170,255,0.1); }
+.fcam-chip--active-pink   { border-color: #ff88cc; color: #ff88cc; background: rgba(255,136,204,0.1); }
+
+.fcam-gate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.fcam-gate-item {
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--bg);
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font);
+}
+
+.fcam-gate-item--active { border-color: #aaaaff; color: #aaaaff; background: rgba(170,170,255,0.1); }
+.fcam-gate-size { color: var(--muted); }
+
+.fcam-save-btn {
+  width: 100%;
+  padding: 6px 0;
+  margin-bottom: 6px;
+  background: rgba(0,255,200,0.1);
+  border: 1px solid var(--teal);
+  border-radius: var(--radius);
+  color: var(--teal);
+  font-family: var(--font);
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fcam-bookmark {
+  padding: 4px 8px;
+  margin-bottom: 3px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-size: 9px;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font);
+  transition: border-color 0.1s;
+}
+
+.fcam-bookmark:hover { border-color: var(--teal); }
+
+/* ── Film Volumetrics Panel ─────────────────────────────────────────── */
+.fvol-panel { width: 250px; max-height: 620px; }
+.fvol-dot   { background: #88ccff; box-shadow: 0 0 6px #88ccff; }
+.fvol-title { color: #88ccff; }
+
+.fvol-preset-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  margin-bottom: 6px;
+}
+
+.fvol-preset-card {
+  padding: 4px 6px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  text-align: center;
+  font-family: var(--font);
+  transition: border-color 0.1s, color 0.1s;
+}
+
+.fvol-preset-card:hover { border-color: #88ccff; color: #88ccff; }
+
+.fvol-fog-types {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.fvol-fog-type {
+  flex: 1;
+  padding: 4px;
+  text-align: center;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--bg);
+  font-family: var(--font);
+}
+
+.fvol-fog-type--active {
+  border-color: var(--teal);
+  color: var(--teal);
+  background: rgba(0,255,200,0.1);
+}
+
+.fvol-apply-btn {
+  width: 100%;
+  padding: 7px 0;
+  margin-top: 4px;
+  background: rgba(136,204,255,0.1);
+  border: 1px solid #88ccff;
+  border-radius: var(--radius);
+  color: #88ccff;
+  font-family: var(--font);
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+}
+
+/* ── Film Path Tracer Panel ─────────────────────────────────────────── */
+.fpt-panel { width: 260px; max-height: 700px; }
+.fpt-dot   { background: #ffff44; box-shadow: 0 0 8px #ffff44; }
+.fpt-title { color: #ffff44; }
+
+.fpt-res-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 6px;
+}
+
+.fpt-res-item {
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--bg);
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font);
+}
+
+.fpt-res-item--active { border-color: #ffff44; color: #ffff44; background: rgba(255,255,68,0.08); }
+.fpt-res-dims { color: var(--muted); }
+
+.fpt-progress-wrap {
+  margin-bottom: 8px;
+}
+
+.fpt-progress-hdr {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+
+.fpt-progress-val { color: #ffff44; }
+
+.fpt-progress-bar {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.fpt-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffff44, var(--teal));
+  transition: width 0.3s;
+}
+
+.fpt-preview {
+  width: 100%;
+  border-radius: var(--radius);
+  margin-bottom: 6px;
+  border: 1px solid var(--border);
+}
+
+.fpt-render-time {
+  font-size: 9px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.fpt-action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.fpt-render-btn {
+  padding: 8px 0;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+}
+
+.fpt-render-btn--start  { background: rgba(255,255,68,0.1); border: 1px solid #ffff44; color: #ffff44; }
+.fpt-render-btn--cancel { background: rgba(255,102,0,0.1);  border: 1px solid var(--orange); color: var(--orange); }
+.fpt-render-btn--save   { background: rgba(0,255,200,0.1);  border: 1px solid var(--teal); color: var(--teal); }
+.fpt-render-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Lighting & Camera Panel (full) ─────────────────────────────────── */
+.lcp-wrap {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg);
+  font-family: var(--font);
+  font-size: 11px;
+  color: #ccc;
+  overflow: hidden;
+}
+
+.lcp-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #0a0a14;
+  border-bottom: 1px solid #1a2a3a;
+  flex-shrink: 0;
+}
+
+.lcp-logo {
+  background: var(--teal);
+  color: #000;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
+.lcp-title {
+  color: var(--teal);
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.lcp-close {
+  margin-left: auto;
+  background: none;
+  border: 1px solid #1a2a3a;
+  border-radius: 3px;
+  color: var(--dim);
+  cursor: pointer;
+  padding: 3px 8px;
+  font-size: 12px;
+  font-family: var(--font);
+}
+
+.lcp-tabs {
+  display: flex;
+  gap: 0;
+  background: #0a0a14;
+  border-bottom: 1px solid #1a2a3a;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.lcp-tab {
+  padding: 7px 14px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--dim);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 400;
+  white-space: nowrap;
+  font-family: var(--font);
+}
+
+.lcp-tab--active {
+  border-bottom-color: var(--teal);
+  color: var(--teal);
+  font-weight: 700;
+}
+
+.lcp-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.lcp-sec { margin-bottom: 14px; }
+
+.lcp-sec-label {
+  font-size: 9px;
+  color: var(--dim);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.lcp-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.lcp-input {
+  background: #0a0a14;
+  border: 1px solid #1a2a3a;
+  border-radius: 3px;
+  color: #ccc;
+  padding: 4px 7px;
+  font-size: 11px;
+  font-family: var(--font);
+  flex: 1;
+  min-width: 60px;
+}
+
+.lcp-select {
+  background: #0a0a14;
+  border: 1px solid #1a2a3a;
+  border-radius: 3px;
+  color: #ccc;
+  padding: 4px 7px;
+  font-size: 11px;
+  font-family: var(--font);
+  width: 100%;
+  cursor: pointer;
+}
+
+.lcp-select--sm { width: 80px; }
+.lcp-select--md { width: 110px; }
+
+.lcp-num {
+  width: 54px;
+  background: #0a0a14;
+  border: 1px solid #1a2a3a;
+  border-radius: 3px;
+  color: var(--teal);
+  padding: 4px 6px;
+  font-size: 11px;
+  font-family: var(--font);
+  text-align: center;
+}
+
+.lcp-cp {
+  width: 30px;
+  height: 24px;
+  border-radius: 3px;
+  border: 1px solid #1a2a3a;
+  cursor: pointer;
+  background: none;
+  padding: 1px;
+}
+
+.lcp-ks-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 4px;
+}
+
+.lcp-ks-label {
+  color: var(--dim);
+  width: 78px;
+  flex-shrink: 0;
+  font-size: 10px;
+}
+
+.lcp-ks-slider {
+  flex: 1;
+  cursor: pointer;
+  accent-color: var(--teal);
+}
+
+.lcp-ks-unit {
+  color: var(--dim);
+  font-size: 9px;
+  width: 18px;
+}
+
+.lcp-grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  margin-bottom: 8px;
+}
+
+.lcp-chk {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 5px;
+  cursor: pointer;
+  font-size: 10px;
+  color: #ccc;
+  font-family: var(--font);
+}
+
+.lcp-card {
+  padding: 7px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: #0a0a14;
+  margin-bottom: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lcp-card--active {
+  border-color: var(--teal);
+  background: rgba(0,255,200,0.05);
+}
+
+.lcp-rig-btn {
+  padding: 4px 7px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: 600;
+  text-align: left;
+  border: 1px solid rgba(90,112,136,0.4);
+  background: rgba(90,112,136,0.1);
+  color: var(--dim);
+}
+
+.lcp-rig-btn--active {
+  border-color: rgba(0,255,200,0.4);
+  background: rgba(0,255,200,0.1);
+  color: var(--teal);
+}
+
+.lcp-rig-name { font-weight: 700; font-size: 10px; }
+.lcp-rig-desc { font-size: 9px; color: var(--dim); }
+
+.lcp-light-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.lcp-light-name  { color: #ccc; font-weight: 600; font-size: 10px; }
+.lcp-light-int   { color: var(--dim); font-size: 9px; }
+
+.lcp-light-type {
+  font-size: 8px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-weight: 700;
+}
+
+.lcp-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.lcp-icon-btn--teal   { color: var(--teal); }
+.lcp-icon-btn--danger { color: var(--danger); font-size: 13px; }
+.lcp-icon-btn--muted  { color: var(--dim); }
+
+.lcp-edit-box {
+  margin-top: 8px;
+  padding: 9px;
+  border: 1px solid rgba(0,255,200,0.27);
+  border-radius: var(--radius);
+  background: rgba(0,255,200,0.02);
+}
+
+.lcp-edit-title {
+  font-size: 9px;
+  color: var(--teal);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.lcp-hdri-btn {
+  padding: 4px 7px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 9px;
+  font-weight: 700;
+  text-align: left;
+  border: 1px solid rgba(90,112,136,0.4);
+  background: rgba(90,112,136,0.1);
+  color: var(--dim);
+}
+
+.lcp-hdri-btn--active {
+  border-color: rgba(0,255,200,0.4);
+  background: rgba(0,255,200,0.1);
+  color: var(--teal);
+}
+
+.lcp-hdri-name { font-weight: 700; }
+.lcp-hdri-k    { color: var(--dim); font-size: 8px; }
+
+.lcp-apply-btn {
+  width: 100%;
+  padding: 8px 0;
+  margin-top: 4px;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+}
+
+.lcp-apply-btn--teal   { background: rgba(0,255,200,0.1);  border: 1px solid var(--teal);   color: var(--teal); }
+.lcp-apply-btn--orange { background: rgba(255,102,0,0.1);  border: 1px solid var(--orange); color: var(--orange); }
+.lcp-apply-btn--danger { background: rgba(255,68,68,0.1);  border: 1px solid var(--danger); color: var(--danger); }
+
+.lcp-scene-hdr {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.lcp-scene-label {
+  font-size: 9px;
+  color: var(--dim);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  flex: 1;
+}
+
+.lcp-sm-btn {
+  padding: 3px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 9px;
+  font-weight: 600;
+  border: 1px solid rgba(90,112,136,0.4);
+  background: rgba(90,112,136,0.1);
+  color: var(--dim);
+}
+
+.lcp-sm-btn--danger {
+  border-color: rgba(255,68,68,0.4);
+  background: rgba(255,68,68,0.1);
+  color: var(--danger);
+}
+
+.lcp-no-lights {
+  color: var(--dim);
+  font-size: 10px;
+}
+
+.lcp-lens-btn {
+  padding: 4px 7px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 9px;
+  font-weight: 700;
+  text-align: left;
+  border: 1px solid rgba(90,112,136,0.4);
+  background: rgba(90,112,136,0.1);
+  color: var(--dim);
+}
+
+.lcp-lens-btn--active {
+  border-color: rgba(0,255,200,0.4);
+  background: rgba(0,255,200,0.1);
+  color: var(--teal);
+}
+
+.lcp-lens-name { font-weight: 700; }
+.lcp-lens-fov  { color: var(--dim); font-size: 8px; }
+
+.lcp-move-btn {
+  padding: 4px 7px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 9px;
+  font-weight: 700;
+  text-align: left;
+  border: 1px solid rgba(90,112,136,0.4);
+  background: rgba(90,112,136,0.1);
+  color: var(--dim);
+}
+
+.lcp-move-btn--active {
+  border-color: rgba(255,102,0,0.4);
+  background: rgba(255,102,0,0.1);
+  color: var(--orange);
+}
+
+.lcp-bk-item {
+  padding: 7px 10px;
+  border-radius: var(--radius);
+  border: 1px solid #1a2a3a;
+  background: #0a0a14;
+  margin-bottom: 3px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.lcp-bk-name {
+  color: #ccc;
+  flex: 1;
+  font-size: 10px;
+}
+
+.lcp-bk-del {
+  background: none;
+  border: none;
+  color: var(--danger);
+  cursor: pointer;
+}
+
+.lcp-tone-row { display: flex; gap: 4px; flex-wrap: wrap; }
+
+.lcp-tone-btn {
+  padding: 3px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 9px;
+  font-weight: 600;
+  border: 1px solid rgba(90,112,136,0.4);
+  background: rgba(90,112,136,0.1);
+  color: var(--dim);
+}
+
+.lcp-tone-btn--active {
+  border-color: rgba(0,255,200,0.4);
+  background: rgba(0,255,200,0.1);
+  color: var(--teal);
+}
+
+.lcp-engine-row { display: flex; gap: 6px; margin-bottom: 6px; }
+
+.lcp-engine-btn {
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: 600;
+  border: 1px solid rgba(90,112,136,0.4);
+  background: rgba(90,112,136,0.1);
+  color: var(--dim);
+}
+
+.lcp-engine-btn--active {
+  border-color: rgba(0,255,200,0.4);
+  background: rgba(0,255,200,0.1);
+  color: var(--teal);
+}
+
+.lcp-bokeh-row { display: flex; gap: 4px; flex-wrap: wrap; }

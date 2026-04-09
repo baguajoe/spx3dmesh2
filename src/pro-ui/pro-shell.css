@@ -1,0 +1,173 @@
+html, body, #root {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #1f1f1f;
+  color: #d9d9d9;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.spx-shell {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #1f1f1f;
+}
+
+.spx-menubar {
+  height: 34px;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 12px;
+  background: linear-gradient(180deg, #343434 0%, #2b2b2b 100%);
+  border-bottom: 1px solid #202020;
+}
+
+.spx-brand {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .8px;
+  color: #9bb6c9;
+}
+
+.spx-menus {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: #cfcfcf;
+}
+
+.spx-workspaces {
+  height: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  background: linear-gradient(180deg, #2d2d2d 0%, #262626 100%);
+  border-bottom: 1px solid #1e1e1e;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.spx-workspaces::-webkit-scrollbar { display:none; }
+
+.spx-workspace {
+  appearance: none;
+  border: 1px solid #454545;
+  background: #313131;
+  color: #bdbdbd;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+}
+.spx-workspace:hover {
+  background: #3a3a3a;
+  color: #ececec;
+}
+.spx-workspace.active {
+  background: #4a5b6c;
+  color: #fff;
+  border-color: #61778d;
+}
+
+.spx-main {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 320px 1fr 330px;
+  overflow: hidden;
+}
+
+.spx-left,
+.spx-right {
+  background: #252525;
+  border-right: 1px solid #1b1b1b;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.spx-right {
+  border-right: none;
+  border-left: 1px solid #1b1b1b;
+  background: #242424;
+}
+
+.spx-center {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: #1d1d1d;
+}
+
+.mesh-editor-canvas {
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(255,255,255,0.03), transparent 25%),
+    linear-gradient(180deg, #252525 0%, #1d1d1d 100%);
+}
+
+.mesh-editor-canvas canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.spx-feature-index {
+  height: 100%;
+  padding: 12px;
+  background: #242424;
+}
+
+.spx-feature-index-header {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .7px;
+  color: #d8d8d8;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #353535;
+  padding-bottom: 8px;
+}
+
+.spx-feature-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.spx-feature-chip {
+  padding: 9px 10px;
+  background: #2e2e2e;
+  border: 1px solid #3b3b3b;
+  border-radius: 8px;
+  color: #c9d0d8;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.spx-statusbar {
+  height: 24px;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  background: #2a2a2a;
+  border-top: 1px solid #1c1c1c;
+  font-size: 11px;
+  color: #9f9f9f;
+}

@@ -1,0 +1,125 @@
+/* ═══════════════════════════════════════════════════════════════════
+   FilmPostPanel
+   ═══════════════════════════════════════════════════════════════════ */
+
+.fpost-panel {
+  width: 240px;
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  font-family: var(--font);
+  color: var(--text);
+  font-size: 11px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+}
+
+.fpost-header {
+  background: linear-gradient(90deg, #0a1520, var(--bg2));
+  border-bottom: 1px solid var(--border);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fpost-header__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 6px var(--teal);
+  flex-shrink: 0;
+}
+
+.fpost-header__title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--teal);
+}
+
+.fpost-header__badge {
+  margin-left: auto;
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.fpost-body {
+  padding: 10px 12px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+/* ── Preset grid ────────────────────────────────────────────────────── */
+.fpost-preset-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.fpost-preset-btn {
+  padding: 5px 6px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--bg);
+  text-align: center;
+  letter-spacing: 0.03em;
+  font-family: var(--font);
+  transition: border-color 0.1s, color 0.1s, background 0.1s;
+}
+
+.fpost-preset-btn--teal {
+  border-color: var(--teal);
+  color: var(--teal);
+  background: rgba(0,255,200,0.08);
+}
+
+.fpost-preset-btn--orange {
+  border-color: var(--orange);
+  color: var(--orange);
+  background: rgba(255,102,0,0.08);
+}
+
+/* ── Apply button ───────────────────────────────────────────────────── */
+.fpost-apply-btn {
+  width: 100%;
+  padding: 5px 0;
+  margin-top: 4px;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+}
+
+.fpost-apply-btn--teal {
+  background: rgba(0,255,200,0.1);
+  border: 1px solid var(--teal);
+  color: var(--teal);
+}
+
+/* ── Fixed overlays ─────────────────────────────────────────────────── */
+.fpost-vignette-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 998;
+}
+
+.fpost-grain-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 997;
+  mix-blend-mode: overlay;
+  opacity: 0.6;
+  width: 100%;
+  height: 100%;
+}
