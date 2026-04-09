@@ -2,27 +2,24 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 
 function Slider({ label, value, min=0, max=1, step=0.01, onChange, unit='' }) {
   return (
-    <div style={{ marginBottom: 5 }}>
-      <div style={{ display:'flex', justifyContent:'space-between', fontSize:10, color:'#888' }}>
+    <div className="ha-slider-wrap">
+      <div className="ha-slider-row">
         <span>{label}</span>
-        <span style={{ color:'#00ffc8', fontWeight:600 }}>
+        <span className="ha-slider-val">
           {typeof value==='number' ? (step<0.1 ? value.toFixed(2) : Math.round(value)) : value}{unit}
         </span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value}
         onChange={e => onChange(parseFloat(e.target.value))}
-        style={{ width:'100%', accentColor:'#00ffc8', cursor:'pointer', height:16 }} />
+        className="ha-slider" />
     </div>
   );
 }
 function Select({ label, value, options, onChange }) {
   return (
-    <div style={{ marginBottom:6 }}>
-      {label && <div style={{ fontSize:10, color:'#888', marginBottom:2 }}>{label}</div>}
-      <select value={value} onChange={e => onChange(e.target.value)} style={{
-        width:'100%', background:'#0d1117', color:'#e0e0e0',
-        border:'1px solid #21262d', padding:'3px 6px', borderRadius:4, fontSize:11, cursor:'pointer',
-      }}>
+    <div className="ha-select-wrap">
+      {label && <div className="ha-select-label">{label}</div>}
+      <select value={value} onChange={e => onChange(e.target.value)} className="ha-select">
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
     </div>
@@ -30,72 +27,50 @@ function Select({ label, value, options, onChange }) {
 }
 function Check({ label, value, onChange }) {
   return (
-    <label style={{ display:'flex', alignItems:'center', gap:6, fontSize:11,
-      color:'#ccc', cursor:'pointer', marginBottom:4 }}>
-      <input type="checkbox" checked={value} onChange={e => onChange(e.target.checked)}
-        style={{ accentColor:'#00ffc8', width:12, height:12 }} />
+    <label className="ha-check">
+      <input type="checkbox" checked={value} onChange={e => onChange(e.target.checked)} className="ha-check__input" />
       {label}
     </label>
   );
 }
 function ColorRow({ label, value, onChange }) {
   return (
-    <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:5 }}>
-      <span style={{ fontSize:10, color:'#888', flex:1 }}>{label}</span>
-      <input type="color" value={value} onChange={e => onChange(e.target.value)}
-        style={{ width:32, height:22, border:'none', cursor:'pointer', borderRadius:3 }} />
-      <span style={{ fontSize:9, color:'#555', fontFamily:'monospace' }}>{value}</span>
+    <div className="ha-color-row">
+      <span className="ha-color-label">{label}</span>
+      <input type="color" value={value} onChange={e => onChange(e.target.value)} className="ha-color-input" />
+      <span className="ha-color-hex">{value}</span>
     </div>
   );
 }
 function Section({ title, children, defaultOpen=true }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div style={{ marginBottom:6, border:'1px solid #21262d', borderRadius:5, overflow:'hidden' }}>
-      <div onClick={() => setOpen(o => !o)} style={{
-        padding:'5px 8px', cursor:'pointer', background:'#0d1117',
-        display:'flex', justifyContent:'space-between',
-        fontSize:11, fontWeight:600, color:'#00ffc8', userSelect:'none',
-      }}>
+    <div className="ha-section">
+      <div className="ha-section__header" onClick={() => setOpen(o => !o)}>
         <span>{title}</span>
-        <span style={{ fontSize:9, opacity:0.7 }}>{open ? '\u25b2' : '\u25bc'}</span>
+        <span className="ha-section__arrow">{open ? '▲' : '▼'}</span>
       </div>
-      {open && <div style={{ padding:'6px 8px', background:'#06060f' }}>{children}</div>}
+      {open && <div className="ha-section__body">{children}</div>}
     </div>
   );
 }
 function Badges({ items, active, onSelect }) {
   return (
-    <div style={{ display:'flex', flexWrap:'wrap', gap:3, marginBottom:6 }}>
+    <div className="ha-badges">
       {items.map(item => (
-        <button key={item} onClick={() => onSelect(item)} style={{
-          padding:'2px 7px', fontSize:9, borderRadius:4, cursor:'pointer',
-          background: active===item ? '#00ffc8' : '#1a1f2c',
-          color: active===item ? '#06060f' : '#ccc',
-          border: `1px solid ${active===item ? '#00ffc8' : '#21262d'}`,
-        }}>{item}</button>
+        <button key={item} onClick={() => onSelect(item)}
+          className={`ha-badge${active===item?' ha-badge--active':''}`}>{item}</button>
       ))}
     </div>
   );
 }
 function GenBtn({ label, onClick }) {
-  return (
-    <button onClick={onClick} style={{
-      width:'100%', background:'#00ffc8', color:'#06060f', border:'none',
-      borderRadius:4, padding:'7px 0', cursor:'pointer', fontWeight:700,
-      fontSize:12, marginTop:6, letterSpacing:0.5, fontFamily:'JetBrains Mono, monospace',
-    }}>{label}</button>
-  );
+  return <button onClick={onClick} className="ha-gen-btn">{label}</button>;
 }
 function RandBtn({ onClick }) {
-  return (
-    <button onClick={onClick} style={{
-      background:'#1a1f2c', color:'#888', border:'1px solid #21262d',
-      borderRadius:4, padding:'6px 10px', cursor:'pointer', fontSize:11,
-    }}>🎲</button>
-  );
+  return <button onClick={onClick} className="ha-rand-btn">🎲</button>;
 }
-const P = { fontFamily:'JetBrains Mono, monospace', color:'#e0e0e0', fontSize:12, userSelect:'none', width:'100%' };
+
 
 const GROOM_TOOLS   = ['Comb','Push','Pull','Smooth','Twist','Cut','Grow','Relax','Puff','Flatten'];
 const LAYER_TYPES   = ['Base','Mid','Top','Flyaway','Vellus','Highlight','Lowlight','Streak','Undercoat'];
@@ -164,16 +139,12 @@ export default function HairAdvancedPanel({ character, hairSystem, onUpdate }) {
   }, [onUpdate]);
 
   return (
-    <div style={P}>
+    <div className="ha-root">
       <Section title="🔧 Groom Tools">
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr', gap:3, marginBottom:6 }}>
+        <div className="ha-tool-grid">
           {GROOM_TOOLS.map(tool => (
-            <button key={tool} onClick={() => handleToolChange(tool)} style={{
-              padding:'4px 0', fontSize:9, borderRadius:4, cursor:'pointer',
-              background: activeTool===tool ? '#00ffc8' : '#1a1f2c',
-              color: activeTool===tool ? '#06060f' : '#ccc',
-              border: `1px solid ${activeTool===tool ? '#00ffc8' : '#21262d'}`,
-            }}>{tool}</button>
+            <button key={tool} onClick={() => handleToolChange(tool)}
+              className={`ha-tool-btn${activeTool===tool?' ha-tool-btn--active':''}`}>{tool}</button>
           ))}
         </div>
         <Slider label="Brush Radius"   value={brushRadius}  min={0.01} max={0.3} step={0.005} onChange={setBrushRadius}  />
@@ -186,19 +157,17 @@ export default function HairAdvancedPanel({ character, hairSystem, onUpdate }) {
 
       <Section title="🧵 Layers">
         {layers.map(layer => (
-          <div key={layer.type} style={{
-            display:'flex', alignItems:'center', gap:4, marginBottom:4, padding:'3px 6px',
-            background: activeLayer===layer.type ? '#0d1117' : 'transparent',
-            borderRadius:3, cursor:'pointer', border:`1px solid ${activeLayer===layer.type?'#21262d':'transparent'}`
-          }} onClick={() => setActiveLayer(layer.type)}>
-            <button onClick={e => { e.stopPropagation(); updateLayer(layer.type,'visible',!layer.visible); }} style={{
-              background:'none', border:'none', color: layer.visible ? '#00ffc8' : '#444', cursor:'pointer', fontSize:11, padding:0,
-            }}>{layer.visible ? '👁' : '🕶'}</button>
-            <button onClick={e => { e.stopPropagation(); updateLayer(layer.type,'locked',!layer.locked); }} style={{
-              background:'none', border:'none', color: layer.locked ? '#FF6600' : '#555', cursor:'pointer', fontSize:11, padding:0,
-            }}>{layer.locked ? '🔒' : '🔓'}</button>
-            <span style={{ flex:1, fontSize:10, color: activeLayer===layer.type ? '#e0e0e0' : '#888' }}>{layer.type}</span>
-            <span style={{ fontSize:9, color:'#555' }}>{Math.round(layer.density*100)}%</span>
+          <div key={layer.type}
+            className={`ha-layer-row${activeLayer===layer.type?' ha-layer-row--active':''}`}
+            onClick={() => setActiveLayer(layer.type)}>
+            <button onClick={e => { e.stopPropagation(); updateLayer(layer.type,'visible',!layer.visible); }}
+              className={`ha-layer-vis${layer.visible?' ha-layer-vis--on':' ha-layer-vis--off'}`}>
+              {layer.visible ? '👁' : '🕶'}</button>
+            <button onClick={e => { e.stopPropagation(); updateLayer(layer.type,'locked',!layer.locked); }}
+              className={`ha-layer-lock${layer.locked?' ha-layer-lock--on':' ha-layer-lock--off'}`}>
+              {layer.locked ? '🔒' : '🔓'}</button>
+            <span className={`ha-layer-name${activeLayer===layer.type?' ha-layer-name--active':''}`}>{layer.type}</span>
+            <span className="ha-layer-density">{Math.round(layer.density*100)}%</span>
           </div>
         ))}
         {activeLayer && <>
@@ -234,20 +203,11 @@ export default function HairAdvancedPanel({ character, hairSystem, onUpdate }) {
         </>}
       </Section>
 
-      <div style={{ display:'flex', gap:4, marginTop:4 }}>
+      <div className="ha-footer">
         <button onClick={() => { setUndoStack(s => s.slice(0,-1)); onUpdate?.({ type:'undo' }); }}
-          disabled={undoStack.length===0} style={{
-          flex:1, background:'#1a1f2c', color: undoStack.length>0?'#ccc':'#444',
-          border:'1px solid #21262d', borderRadius:4, padding:'5px 0', cursor:'pointer', fontSize:10,
-        }}>↩ Undo ({undoStack.length})</button>
-        <button onClick={() => onUpdate?.({ type:'rebuild' })} style={{
-          flex:1, background:'#1a1f2c', color:'#888', border:'1px solid #21262d',
-          borderRadius:4, padding:'5px 0', cursor:'pointer', fontSize:10,
-        }}>Rebuild</button>
-        <button onClick={() => onUpdate?.({ type:'export' })} style={{
-          flex:1, background:'#1a1f2c', color:'#888', border:'1px solid #21262d',
-          borderRadius:4, padding:'5px 0', cursor:'pointer', fontSize:10,
-        }}>Export</button>
+          disabled={undoStack.length===0} className="ha-footer-btn">↩ Undo ({undoStack.length})</button>
+        <button onClick={() => onUpdate?.({ type:'rebuild' })} className="ha-footer-btn">Rebuild</button>
+        <button onClick={() => onUpdate?.({ type:'export' })} className="ha-footer-btn">Export</button>
       </div>
     </div>
   );

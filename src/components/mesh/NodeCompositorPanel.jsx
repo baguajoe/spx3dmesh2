@@ -20,38 +20,6 @@ const CAT_COLORS = {
 
 const PRESETS = ["Beauty Pass","Toon Composite","Film Grade","Night Vision","Infrared","Bleach Bypass","Cross Process"];
 
-const S = {
-  root: { position:"fixed", top:40, left:200, right:200, bottom:80,
-    background:C.bg, border:`1px solid ${C.border}`, borderRadius:8,
-    fontFamily:C.font, color:C.text, zIndex:850, display:"flex",
-    flexDirection:"column", boxShadow:"0 8px 40px rgba(0,0,0,0.8)" },
-  header: { display:"flex", alignItems:"center", gap:8, padding:"8px 14px",
-    borderBottom:`1px solid ${C.border}`, flexShrink:0, background:C.panel },
-  title: { fontSize:12, fontWeight:700, color:C.teal, letterSpacing:2, flex:1 },
-  close: { background:"none", border:"none", color:C.dim, cursor:"pointer", fontSize:16 },
-  toolbar: { display:"flex", gap:6, padding:"6px 12px", borderBottom:`1px solid ${C.border}`,
-    flexShrink:0, flexWrap:"wrap", alignItems:"center" },
-  btn: (active) => ({ background: active ? C.teal : "#161b22",
-    color: active ? "#06060f" : C.dim, border:`1px solid ${active ? C.teal : C.border}`,
-    borderRadius:4, padding:"4px 10px", fontFamily:C.font, fontSize:10, cursor:"pointer" }),
-  btnO: { background:C.orange, color:"#fff", border:"none", borderRadius:4,
-    padding:"4px 10px", fontFamily:C.font, fontSize:10, cursor:"pointer" },
-  canvas: { flex:1, position:"relative", overflow:"hidden", background:"#030308" },
-  sidebar: { width:200, borderLeft:`1px solid ${C.border}`, background:C.panel,
-    overflowY:"auto", flexShrink:0 },
-  sideSection: { padding:"8px 10px", borderBottom:`1px solid ${C.border}` },
-  sideTitle: { fontSize:9, color:C.orange, letterSpacing:2, marginBottom:6, textTransform:"uppercase" },
-  nodeCard: { background:C.nodeHeader, border:`1px solid ${C.border}`, borderRadius:4,
-    marginBottom:4, overflow:"hidden", cursor:"pointer" },
-  nodeCardHeader: (cat) => ({ background:`${CAT_COLORS[cat] || C.teal}22`,
-    borderBottom:`1px solid ${CAT_COLORS[cat] || C.teal}44`,
-    padding:"3px 7px", fontSize:9, color: CAT_COLORS[cat] || C.teal,
-    fontWeight:700, letterSpacing:1 }),
-  nodeItem: { padding:"2px 7px 3px", fontSize:9, color:C.dim, cursor:"pointer",
-    transition:"background 0.1s" },
-  stat: { fontSize:9, color:C.teal, marginBottom:2 },
-};
-
 // ── Node visual component ────────────────────────────────────────────────────
 function NodeWidget({ node, selected, onSelect, onDelete, onMute, onMove }) {
   const cat = Object.entries(COMPOSITOR_NODE_TYPES)
@@ -60,55 +28,46 @@ function NodeWidget({ node, selected, onSelect, onDelete, onMute, onMove }) {
 
   return (
     <div
-      style={{
-        position:"absolute", left:node.position.x, top:node.position.y,
-        width:160, background:C.node, border:`1px solid ${selected ? color : C.border}`,
-        borderRadius:6, boxShadow: selected ? `0 0 10px ${color}44` : "0 2px 8px rgba(0,0,0,0.5)",
-        userSelect:"none", opacity: node.mute ? 0.4 : 1,
-      }}
+        className={`nc-node-widget${selected?' nc-node-widget--selected':''}${node.mute?' nc-node-widget--muted':''}`}
+      style={{ left:node.position.x, top:node.position.y, '--node-color': color }}
       onClick={() => onSelect(node.id)}
       onMouseDown={e => onMove(e, node.id)}
     >
       {/* Header */}
-      <div style={{ background:`${color}22`, borderBottom:`1px solid ${color}44`,
-        padding:"4px 8px", display:"flex", alignItems:"center", justifyContent:"space-between",
-        borderRadius:"6px 6px 0 0" }}>
-        <span style={{ fontSize:9, color, fontWeight:700, letterSpacing:1 }}>{node.type}</span>
-        <div style={{ display:"flex", gap:4 }}>
+      <div className="nc-node-header" style={{ background:`${color}22`, borderBottom:`1px solid ${color}44` }}>
+        <span className="nc-node-type" style={{ color }}>{node.type}</span>
+        <div className="nc-node-btns">
           <button onClick={e=>{e.stopPropagation();onMute(node.id);}}
-            style={{ ...S.btn(node.mute), padding:"1px 5px", fontSize:8 }}>
+            className={`nc-node-mute-btn${node.mute?' nc-node-mute-btn--on':''}`}>
             {node.mute ? "↺" : "M"}
           </button>
           <button onClick={e=>{e.stopPropagation();onDelete(node.id);}}
-            style={{ background:"none", border:"none", color:"#ff4444", cursor:"pointer", fontSize:10 }}>✕</button>
+            className="nc-node-del">✕</button>
         </div>
       </div>
       {/* Inputs */}
-      <div style={{ padding:"4px 0" }}>
+      <div className="nc-node-ports">
         {node.inputs.map(inp => (
-          <div key={inp.id} style={{ display:"flex", alignItems:"center", padding:"2px 8px", fontSize:9, color:C.dim }}>
-            <div style={{ width:8, height:8, borderRadius:"50%", background: inp.connected ? color : C.border,
-              border:`1px solid ${color}`, marginRight:5, flexShrink:0 }} />
+          <div key={inp.id} className="nc-port-row">
+            <div className="nc-port-dot" style={{ background: inp.connected ? color : '#21262d', border:`1px solid ${color}` }} />
             {inp.name}
           </div>
         ))}
       </div>
       {/* Params preview */}
       {Object.keys(node.params).length > 0 && (
-        <div style={{ padding:"2px 8px 4px", fontSize:8, color:C.dim, borderTop:`1px solid ${C.border}` }}>
+        <div className="nc-node-params">
           {Object.entries(node.params).slice(0,2).map(([k,v]) => (
-            <div key={k}>{k}: <span style={{color:C.teal}}>{JSON.stringify(v).slice(0,12)}</span></div>
+            <div key={k}>{k}: <span className="nc-param-val">{JSON.stringify(v).slice(0,12)}</span></div>
           ))}
         </div>
       )}
       {/* Outputs */}
-      <div style={{ padding:"4px 0", borderTop:`1px solid ${C.border}` }}>
+      <div className="nc-node-ports nc-node-ports--out">
         {node.outputs.map(out => (
-          <div key={out.id} style={{ display:"flex", alignItems:"center", justifyContent:"flex-end",
-            padding:"2px 8px", fontSize:9, color:C.dim }}>
+          <div key={out.id} className="nc-port-row nc-port-row--out">
             {out.name}
-            <div style={{ width:8, height:8, borderRadius:"50%", background:color,
-              border:`1px solid ${color}`, marginLeft:5, flexShrink:0 }} />
+            <div className="nc-port-dot" style={{ background:color, border:`1px solid ${color}` }} />
           </div>
         ))}
       </div>
@@ -191,34 +150,32 @@ export default function NodeCompositorPanel({ open, onClose }) {
   if (!open) return null;
 
   return (
-    <div style={S.root}>
+    <div className="nc-root">
       {/* Header */}
-      <div style={S.header}>
-        <span style={S.title}>⬡ NODE COMPOSITOR</span>
-        <span style={{ fontSize:9, color:C.dim }}>{graph.nodes.length} nodes</span>
-        <button style={S.close} onClick={onClose}>✕</button>
+      <div className="nc-header">
+        <span className="nc-title">⬡ NODE COMPOSITOR</span>
+        <span className="nc-node-count">{graph.nodes.length} nodes</span>
+        <button className="nc-close" onClick={onClose}>✕</button>
       </div>
 
       {/* Toolbar */}
-      <div style={S.toolbar}>
-        <button style={S.btn(false)} onClick={evaluate}>▶ Evaluate</button>
-        <select value={preset} onChange={e => loadPreset(e.target.value)}
-          style={{ background:"#0d1117", border:`1px solid ${C.border}`, color:C.text,
-            padding:"4px 8px", borderRadius:4, fontFamily:C.font, fontSize:10, cursor:"pointer" }}>
+      <div className="nc-toolbar">
+        <button className="nc-btn" onClick={evaluate}>▶ Evaluate</button>
+        <select value={preset} onChange={e => loadPreset(e.target.value)} className="nc-select">
           <option value="">Presets…</option>
           {PRESETS.map(p => <option key={p} value={p}>{p}</option>)}
         </select>
-        <button style={S.btn(false)} onClick={() => setGraph(createCompositorGraph())}>Clear</button>
-        {status && <span style={{ fontSize:9, color:C.teal, marginLeft:8 }}>{status}</span>}
+        <button className="nc-btn" onClick={() => setGraph(createCompositorGraph())}>Clear</button>
+        {status && <span className="nc-status">{status}</span>}
       </div>
 
       {/* Main area */}
-      <div style={{ display:"flex", flex:1, overflow:"hidden" }}>
+      <div className="nc-main">
 
         {/* Node canvas */}
-        <div ref={canvasRef} style={S.canvas}>
+        <div ref={canvasRef} className="nc-canvas">
           {/* Wire SVG layer */}
-          <svg style={{ position:"absolute", inset:0, width:"100%", height:"100%", pointerEvents:"none" }}>
+          <svg className="nc-wire-svg">
             {graph.connections && graph.connections.map((conn, i) => {
               const fromNode = graph.nodes.find(n => n.id === conn.fromNodeId);
               const toNode = graph.nodes.find(n => n.id === conn.toNodeId);
@@ -241,21 +198,20 @@ export default function NodeCompositorPanel({ open, onClose }) {
               onMute={muteNode} onMove={onMove} />
           ))}
           {graph.nodes.length === 0 && (
-            <div style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)",
-              fontSize:11, color:C.dim, textAlign:"center" }}>
+            <div className="nc-empty">
               Add nodes from the sidebar →
             </div>
           )}
         </div>
 
         {/* Sidebar */}
-        <div style={S.sidebar}>
+        <div className="nc-sidebar">
           {/* Add nodes */}
           {Object.entries(COMPOSITOR_NODE_TYPES).map(([cat, types]) => (
-            <div key={cat} style={S.sideSection}>
-              <div style={S.sideTitle}>{cat}</div>
+            <div key={cat} className="nc-side-section">
+              <div className="nc-side-title">{cat}</div>
               {types.map(type => (
-                <div key={type} style={S.nodeItem}
+                <div key={type} className="nc-node-item"
                   onClick={() => addNode(type)}
                   onMouseEnter={e => e.currentTarget.style.background = "#161b22"}
                   onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
@@ -267,11 +223,11 @@ export default function NodeCompositorPanel({ open, onClose }) {
 
           {/* Selected node params */}
           {selectedNode && (
-            <div style={S.sideSection}>
-              <div style={S.sideTitle}>Params — {selectedNode.type}</div>
+            <div className="nc-side-section">
+              <div className="nc-side-title">Params — {selectedNode.type}</div>
               {Object.entries(selectedNode.params).map(([k, v]) => (
-                <div key={k} style={{ marginBottom:6 }}>
-                  <div style={{ fontSize:9, color:C.dim, marginBottom:2 }}>{k}</div>
+                <div key={k} className="nc-param-edit">
+                  <div className="nc-param-label">{k}</div>
                   {typeof v === "number" ? (
                     <input type="number" value={v} step={0.1}
                       onChange={e => setGraph(g => ({
@@ -279,10 +235,9 @@ export default function NodeCompositorPanel({ open, onClose }) {
                         nodes: g.nodes.map(n => n.id === selectedNode.id
                           ? { ...n, params:{ ...n.params, [k]: parseFloat(e.target.value) } } : n)
                       }))}
-                      style={{ width:"100%", background:"#0d1117", border:`1px solid ${C.border}`,
-                        color:C.text, padding:"2px 6px", borderRadius:3, fontFamily:C.font, fontSize:10 }} />
+                      className="nc-param-input" />
                   ) : (
-                    <div style={{ fontSize:9, color:C.teal }}>{JSON.stringify(v)}</div>
+                    <div className="nc-param-val">{JSON.stringify(v)}</div>
                   )}
                 </div>
               ))}
@@ -291,11 +246,11 @@ export default function NodeCompositorPanel({ open, onClose }) {
 
           {/* Stats */}
           {stats && (
-            <div style={S.sideSection}>
-              <div style={S.sideTitle}>Stats</div>
-              <div style={S.stat}>Nodes: {stats.nodeCount}</div>
-              <div style={S.stat}>Connections: {stats.connectionCount}</div>
-              <div style={S.stat}>Muted: {stats.mutedCount}</div>
+            <div className="nc-side-section">
+              <div className="nc-side-title">Stats</div>
+              <div className="nc-stat">Nodes: {stats.nodeCount}</div>
+              <div className="nc-stat">Connections: {stats.connectionCount}</div>
+              <div className="nc-stat">Muted: {stats.mutedCount}</div>
             </div>
           )}
         </div>

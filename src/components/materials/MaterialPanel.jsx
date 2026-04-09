@@ -62,7 +62,7 @@ export default function MaterialPanel({ open = false, onClose, meshRef = null })
               >
                 <span
                   className="material-swatch"
-                  style={{ background: slot.pbr?.baseColor || "#cccccc" }}
+                  className="mp-color-swatch" style={{ background: slot.pbr?.baseColor || "#cccccc" }}
                 />
                 <span className="material-slot-name">{slot.name}</span>
               </button>

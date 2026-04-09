@@ -175,7 +175,7 @@ export default function HairPanel({ character, scene, onUpdate }) {
             <div
               key={c}
               className={`spx-palette__swatch${rootColor===c ? ' spx-palette__swatch--active' : ''}`}
-              style={{ background: c }}
+              className="hp-color-swatch" style={{ background: c }}
               onClick={() => setRootColor(c)}
             />
           ))}
