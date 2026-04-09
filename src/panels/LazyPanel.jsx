@@ -1,7 +1,7 @@
 import React, { lazy, Suspense } from "react";
 
 const PanelFallback = () => (
-  <div style={{padding:8,color:"#555",fontFamily:"JetBrains Mono,monospace",fontSize:9}}>
+  <div className="lazy-panel">
     Loading...
   </div>
 );

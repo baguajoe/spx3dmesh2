@@ -509,7 +509,7 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
     };
   }, [avatarUrl]);
 
-  return <div ref={mountRef} style={{ width: '100%', height: '100%', minHeight: 400 }} />;
+  return <div ref={mountRef} className="avatar-rig-mount" />;
 };
 
 export default AvatarRigPlayer3D;

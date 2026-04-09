@@ -391,15 +391,15 @@ function LiveCaptureTab({ onExportGlb }) {
       <div className="mw-left">
         {/* Camera feed */}
         <div className="mw-cam-wrap">
-          <video ref={videoRef} className="mw-cam" autoPlay muted playsInline style={{ transform: 'scaleX(-1)' }} />
+          <video ref={videoRef} className="mw-cam" autoPlay muted playsInline className="mw-mirror" />
           <canvas ref={overlayRef} className="mw-cam-overlay" style={{ transform: 'scaleX(-1)' }} />
           {isCapturing && (
             <div className="mw-hud">
               <span className={`mw-hud-dot ${landmarkCount > 20 ? 'mw-hud-dot--good' : 'mw-hud-dot--bad'}`} />
               <span>{fps} FPS</span>
               <span>{landmarkCount}/33</span>
-              {multiPerson && <span style={{color:'#00ffc8'}}>👥 {personCount}P</span>}
-              {depthEnabled && depthReady && <span style={{color:'#4fc3f7'}}>📐 3D</span>}
+              {multiPerson && <span className="mw-badge-teal">👥 {personCount}P</span>}
+              {depthEnabled && depthReady && <span className="mw-badge-blue">📐 3D</span>}
               {faceStatus === 'running'  && <span>😊</span>}
               {handStatus === 'running'  && <span>🖐</span>}
               {isRecording && <span className="mw-hud-rec">● REC</span>}
@@ -423,20 +423,20 @@ function LiveCaptureTab({ onExportGlb }) {
         </label>
 
         {/* ── NEW: Multi-person ── */}
-        <SectionLabel style={{marginTop:10}}>Multi-Person</SectionLabel>
-        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
-          <label className="mw-check" style={{margin:0}}>
+        <SectionLabel className="mw-section-mt">Multi-Person</SectionLabel>
+        <div className="mw-row">
+          <label className="mw-check mw-check--inline">
             <input type="checkbox" checked={multiPerson} onChange={e => setMultiPerson(e.target.checked)} disabled={isCapturing} />
             Track multiple people
           </label>
           {multiPerson && isCapturing && (
-            <span style={{fontSize:11,color:'#00ffc8'}}>👥 {personCount} detected</span>
+            <span className="mw-badge-teal mw-badge-teal--lg">👥 {personCount} detected</span>
           )}
         </div>
         {multiPerson && isCapturing && multiSkeletons.length > 1 && (
-          <div style={{display:'flex',gap:4,flexWrap:'wrap',marginBottom:6}}>
+          <div className="mw-badge-wrap">
             {multiSkeletons.map((s,i) => (
-              <span key={s.id} style={{fontSize:10,padding:'2px 6px',borderRadius:3,background:PERSON_COLORS[i]+'22',border:`1px solid ${PERSON_COLORS[i]}`,color:PERSON_COLORS[i]}}>
+              <span key={s.id} className="mw-person-badge" style={{background:PERSON_COLORS[i]+'22',border:`1px solid ${PERSON_COLORS[i]}`,color:PERSON_COLORS[i]}}>
                 P{i+1}
               </span>
             ))}
@@ -444,14 +444,14 @@ function LiveCaptureTab({ onExportGlb }) {
         )}
 
         {/* ── NEW: Depth Estimation ── */}
-        <SectionLabel style={{marginTop:10}}>Depth Estimation</SectionLabel>
-        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
+        <SectionLabel className="mw-section-mt">Depth Estimation</SectionLabel>
+        <div className="mw-row">
           <label className="mw-check" style={{margin:0}}>
             <input type="checkbox" checked={depthEnabled} onChange={e => setDepthEnabled(e.target.checked)} disabled={isCapturing} />
             MiDaS 3D depth
           </label>
           {depthEnabled && (
-            <span style={{fontSize:10,color: depthReady ? '#00ffc8' : '#888'}}>
+            <span className={`mw-depth-status${depthReady?' mw-depth-status--ready':''}`}>
               {depthReady ? '✓ Ready' : '⟳ Loading...'}
             </span>
           )}
@@ -464,17 +464,17 @@ function LiveCaptureTab({ onExportGlb }) {
         )}
 
         {/* ── Smoother ── */}
-        <SectionLabel style={{marginTop:10}}>Smoother</SectionLabel>
+        <SectionLabel className="mw-section-mt">Smoother</SectionLabel>
         <select className="mw-select" value={smootherType} onChange={e => setSmootherType(e.target.value)} disabled={isCapturing}>
           {SMOOTHER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
 
         {/* ── Model Quality ── */}
-        <SectionLabel style={{marginTop:10}}>Model Quality</SectionLabel>
-        <div style={{display:'flex',gap:4}}>
+        <SectionLabel className="mw-section-mt">Model Quality</SectionLabel>
+        <div className="mw-quality-btns">
           {[['Lite',0],['Full',1],['Heavy',2]].map(([lbl,val]) => (
             <button key={val}
-              style={{flex:1,fontSize:10,padding:'3px 0',borderRadius:3,cursor:'pointer',
+              className="mw-quality-btn" style={{
                 background: modelComplexity===val ? '#00ffc822' : '#0a1628',
                 border: `1px solid ${modelComplexity===val ? '#00ffc8' : '#1a2a3a'}`,
                 color: modelComplexity===val ? '#00ffc8' : '#888'}}
@@ -485,7 +485,7 @@ function LiveCaptureTab({ onExportGlb }) {
         </div>
 
         {/* ── Retargeting ── */}
-        <SectionLabel style={{marginTop:10}}>Retargeting</SectionLabel>
+        <SectionLabel className="mw-section-mt">Retargeting</SectionLabel>
         <label className="mw-check">
           <input type="checkbox" checked={retargetEnabled} onChange={e => setRetargetEnabled(e.target.checked)} />
           Enable bone retargeting
@@ -502,7 +502,7 @@ function LiveCaptureTab({ onExportGlb }) {
         )}
 
         {/* ── NEW: Foot Plant ── */}
-        <SectionLabel style={{marginTop:10}}>Foot Plant Fix</SectionLabel>
+        <SectionLabel className="mw-section-mt">Foot Plant Fix</SectionLabel>
         <label className="mw-check">
           <input type="checkbox" checked={footPlant} onChange={e => setFootPlant(e.target.checked)} />
           Auto foot plant IK (fixes floating feet)
@@ -519,7 +519,7 @@ function LiveCaptureTab({ onExportGlb }) {
         )}
 
         {/* Avatar */}
-        <SectionLabel style={{marginTop:10}}>Avatar</SectionLabel>
+        <SectionLabel className="mw-section-mt">Avatar</SectionLabel>
         <div style={{display:'flex',gap:4,marginBottom:6,flexWrap:'wrap'}}>
           {[{label:'Y Bot', url:'/ybot.glb'}].map(p => (
             <button key={p.label}

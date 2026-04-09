@@ -239,7 +239,7 @@ const MotionCaptureWithRecording = ({ userId, socket, onPoseFrame, fullWidth = f
         style={videoStyle}
       />
 
-      <div ref={avatarRef} style={{ display: 'none' }} />
+      <div ref={avatarRef} className="spx-hidden" />
 
       <div style={{
         display: 'flex',
