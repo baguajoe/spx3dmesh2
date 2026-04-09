@@ -176,7 +176,7 @@ export default function EnvironmentGenerator() {
       <div className="gen-sidebar">
         <div className="gen-env-title">🌍 ENVIRONMENT</div>
 
-        <div className="gen-sec-label" style={{padding:'0 0 6px'}}>BIOME PRESET</div>
+        <div className="gen-sec-label gen-sec-label--pb">BIOME PRESET</div>
         <div className="gen-env-preset-grid">
           {Object.entries(PRESETS).map(([id,p])=>(
             <div key={id} className={`gen-env-preset${activePreset===id?' gen-env-preset--active':''}`} onClick={()=>setActivePreset(id)}>
@@ -186,7 +186,7 @@ export default function EnvironmentGenerator() {
           ))}
         </div>
 
-        <div className="gen-sec-label" style={{padding:'8px 0 4px'}}>TERRAIN</div>
+        <div className="gen-sec-label gen-sec-label--mt">TERRAIN</div>
         <label className="gen-sec-box-label">Size: {size}m</label>
         <input className="gen-sec-box-slider" type="range" min={40} max={300} value={size} onChange={e=>setSize(+e.target.value)}/>
         <label className="gen-sec-box-label">Roughness: {roughness.toFixed(2)}</label>
@@ -194,13 +194,13 @@ export default function EnvironmentGenerator() {
         <label className="gen-sec-box-label">Height Scale: {heightScale}m</label>
         <input className="gen-sec-box-slider" type="range" min={1} max={40} value={heightScale} onChange={e=>setHeightScale(+e.target.value)}/>
 
-        <div className="gen-sec-label" style={{padding:'8px 0 4px'}}>VEGETATION</div>
+        <div className="gen-sec-label gen-sec-label--mt">VEGETATION</div>
         <label className="gen-sec-box-label">Tree Density: {treeDensity.toFixed(2)}</label>
         <input className="gen-sec-box-slider" type="range" min={0} max={1} step={0.01} value={treeDensity} onChange={e=>setTreeDensity(+e.target.value)}/>
         <label className="gen-sec-box-label">Rock Density: {rockDensity.toFixed(2)}</label>
         <input className="gen-sec-box-slider" type="range" min={0} max={1} step={0.01} value={rockDensity} onChange={e=>setRockDensity(+e.target.value)}/>
 
-        <div className="gen-sec-label" style={{padding:'8px 0 4px'}}>WATER</div>
+        <div className="gen-sec-label gen-sec-label--mt">WATER</div>
         <label className="gen-row-label" style={{display:'flex',alignItems:'center',gap:6,cursor:'pointer',marginBottom:8,fontSize:10,color:'var(--muted)'}}>
           <input type="checkbox" checked={showWater} onChange={e=>setShowWater(e.target.checked)} style={{accentColor:'var(--teal)'}}/>
           Show Water

@@ -94,11 +94,11 @@ export default function RotoscopePanel({sceneRef,rendererRef,currentFrame,setCur
 
   if(!open) return null;
   return(<div style={{width:260,background:C.panel,borderRadius:6,border:`1px solid ${C.border}`,fontFamily:C.font,color:C.text,fontSize:11,boxShadow:'0 8px 32px rgba(0,0,0,0.7)',display:'flex',flexDirection:'column',maxHeight:680}}>
-    <div style={{background:'linear-gradient(90deg,#0a1520,#0d1117)',borderBottom:`1px solid ${C.border}`,padding:'8px 12px',display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
+    <div className="spnl-panel-hdr">
       <div style={{width:6,height:6,borderRadius:'50%',background:'#ff44aa',boxShadow:'0 0 6px #ff44aa'}}/><span style={{fontSize:11,fontWeight:700,letterSpacing:2,color:'#ff44aa'}}>ROTOSCOPE</span>
-      {onClose&&<span onClick={onClose} style={{marginLeft:'auto',cursor:'pointer',color:C.dim}}>×</span>}
+      {onClose&&<span onClick={onClose} className="spnl-close">×</span>}
     </div>
-    <div style={{flex:1,overflowY:'auto',padding:'10px 12px'}}>
+    <div className="spnl-panel-scroll">
 
       {/* Video load */}
       <Section title='VIDEO SOURCE' color='#ff44aa'>
@@ -108,7 +108,7 @@ export default function RotoscopePanel({sceneRef,rendererRef,currentFrame,setCur
         </label>):(
           <div>
             <div style={{fontSize:9,color:C.teal,marginBottom:4,fontWeight:700}}>✓ {videoFile?.name}</div>
-            <div style={{fontSize:9,color:C.dim,marginBottom:6}}>{totalFrames} frames @ {fps}fps</div>
+            <div className="spnl-dim">{totalFrames} frames @ {fps}fps</div>
             <button onClick={removeFromScene} style={{width:'100%',padding:'5px',background:'rgba(255,68,170,0.1)',border:'1px solid #ff44aa',borderRadius:4,color:'#ff44aa',fontFamily:C.font,fontSize:9,cursor:'pointer'}}>✕ REMOVE</button>
           </div>
         )}

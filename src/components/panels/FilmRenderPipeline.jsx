@@ -62,18 +62,18 @@ export default function FilmRenderPipeline({rendererRef,sceneRef,cameraRef,open=
   },[passes,renderPass]);
   if(!open)return null;
   return(<div style={{width:270,background:C.panel,borderRadius:6,border:`1px solid ${C.border}`,fontFamily:C.font,color:C.text,fontSize:11,boxShadow:'0 8px 32px rgba(0,0,0,0.7)',display:'flex',flexDirection:'column',maxHeight:700}}>
-    <div style={{background:'linear-gradient(90deg,#0a1520,#0d1117)',borderBottom:`1px solid ${C.border}`,padding:'8px 12px',display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
+    <div className="spnl-panel-hdr">
       <div style={{width:6,height:6,borderRadius:'50%',background:'#ffcc00',boxShadow:'0 0 6px #ffcc00'}}/><span style={{fontSize:11,fontWeight:700,letterSpacing:2,color:'#ffcc00'}}>RENDER PIPELINE</span>
-      {onClose&&<span onClick={onClose} style={{marginLeft:'auto',cursor:'pointer',color:C.dim}}>×</span>}
+      {onClose&&<span onClick={onClose} className="spnl-close">×</span>}
     </div>
-    <div style={{flex:1,overflowY:'auto',padding:'10px 12px'}}>
+    <div className="spnl-panel-scroll">
       <Section title='RESOLUTION' color='#ffcc00'>
         <div style={{display:'flex',flexDirection:'column',gap:3,marginBottom:4}}>
           {RESOLUTIONS.map((r,i)=><div key={i} onClick={()=>setResolution(i)} style={{padding:'4px 8px',borderRadius:4,cursor:'pointer',fontSize:9,fontWeight:700,border:`1px solid ${resolution===i?'#ffcc00':C.border}`,background:resolution===i?'rgba(255,204,0,0.1)':C.bg,color:resolution===i?'#ffcc00':C.dim,display:'flex',justifyContent:'space-between'}}><span>{r.label}</span><span style={{color:C.dim}}>{r.w}×{r.h}</span></div>)}
         </div>
       </Section>
       <Section title='RENDER PASSES' color='#ff88aa'>
-        <div style={{display:'flex',flexDirection:'column',gap:3,marginBottom:6}}>
+        <div className="spnl-level-list">
           {Object.entries(PASS_TYPES).map(([k,v])=><div key={k} onClick={()=>setPasses(p=>({...p,[k]:!p[k]}))} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'3px 6px',borderRadius:4,cursor:'pointer',border:`1px solid ${passes[k]?'#ff88aa':C.border}`,background:passes[k]?'rgba(255,136,170,0.08)':C.bg}}><div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:8,height:8,borderRadius:2,background:v.color}}/><span style={{fontSize:9,color:passes[k]?C.text:C.dim,fontWeight:passes[k]?700:400}}>{v.label}</span></div><span style={{fontSize:8,color:C.dim}}>{passes[k]?'ON':'OFF'}</span></div>)}
         </div>
         <button onClick={renderAllPasses} disabled={rendering} style={{width:'100%',padding:'6px 0',background:'rgba(255,136,170,0.1)',border:'1px solid #ff88aa',borderRadius:4,color:'#ff88aa',fontFamily:C.font,fontSize:9,fontWeight:700,cursor:'pointer',letterSpacing:1,opacity:rendering?0.5:1}}>RENDER ALL PASSES</button>
@@ -82,7 +82,7 @@ export default function FilmRenderPipeline({rendererRef,sceneRef,cameraRef,open=
         <Slider label='SAMPLES' value={samples} min={1} max={512} step={1} onChange={setSamples}/>
         {rendering&&<div style={{height:4,background:C.border,borderRadius:2,marginBottom:6,overflow:'hidden'}}><div style={{height:'100%',width:`${progress}%`,background:C.teal,transition:'width 0.2s'}}/></div>}
         {lastRender&&<img src={lastRender} style={{width:'100%',borderRadius:4,marginBottom:6,border:`1px solid ${C.border}`}} alt='render preview'/>}
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+        <div className="spnl-grid-2">
           <button onClick={renderBeauty} disabled={rendering} style={{padding:'7px 0',background:'rgba(0,255,200,0.1)',border:`1px solid ${C.teal}`,borderRadius:4,color:C.teal,fontFamily:C.font,fontSize:9,fontWeight:700,cursor:'pointer',opacity:rendering?0.5:1}}>▶ RENDER</button>
           <button onClick={downloadRender} disabled={!lastRender} style={{padding:'7px 0',background:'rgba(255,102,0,0.1)',border:`1px solid ${C.orange}`,borderRadius:4,color:C.orange,fontFamily:C.font,fontSize:9,fontWeight:700,cursor:'pointer',opacity:lastRender?1:0.4}}>↓ SAVE PNG</button>
         </div>

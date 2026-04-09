@@ -21,33 +21,33 @@ export default function FilmSubdivPanel({meshRef,sceneRef,open=true,onClose}){
   const flatShade=useCallback(()=>{const mesh=meshRef?.current;if(!mesh||!mesh.geometry)return;delete mesh.geometry.attributes.normal;mesh.geometry.computeVertexNormals();if(mesh.material){mesh.material.flatShading=true;mesh.material.needsUpdate=true;}},[meshRef]);
   const smoothShade=useCallback(()=>{const mesh=meshRef?.current;if(!mesh||!mesh.geometry)return;mesh.geometry.computeVertexNormals();if(mesh.material){mesh.material.flatShading=false;mesh.material.needsUpdate=true;}},[meshRef]);
   if(!open)return null;
-  return(<div style={{width:250,background:C.panel,borderRadius:6,border:`1px solid ${C.border}`,fontFamily:C.font,color:C.text,fontSize:11,boxShadow:'0 8px 32px rgba(0,0,0,0.7)',display:'flex',flexDirection:'column',maxHeight:600}}>
-    <div style={{background:'linear-gradient(90deg,#0a1520,#0d1117)',borderBottom:`1px solid ${C.border}`,padding:'8px 12px',display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
-      <div style={{width:6,height:6,borderRadius:'50%',background:'#44aaff',boxShadow:'0 0 6px #44aaff'}}/><span style={{fontSize:11,fontWeight:700,letterSpacing:2,color:'#44aaff'}}>SUBDIVISION</span>
-      {onClose&&<span onClick={onClose} style={{marginLeft:'auto',cursor:'pointer',color:C.dim}}>×</span>}
+  return(<div className="spnl-panel-container">
+    <div className="spnl-panel-hdr">
+      <div className="spnl-hdr-dot spnl-hdr-dot--blue"/><span className="spnl-hdr-title spnl-hdr-title--blue">SUBDIVISION</span>
+      {onClose&&<span onClick={onClose} className="spnl-close">×</span>}
     </div>
-    <div style={{flex:1,overflowY:'auto',padding:'10px 12px'}}>
-      <div style={{background:C.bg,borderRadius:4,padding:'6px 10px',marginBottom:8,border:`1px solid ${C.border}`}}>
-        <div style={{fontSize:9,color:C.dim,letterSpacing:1}}>POLY COUNT</div>
-        <div style={{fontSize:16,fontWeight:700,color:polyCount>500000?C.orange:C.teal}}>{polyCount.toLocaleString()}</div>
+    <div className="spnl-panel-scroll">
+      <div className="spnl-stats-box">
+        <div className="spnl-stats-label">POLY COUNT</div>
+        <div className="spnl-poly-count" style={{color:polyCount>500000?'#FF6600':'#00ffc8'}}>{polyCount.toLocaleString()}</div>
       </div>
       <Section title='MULTIRES LEVELS' color='#44aaff'>
-        {levels.length===0&&<div style={{fontSize:9,color:C.dim,marginBottom:6}}>No levels — init stack first</div>}
-        <div style={{display:'flex',flexDirection:'column',gap:3,marginBottom:6}}>
+        {levels.length===0&&<div className="spnl-dim">No levels — init stack first</div>}
+        <div className="spnl-level-list">
           {levels.map((l,i)=><div key={i} onClick={()=>goToLevel(i)} style={{display:'flex',justifyContent:'space-between',padding:'4px 8px',borderRadius:4,cursor:'pointer',border:`1px solid ${currentLevel===i?'#44aaff':C.border}`,background:currentLevel===i?'rgba(68,170,255,0.1)':C.bg}}><span style={{fontSize:9,fontWeight:700,color:currentLevel===i?'#44aaff':C.dim}}>Level {i}</span><span style={{fontSize:9,color:C.dim}}>{l.verts.toLocaleString()} verts</span></div>)}
         </div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4}}>
-          <button onClick={initStack} style={{padding:'6px 0',background:C.bg,border:`1px solid ${C.border}`,borderRadius:4,color:C.dim,fontFamily:C.font,fontSize:9,fontWeight:700,cursor:'pointer'}}>INIT</button>
+        <div className="spnl-grid-2">
+          <button onClick={initStack} className="spnl-btn">INIT</button>
           <button onClick={addLevel} style={{padding:'6px 0',background:'rgba(68,170,255,0.1)',border:'1px solid #44aaff',borderRadius:4,color:'#44aaff',fontFamily:C.font,fontSize:9,fontWeight:700,cursor:'pointer'}}>+ LEVEL</button>
         </div>
       </Section>
       <Section title='APPLY SUBDIVISION' color={C.teal}>
         <Slider label='LEVELS' value={subdivLevels} min={1} max={4} step={1} onChange={setSubdivLevels}/>
-        <button onClick={applySubdiv} style={{width:'100%',padding:'7px 0',marginTop:4,background:'rgba(0,255,200,0.1)',border:`1px solid ${C.teal}`,borderRadius:4,color:C.teal,fontFamily:C.font,fontSize:9,fontWeight:700,cursor:'pointer',letterSpacing:1}}>SUBDIVIDE MESH</button>
-        <button onClick={getStats} style={{width:'100%',padding:'5px 0',marginTop:4,background:'transparent',border:`1px solid ${C.border}`,borderRadius:4,color:C.dim,fontFamily:C.font,fontSize:9,cursor:'pointer'}}>REFRESH STATS</button>
+        <button onClick={applySubdiv} className="spnl-btn-full spnl-btn-accent">SUBDIVIDE MESH</button>
+        <button onClick={getStats} className="spnl-btn-full">REFRESH STATS</button>
       </Section>
       <Section title='SHADING' color={C.orange} defaultOpen={false}>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+        <div className="spnl-grid-2">
           <button onClick={flatShade} style={{padding:'6px 0',background:'rgba(255,102,0,0.1)',border:`1px solid ${C.orange}`,borderRadius:4,color:C.orange,fontFamily:C.font,fontSize:9,fontWeight:700,cursor:'pointer'}}>FLAT</button>
           <button onClick={smoothShade} style={{padding:'6px 0',background:'rgba(0,255,200,0.1)',border:`1px solid ${C.teal}`,borderRadius:4,color:C.teal,fontFamily:C.font,fontSize:9,fontWeight:700,cursor:'pointer'}}>SMOOTH</button>
         </div>

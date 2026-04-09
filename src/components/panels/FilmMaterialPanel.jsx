@@ -40,9 +40,9 @@ export default function FilmMaterialPanel({sceneRef,open=true,onClose}){
   return(<div style={{width:250,background:C.panel,borderRadius:6,border:`1px solid ${C.border}`,fontFamily:C.font,color:C.text,fontSize:11,boxShadow:'0 8px 32px rgba(0,0,0,0.7)',display:'flex',flexDirection:'column',maxHeight:680}}>
     <div style={{background:'linear-gradient(90deg,#0a1520,#0d1117)',borderBottom:`1px solid ${C.border}`,padding:'8px 12px',display:'flex',alignItems:'center',gap:8}}>
       <div style={{width:6,height:6,borderRadius:'50%',background:'#aa88ff',boxShadow:'0 0 6px #aa88ff'}}/><span style={{fontSize:11,fontWeight:700,letterSpacing:2,color:'#aa88ff'}}>FILM MATERIAL</span>
-      {onClose&&<span onClick={onClose} style={{marginLeft:'auto',cursor:'pointer',color:C.dim}}>×</span>}
+      {onClose&&<span onClick={onClose} className="spnl-close">×</span>}
     </div>
-    <div style={{flex:1,overflowY:'auto',padding:'10px 12px'}}>
+    <div className="spnl-panel-scroll">
       <Section title='QUICK PRESETS' color='#aa88ff'>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4,marginBottom:6}}>
           {PRESETS.map(p=><div key={p.label} onClick={()=>load(p)} style={{display:'flex',alignItems:'center',gap:5,padding:'4px 6px',borderRadius:4,cursor:'pointer',border:`1px solid ${C.border}`,background:C.bg}} onMouseEnter={e=>e.currentTarget.style.borderColor='#aa88ff'} onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}><div style={{width:12,height:12,borderRadius:2,background:p.color,flexShrink:0}}/><span style={{fontSize:8,fontWeight:700,color:C.dim}}>{p.label}</span></div>)}

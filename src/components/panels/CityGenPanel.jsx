@@ -66,13 +66,13 @@ export default function CityGenPanel({sceneRef,open=true,onClose}) {
   if(!open) return null;
   return (
     <div style={{width:320,background:C.panel,borderRadius:8,border:`1px solid ${C.border}`,fontFamily:C.font,color:C.text,boxShadow:'0 16px 48px rgba(0,0,0,0.8)',display:'flex',flexDirection:'column',maxHeight:680}}>
-      <div style={{background:'linear-gradient(135deg,#0a1020,#0d1117)',borderBottom:`1px solid ${C.border}`,padding:'10px 14px',display:'flex',alignItems:'center',gap:10,flexShrink:0}}>
+      <div className="spnl-panel-hdr" style={{padding:'10px 14px',display:'flex',alignItems:'center',gap:10,flexShrink:0}}>
         <div style={{width:8,height:8,borderRadius:'50%',background:'#44aaff',boxShadow:'0 0 10px #44aaff'}}/>
         <span style={{fontSize:12,fontWeight:700,letterSpacing:3,color:'#44aaff'}}>CITY GENERATOR</span>
-        {onClose&&<span onClick={onClose} style={{marginLeft:'auto',cursor:'pointer',color:C.dim,fontSize:14}}>×</span>}
+        {onClose&&<span onClick={onClose} className="spnl-close">×</span>}
       </div>
-      <div style={{padding:'5px 14px',fontSize:9,color:C.dim,borderBottom:`1px solid ${C.border}`}}>{status}</div>
-      <div style={{flex:1,overflowY:'auto',padding:'12px 14px'}}>
+      <div className="spnl-status-bar">{status}</div>
+      <div className="spnl-panel-scroll">
         <div style={{display:'flex',gap:4,marginBottom:12,padding:'3px',background:'#0a0f1a',borderRadius:6}}>
           {['city','building'].map(m=>(
             <div key={m} onClick={()=>setMode(m)} style={{flex:1,padding:'5px 0',textAlign:'center',borderRadius:4,cursor:'pointer',fontSize:9,fontWeight:700,letterSpacing:1,background:mode===m?'#1a2535':'transparent',color:mode===m?C.teal:C.dim,border:`1px solid ${mode===m?C.teal:'transparent'}`}}>{m==='city'?'FULL CITY':'SINGLE BUILDING'}</div>
@@ -93,14 +93,14 @@ export default function CityGenPanel({sceneRef,open=true,onClose}) {
                 <div style={{position:'absolute',top:2,left:addRoads?16:2,width:12,height:12,borderRadius:'50%',background:addRoads?C.bg:'#555',transition:'left 0.15s'}}/>
               </div>
             </div>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+            <div className="spnl-grid-2">
               <button onClick={generateCityFn} style={{padding:'9px 0',background:'rgba(68,170,255,0.1)',border:'1px solid #44aaff',borderRadius:5,color:'#44aaff',fontFamily:C.font,fontSize:10,fontWeight:700,cursor:'pointer',letterSpacing:1}}>🏙 GENERATE</button>
               <button onClick={clearCity} style={{padding:'9px 0',background:C.bg,border:`1px solid ${C.border}`,borderRadius:5,color:C.dim,fontFamily:C.font,fontSize:10,cursor:'pointer'}}>✕ CLEAR</button>
             </div>
           </>
         ):(
           <>
-            <div style={{fontSize:9,fontWeight:700,color:C.dim,letterSpacing:2,marginBottom:8}}>BUILDING STYLE</div>
+            <div className="spnl-section-label">BUILDING STYLE</div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:3,marginBottom:12}}>
               {BUILDING_STYLES.map((s,i)=>(
                 <div key={s.label} onClick={()=>setBuildStyle(i)} style={{padding:'6px 8px',borderRadius:5,cursor:'pointer',fontSize:9,fontWeight:700,border:`1px solid ${buildStyle===i?C.teal:C.border}`,color:buildStyle===i?C.teal:C.dim,background:buildStyle===i?'rgba(0,255,200,0.08)':C.bg}}>{s.label}</div>

@@ -103,28 +103,28 @@ export default function CrowdPanel({sceneRef, open=true, onClose}) {
   if (!open) return null;
 
   return (
-    <div style={{width:340,background:C.panel,borderRadius:8,border:`1px solid ${C.border}`,
+    <div className="spnl-panel-container-lg" style={{
       fontFamily:C.font,color:C.text,boxShadow:'0 16px 48px rgba(0,0,0,0.8)',
       display:'flex',flexDirection:'column',maxHeight:700,overflow:'hidden'}}>
 
-      <div style={{background:'linear-gradient(135deg,#0a1020,#0d1117)',borderBottom:`1px solid ${C.border}`,
+      <div className="spnl-panel-hdr" style={{
         padding:'10px 14px',display:'flex',alignItems:'center',gap:10,flexShrink:0}}>
-        <div style={{width:8,height:8,borderRadius:'50%',background:'#88ffaa',boxShadow:'0 0 10px #88ffaa'}}/>
-        <span style={{fontSize:12,fontWeight:700,letterSpacing:3,color:'#88ffaa'}}>CROWD SIM</span>
+        <div className="spnl-hdr-dot spnl-hdr-dot--green"/>
+        <span className="spnl-hdr-title spnl-hdr-title--green">CROWD SIM</span>
         <div style={{marginLeft:'auto',display:'flex',gap:6,alignItems:'center'}}>
-          {agentCount>0&&<span style={{fontSize:9,color:running?C.teal:C.dim}}>{agentCount} agents</span>}
+          {agentCount>0&&<span className={`spnl-agent-count${running?' spnl-agent-count--on':''}`}>{agentCount} agents</span>}
           {onClose&&<span onClick={onClose} style={{cursor:'pointer',color:C.dim,fontSize:14}}>×</span>}
         </div>
       </div>
 
-      <div style={{padding:'5px 14px',fontSize:9,color:C.dim,borderBottom:`1px solid ${C.border}`}}>{status}</div>
+      <div className="spnl-status-bar">{status}</div>
 
-      <div style={{flex:1,overflowY:'auto',padding:'12px 14px'}}>
+      <div className="spnl-panel-scroll">
 
         {/* Behavior selector */}
-        <div style={{marginBottom:14}}>
-          <div style={{fontSize:9,fontWeight:700,color:C.dim,letterSpacing:2,marginBottom:8}}>BEHAVIOR</div>
-          <div style={{display:'flex',flexDirection:'column',gap:4}}>
+        <div className="spnl-mb">
+          <div className="spnl-section-label">BEHAVIOR</div>
+          <div className="spnl-col">
             {BEHAVIORS.map(b=>(
               <div key={b.id} onClick={()=>changeBehavior(b.id)} style={{
                 padding:'8px 12px',borderRadius:6,cursor:'pointer',
@@ -135,9 +135,9 @@ export default function CrowdPanel({sceneRef, open=true, onClose}) {
               onMouseEnter={e=>{e.currentTarget.style.borderColor=b.color;}}
               onMouseLeave={e=>{e.currentTarget.style.borderColor=behavior===b.id?b.color:C.border;}}
               >
-                <span style={{fontSize:16}}>{b.icon}</span>
+                <span className="spnl-icon-md">{b.icon}</span>
                 <div>
-                  <div style={{fontSize:10,fontWeight:700,color:behavior===b.id?b.color:C.text}}>{b.label}</div>
+                  <div className="spnl-behavior-label" style={{color:behavior===b.id?b.color:'#e0e0e0'}}>{b.label}</div>
                   <div style={{fontSize:8,color:C.dim}}>{b.desc}</div>
                 </div>
                 {behavior===b.id&&<div style={{marginLeft:'auto',width:6,height:6,borderRadius:'50%',background:b.color}}/>}
@@ -147,7 +147,7 @@ export default function CrowdPanel({sceneRef, open=true, onClose}) {
         </div>
 
         {/* Knobs */}
-        <div style={{marginBottom:14}}>
+        <div className="spnl-mb">
           <div style={{fontSize:9,fontWeight:700,color:C.dim,letterSpacing:2,marginBottom:10}}>PARAMETERS</div>
           <div style={{display:'flex',justifyContent:'space-around',flexWrap:'wrap',gap:8,marginBottom:10}}>
             <Knob label="Agents"  value={count}      min={10}  max={500} step={10}  onChange={setCount}     color='#88ffaa'/>
@@ -180,7 +180,7 @@ export default function CrowdPanel({sceneRef, open=true, onClose}) {
             :<button onClick={stopSim}  style={{padding:'8px 0',background:'rgba(255,102,0,0.1)',border:`1px solid ${C.orange}`,borderRadius:5,color:C.orange,fontFamily:C.font,fontSize:10,fontWeight:700,cursor:'pointer'}}>■ STOP</button>
           }
         </div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+        <div className="spnl-grid-2">
           <button onClick={setPanic} style={{padding:'7px 0',background:'rgba(255,68,0,0.08)',border:'1px solid #ff4444',borderRadius:5,color:'#ff4444',fontFamily:C.font,fontSize:9,fontWeight:700,cursor:'pointer'}}>😱 TRIGGER PANIC</button>
           <button onClick={clearCrowd} style={{padding:'7px 0',background:C.bg,border:`1px solid ${C.border}`,borderRadius:5,color:C.dim,fontFamily:C.font,fontSize:9,cursor:'pointer'}}>✕ CLEAR</button>
         </div>

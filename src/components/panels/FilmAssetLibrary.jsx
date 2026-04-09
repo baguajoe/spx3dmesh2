@@ -87,7 +87,7 @@ export default function FilmAssetLibrary({ sceneRef, open=true, onClose }) {
       <div style={{background:'linear-gradient(90deg,#0a1520,#0d1117)',borderBottom:`1px solid ${C.border}`,padding:'8px 12px',display:'flex',alignItems:'center',gap:8}}>
         <div style={{width:6,height:6,borderRadius:'50%',background:C.orange,boxShadow:`0 0 6px ${C.orange}`}}/>
         <span style={{fontSize:11,fontWeight:700,letterSpacing:2,color:C.orange}}>ASSET LIBRARY</span>
-        {onClose&&<span onClick={onClose} style={{marginLeft:'auto',cursor:'pointer',color:C.dim,fontSize:14}}>×</span>}
+        {onClose&&<span onClick={onClose} className="spnl-close">×</span>}
       </div>
       <div style={{padding:'6px 10px',borderBottom:`1px solid ${C.border}`}}>
         <input value={search} onChange={e=>setSearch(e.target.value)} placeholder='search...' style={{width:'100%',background:C.bg,border:`1px solid ${C.border}`,borderRadius:4,padding:'4px 8px',color:C.text,fontFamily:C.font,fontSize:10,boxSizing:'border-box'}}/>

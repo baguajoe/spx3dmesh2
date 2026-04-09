@@ -176,7 +176,7 @@ export default function ProceduralCrowdGenerator({ sceneRef, setStatus }) {
       <div className="gen-crowd-title">👥 CROWD GENERATOR</div>
       <div ref={mountRef} className="gen-crowd-viewport"/>
       <div className="gen-sec-box">
-        <div className="gen-sec-label" style={{padding:'0 0 6px'}}>Formation</div>
+        <div className="gen-sec-label gen-sec-label--pb">Formation</div>
         <div className="gen-formation-row">
           {FORMATIONS.map(f => (
             <button key={f} className={`gen-formation-badge${formation===f?' gen-formation-badge--active':''}`} onClick={()=>setFormation(f)}>{f}</button>

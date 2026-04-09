@@ -39,11 +39,11 @@ export default function FilmSculptPanel({meshRef,sceneRef,open=true,onClose}){
   const recomputeNormals=useCallback(()=>{const mesh=meshRef?.current;if(!mesh||!mesh.geometry)return;mesh.geometry.computeVertexNormals();mesh.geometry.attributes.normal.needsUpdate=true;},[meshRef]);
   if(!open)return null;
   return(<div style={{width:250,background:C.panel,borderRadius:6,border:`1px solid ${C.border}`,fontFamily:C.font,color:C.text,fontSize:11,boxShadow:'0 8px 32px rgba(0,0,0,0.7)',display:'flex',flexDirection:'column',maxHeight:680}}>
-    <div style={{background:'linear-gradient(90deg,#0a1520,#0d1117)',borderBottom:`1px solid ${C.border}`,padding:'8px 12px',display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
+    <div className="spnl-panel-hdr">
       <div style={{width:6,height:6,borderRadius:'50%',background:'#ff8844',boxShadow:'0 0 6px #ff8844'}}/><span style={{fontSize:11,fontWeight:700,letterSpacing:2,color:'#ff8844'}}>FILM SCULPT</span>
-      {onClose&&<span onClick={onClose} style={{marginLeft:'auto',cursor:'pointer',color:C.dim}}>×</span>}
+      {onClose&&<span onClick={onClose} className="spnl-close">×</span>}
     </div>
-    <div style={{flex:1,overflowY:'auto',padding:'10px 12px'}}>
+    <div className="spnl-panel-scroll">
       <Section title='BRUSH TYPE' color='#ff8844'>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:3,marginBottom:6}}>
           {['draw','flatten','smooth','pinch','inflate','crease','grab','nudge','rotate','scrape','fill','trim','mask','elastic','clay'].map(b=><div key={b} onClick={()=>setBrushType(b)} style={{padding:'4px 6px',borderRadius:4,cursor:'pointer',fontSize:8,fontWeight:700,textAlign:'center',border:`1px solid ${brushType===b?'#ff8844':C.border}`,background:brushType===b?'rgba(255,136,68,0.15)':C.bg,color:brushType===b?'#ff8844':C.dim,letterSpacing:0.5}}>{b.toUpperCase()}</div>)}

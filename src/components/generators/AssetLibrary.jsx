@@ -260,7 +260,7 @@ export default function AssetLibrary({ scene }) {
             <div style={s.divider} />
           </>
         )}
-        <div style={{ ...s.sectionLabel, paddingTop: search ? 12 : 4 }}>{search ? `Results (${currentAssets.length})` : CATEGORIES[category]?.label}</div>
+        <div className="spnl-section-label">{search ? `Results (${currentAssets.length})` : CATEGORIES[category]?.label}</div>
         <div style={s.assetGrid}>
           {currentAssets.map(a => {
             const cnt = placedRef.current.filter(p => p.assetId === a.id).length;
