@@ -275,9 +275,9 @@ const LiveMoCapAvatar = ({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div className="lmc-root">
       {/* Controls */}
-      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+      <div className="lmc-controls">
         <button
           onClick={toggleCamera}
           style={{
@@ -326,17 +326,17 @@ const LiveMoCapAvatar = ({
           </>
         )}
 
-        <span style={{ marginLeft: 'auto', color: '#666' }}>
+        <span className="lmc-status">
           {isRunning ? `${fps} FPS` : 'Camera off'}
           {recording && ` | Recording: ${recordedFrames.length} frames`}
         </span>
       </div>
 
       {/* Video + Avatar */}
-      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+      <div className="lmc-panels">
         {/* Webcam feed */}
         {showVideo && (
-          <div style={{ position: 'relative' }}>
+          <div className="lmc-video-wrap">
             <video
               ref={videoRef}
               style={{
@@ -396,9 +396,9 @@ const LiveMoCapAvatar = ({
 
       {/* Debug info */}
       {landmarks && (
-        <details style={{ fontSize: '12px', color: '#666' }}>
+        <details className="lmc-details">
           <summary>Debug: Landmark positions</summary>
-          <pre style={{ maxHeight: '200px', overflow: 'auto' }}>
+          <pre className="lmc-pre">
             {JSON.stringify(
               {
                 nose: landmarks[0],

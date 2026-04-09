@@ -392,7 +392,7 @@ function LiveCaptureTab({ onExportGlb }) {
         {/* Camera feed */}
         <div className="mw-cam-wrap">
           <video ref={videoRef} className="mw-cam" autoPlay muted playsInline className="mw-mirror" />
-          <canvas ref={overlayRef} className="mw-cam-overlay" style={{ transform: 'scaleX(-1)' }} />
+          <canvas ref={overlayRef} className="mw-cam-overlay mw-mirror" />
           {isCapturing && (
             <div className="mw-hud">
               <span className={`mw-hud-dot ${landmarkCount > 20 ? 'mw-hud-dot--good' : 'mw-hud-dot--bad'}`} />
@@ -446,7 +446,7 @@ function LiveCaptureTab({ onExportGlb }) {
         {/* ── NEW: Depth Estimation ── */}
         <SectionLabel className="mw-section-mt">Depth Estimation</SectionLabel>
         <div className="mw-row">
-          <label className="mw-check" style={{margin:0}}>
+          <label className="mw-check mw-check--inline">
             <input type="checkbox" checked={depthEnabled} onChange={e => setDepthEnabled(e.target.checked)} disabled={isCapturing} />
             MiDaS 3D depth
           </label>
@@ -491,10 +491,10 @@ function LiveCaptureTab({ onExportGlb }) {
           Enable bone retargeting
         </label>
         {retargetEnabled && (
-          <div style={{fontSize:10,color:'#888',marginTop:4,lineHeight:1.5}}>
+          <div className="mw-hint">
             Load a GLB avatar below to auto-bind T-pose and retarget
             {retargetStats && (
-              <div style={{color:'#00ffc8',marginTop:2}}>
+              <div className="mw-hint-teal">
                 ✓ {retargetStats.boundBones} bones bound · smoothing {Math.round(retargetStats.smoothing*100)}%
               </div>
             )}
@@ -508,29 +508,29 @@ function LiveCaptureTab({ onExportGlb }) {
           Auto foot plant IK (fixes floating feet)
         </label>
         {footPlant && footPlantStats && (
-          <div style={{fontSize:10,color:'#888',marginTop:4,lineHeight:1.6}}>
+          <div className="mw-hint">
             Ground Y: {Number(footPlantStats.groundY).toFixed(3)}<br/>
             L planted: {footPlantStats.leftPlantedFrames} fr ({Math.round(footPlantStats.leftPlantRatio*100)}%)<br/>
             R planted: {footPlantStats.rightPlantedFrames} fr ({Math.round(footPlantStats.rightPlantRatio*100)}%)
           </div>
         )}
         {footPlant && !footPlantStats && (
-          <div style={{fontSize:10,color:'#555',marginTop:2}}>Applied on export / BVH download</div>
+          <div className="mw-hint-dim">Applied on export / BVH download</div>
         )}
 
         {/* Avatar */}
         <SectionLabel className="mw-section-mt">Avatar</SectionLabel>
-        <div style={{display:'flex',gap:4,marginBottom:6,flexWrap:'wrap'}}>
+        <div className="mw-avatar-row">
           {[{label:'Y Bot', url:'/ybot.glb'}].map(p => (
             <button key={p.label}
-              style={{fontSize:10,padding:'3px 8px',background:avatarUrl===p.url?'#00ffc822':'#0a1628',
+              className={`mw-avatar-btn${avatarUrl===p.url?' mw-avatar-btn--active':''}`} style={{background:avatarUrl===p.url?'#00ffc822':'#0a1628',
                 border:`1px solid ${avatarUrl===p.url?'#00ffc8':'#1a2a3a'}`,
                 color:avatarUrl===p.url?'#00ffc8':'#888',borderRadius:3,cursor:'pointer'}}
               onClick={() => setAvatarUrl(p.url)}>{p.label}</button>
           ))}
-          <label style={{fontSize:10,padding:'3px 8px',background:'#0a1628',border:'1px solid #1a2a3a',color:'#888',borderRadius:3,cursor:'pointer'}}>
+          <label className="mw-avatar-upload-btn">
             📂 Upload GLB
-            <input type="file" accept=".glb,.gltf" style={{display:'none'}} onChange={e => {
+            <input type="file" accept=".glb,.gltf" className="spx-hidden" onChange={e => {
               const f = e.target.files?.[0]; if (!f) return;
               setAvatarUrl(URL.createObjectURL(f));
             }} />
@@ -539,7 +539,7 @@ function LiveCaptureTab({ onExportGlb }) {
         <input className="mw-input" value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="GLB URL or path" />
 
         {/* Capture buttons */}
-        <div className="mw-btn-row" style={{marginTop:8}}>
+        <div className="mw-btn-row mw-btn-row--mt">
           {!isCapturing
             ? <button className="mw-btn mw-btn--primary" onClick={startCapture}>▶ Start Capture</button>
             : <button className="mw-btn mw-btn--danger"  onClick={stopCapture}>■ Stop</button>
@@ -549,7 +549,7 @@ function LiveCaptureTab({ onExportGlb }) {
         </div>
 
         {recordedFrames?.length > 0 && (
-          <div className="mw-btn-row" style={{flexWrap:'wrap'}}>
+          <div className="mw-btn-row mw-btn-row--wrap">
             <button className="mw-btn" onClick={() => setIsPlaying(p => !p)}>{isPlaying ? '⏹ Stop' : '▶ Play'}</button>
             <button className="mw-btn" onClick={exportJSON}>💾 JSON</button>
             <button className="mw-btn" onClick={() => downloadBVH(processFramesForExport(recordedFrames), `mocap_${Date.now()}.bvh`)}>📐 BVH</button>
