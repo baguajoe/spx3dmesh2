@@ -282,7 +282,7 @@ export default function ProfessionalShell({
         ))}
       </div>
 
-      <WorkspaceToolsDock />
+      
       {/* Main 3-col */}
       <div className="spx-main">
         <aside className="spx-left">{leftPanel}</aside>
