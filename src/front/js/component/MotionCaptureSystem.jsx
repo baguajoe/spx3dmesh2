@@ -210,26 +210,26 @@ const MotionCaptureSystem = ({
           {recordedFrames?.length > 0 && <>
             <button onClick={() => setIsPlaying(p => !p)} className="mcs-btn mcs-btn--ghost">{isPlaying ? '⏹ Stop Playback' : '▶ Play Recording'}</button>
             <button onClick={exportRecording} className="mcs-btn mcs-btn--ghost">💾 Export JSON</button>
-            <button onClick={saveToBackend} style={{ padding:'6px 12px', background:'#1e1e2e', color:'#ccc', border:'1px solid #333', borderRadius:'8px', cursor:'pointer' }}>☁ Save</button>
-            {downloadUrl && <a href={downloadUrl} download="mocap_video.webm" style={{ padding:'6px 12px', background:'#1e1e2e', color:'#ccc', border:'1px solid #333', borderRadius:'8px', cursor:'pointer', textDecoration:'none' }}>📹 Download Video</a>}
+            <button onClick={saveToBackend} className="mcs-btn mcs-btn--ghost">☁ Save</button>
+            {downloadUrl && <a href={downloadUrl} download="mocap_video.webm" className="mcs-btn mcs-btn--ghost mcs-link">📹 Download Video</a>}
           </>}
         </div>
-        <div style={{ display:'flex', alignItems:'center', gap:'12px', fontSize:'13px' }}>
-          <label style={{ display:'flex', alignItems:'center', gap:'6px', cursor:'pointer' }}>
+        <div className="mcs-controls-row">
+          <label className="mcs-label">
             <input type="checkbox" checked={smoothingEnabled} onChange={e => setSmoothingEnabled(e.target.checked)} />
             Smoothing
           </label>
           {smoothingEnabled && (
-            <select value={currentPreset} onChange={e => setCurrentPreset(e.target.value)} style={{ background:'#1a1a2e', color:'#e0e0e0', border:'1px solid #333', borderRadius:'6px', padding:'4px 8px', fontSize:'12px' }}>
+            <select value={currentPreset} onChange={e => setCurrentPreset(e.target.value)} className="mcs-select">
               <option value="dance">Dance (fast)</option>
               <option value="balanced">Balanced</option>
               <option value="cinematic">Cinematic</option>
             </select>
           )}
         </div>
-        {error && <div style={{ color:'#f87171', fontSize:'13px', padding:'8px', background:'#1a0a0a', borderRadius:'6px' }}>{error}</div>}
+        {error && <div className="mcs-error">{error}</div>}
       </div>
-      <div style={{ flex:1, borderRadius:'12px', overflow:'hidden', border:'1px solid #1a1a2e', minHeight:'500px' }}>
+      <div className="mcs-canvas-wrap">
         <AvatarRigPlayer3D
           avatarUrl={resolvedAvatarUrl}
           liveFrame={isPlaying ? null : liveFrame}
