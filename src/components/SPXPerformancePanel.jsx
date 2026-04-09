@@ -257,12 +257,12 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
       {/* Header */}
       <div className="spp-header">
         <span>⬡ SPX Performance</span>
-        <button style={{ ...S.btn, fontSize: 10, padding: "2px 6px" }} onClick={handleRenameSession}>
+        <button className="spp-btn spp-btn--sm" onClick={handleRenameSession}>
           {session.name}
         </button>
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto" }}>
+      <div className="spp-scroll">
 
         {/* ── Clip Library ── */}
         <Section title="▸ Clip Library" defaultOpen={true}>
@@ -270,7 +270,7 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
             ⊕ Import BVH File
           </button>
           {session.clips.length === 0 && (
-            <div style={{ color: "#484f58", fontSize: 10, fontStyle: "italic" }}>
+            <div className="spp-dim-italic">
               No clips — import a BVH to begin
             </div>
           )}
@@ -283,7 +283,7 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
               {renaming === clip.id ? (
                 <div className="spp-row">
                   <input
-                    style={{ ...S.input, width: 100 }}
+                    className="spp-input spp-input--w100"
                     value={renameVal}
                     onChange={e => setRenameVal(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && handleRenameClip(clip.id)}
@@ -294,21 +294,21 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
                 </div>
               ) : (
                 <>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ color: clip.id === session.activeClipId ? "#00ffc8" : "#c8c8c8", fontSize: 11 }}>
+                  <div className="spp-flex1">
+                    <div className={`spp-clip-name${clip.id === session.activeClipId ? ' spp-clip-name--active' : ''}`}>
                       {clip.name}
-                      {clip.cleaned && <span style={{ color: "#00ffc8", marginLeft: 4 }}>✓</span>}
+                      {clip.cleaned && <span className="spp-clean-check">✓</span>}
                     </div>
-                    <div style={{ color: "#484f58", fontSize: 9 }}>
+                    <div className="spp-dim-sm">
                       {clip.frames?.length || 0}f · {clip.duration?.toFixed(2)}s · {clip.source || "bvh"}
                     </div>
                   </div>
                   <div className="spp-row">
-                    <button style={{ ...S.btn, padding: "2px 5px" }} title="Rename"
+                    <button className="spp-btn spp-btn--xs" title="Rename"
                       onClick={e => { e.stopPropagation(); setRenaming(clip.id); setRenameVal(clip.name); }}>✏</button>
-                    <button style={{ ...S.btn, padding: "2px 5px" }} title="Duplicate"
+                    <button className="spp-btn spp-btn--xs" title="Duplicate"
                       onClick={e => { e.stopPropagation(); handleDuplicateClip(clip.id); }}>⧉</button>
-                    <button style={{ ...S.btnDanger, padding: "2px 5px" }} title="Remove"
+                    <button className="spp-btn spp-btn--danger-xs" title="Remove"
                       onClick={e => { e.stopPropagation(); handleRemoveClip(clip.id); }}>✕</button>
                   </div>
                 </>
@@ -319,7 +319,7 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
 
         {/* ── Cleanup ── */}
         <Section title="▸ Cleanup & Analysis">
-          <div style={{ color: "#484f58", fontSize: 10 }}>
+          <div className="spp-dim">
             Active: {activeClip ? activeClip.name : "none"}
           </div>
           <div className="spp-row">
@@ -345,14 +345,14 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
                 <span className="spp-label">Trim In</span>
                 <input
                   type="number"
-                  style={{ ...S.input, width: 60 }}
+                  className="spp-input spp-input--w60"
                   defaultValue={activeClip.startFrame}
                   onBlur={e => handleTrimClip(activeClip.id, parseInt(e.target.value), activeClip.endFrame)}
                 />
                 <span className="spp-label">Trim Out</span>
                 <input
                   type="number"
-                  style={{ ...S.input, width: 60 }}
+                  className="spp-input spp-input--w60"
                   defaultValue={activeClip.endFrame}
                   onBlur={e => handleTrimClip(activeClip.id, activeClip.startFrame, parseInt(e.target.value))}
                 />
@@ -361,14 +361,14 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
                 <span className="spp-label">Blend In</span>
                 <input
                   type="number"
-                  style={{ ...S.input, width: 60 }}
+                  className="spp-input spp-input--w60"
                   defaultValue={activeClip.blendIn}
                   onBlur={e => handleSetBlend(activeClip.id, parseInt(e.target.value), activeClip.blendOut)}
                 />
                 <span className="spp-label">Blend Out</span>
                 <input
                   type="number"
-                  style={{ ...S.input, width: 60 }}
+                  className="spp-input spp-input--w60"
                   defaultValue={activeClip.blendOut}
                   onBlur={e => handleSetBlend(activeClip.id, activeClip.blendIn, parseInt(e.target.value))}
                 />
@@ -388,7 +388,7 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
               const width = session.totalFrames > 0
                 ? (((clip.endFrame - clip.startFrame) / session.totalFrames) * 100) : 10;
               return (
-                <div key={clip.id} style={{
+                <div key={clip.id} className="spp-tl-clip" style={{
                   position: "absolute",
                   left: `${left}%`,
                   width: `${Math.max(width, 2)}%`,
@@ -409,7 +409,7 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
               );
             })}
             {/* Playhead */}
-            <div style={{
+            <div className="spp-tl-empty" style={{
               position: "absolute",
               left: `${timelineProgress}%`,
               top: 0,
@@ -419,18 +419,18 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
               pointerEvents: "none",
             }} />
             {session.clips.length === 0 && (
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#484f58", fontSize: 10 }}>
+              <div className="spp-tl-empty-label">
                 Timeline empty
               </div>
             )}
           </div>
 
           {/* Frame counter */}
-          <div style={{ ...S.row, justifyContent: "space-between" }}>
-            <span style={{ color: "#484f58", fontSize: 10 }}>
+          <div className="spp-row spp-row--between">
+            <span className="spp-dim">
               Frame {Math.floor(session.currentFrame)} / {session.totalFrames}
             </span>
-            <span style={{ color: "#484f58", fontSize: 10 }}>
+            <span className="spp-dim">
               {(session.currentFrame / session.fps).toFixed(2)}s
             </span>
           </div>
@@ -481,7 +481,7 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
           <button className="spp-btn" onClick={handleExportSession}>
             ↓ Save Session (.spxperf)
           </button>
-          <button style={S.btnOrange} onClick={handleSendToSPX}>
+          <button className="spp-btn spp-btn--orange" onClick={handleSendToSPX}>
             ⬡ Send to StreamPireX
           </button>
         </Section>
@@ -489,7 +489,7 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
         {/* ── AI Assistant ── */}
         <Section title="▸ AI Animation Assistant">
           <textarea
-            style={S.textarea}
+            className="spp-textarea"
             placeholder="Ask anything... e.g. 'This walk cycle feels stiff, how do I fix it?' or 'Smooth out the arm motion'"
             value={aiPrompt}
             onChange={e => setAiPrompt(e.target.value)}
@@ -503,9 +503,9 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
             {aiLoading ? "⟳ Thinking..." : "⬡ Ask AI (Ctrl+Enter)"}
           </button>
           {aiResponse && (
-            <div style={S.aiBox}>{aiResponse}</div>
+            <div className="spp-ai-box">{aiResponse}</div>
           )}
-          <div style={{ color: "#484f58", fontSize: 9 }}>
+          <div className="spp-dim-sm">
             AI credits deduct from StreamPireX account on integration
           </div>
         </Section>
@@ -513,7 +513,7 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
       </div>
 
       {/* Status bar */}
-      <div style={S.status}>{status}</div>
+      <div className="spp-status">{status}</div>
     </div>
   );
 }

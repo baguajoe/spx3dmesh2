@@ -121,3 +121,51 @@
   font-weight: 700;
   font-size: 12px;
 }
+/* ── SPXPerformancePanel additions ───────────────────── */
+.spp-btn--orange  { background: rgba(255,102,0,0.12); border-color: #FF6600; color: #FF6600; }
+.spp-btn--sm      { font-size: 10px; padding: 2px 6px; }
+.spp-btn--xs      { padding: 2px 5px; }
+.spp-btn--danger-xs { background: rgba(255,68,68,0.1); border-color: #ff4444; color: #ff4444; padding: 2px 5px; border-radius: 4px; cursor: pointer; font-family: JetBrains Mono, monospace; font-size: 10px; }
+
+.spp-textarea {
+  width: 100%; background: #06060f; border: 1px solid #21262d;
+  color: #c8c8c8; border-radius: 4px; padding: 6px 8px;
+  font-family: JetBrains Mono, monospace; font-size: 10px;
+  resize: vertical; min-height: 60px; box-sizing: border-box;
+}
+
+.spp-ai-box {
+  background: #06060f; border: 1px solid #21262d; border-radius: 4px;
+  padding: 8px; font-size: 10px; color: #c8c8c8; margin-top: 4px;
+  white-space: pre-wrap; font-family: JetBrains Mono, monospace;
+  max-height: 200px; overflow-y: auto;
+}
+
+.spp-status {
+  padding: 4px 12px; background: #161b22; border-top: 1px solid #21262d;
+  font-size: 10px; color: #8b949e; flex-shrink: 0;
+}
+
+.spp-scroll    { flex: 1; overflow-y: auto; }
+.spp-flex1     { flex: 1; }
+.spp-dim       { color: #484f58; font-size: 10px; }
+.spp-dim-sm    { color: #484f58; font-size: 9px; }
+.spp-dim-italic { color: #484f58; font-size: 10px; font-style: italic; }
+
+.spp-row--between { justify-content: space-between; }
+
+.spp-input {
+  background: #0d1117; border: 1px solid #21262d; color: #c8c8c8;
+  border-radius: 3px; padding: 2px 6px; font-family: JetBrains Mono, monospace;
+  font-size: 10px;
+}
+.spp-input--w100 { width: 100px; }
+.spp-input--w60  { width: 60px; }
+
+.spp-clip-name        { color: #c8c8c8; font-size: 11px; }
+.spp-clip-name--active { color: #00ffc8; }
+.spp-clean-check      { color: #00ffc8; margin-left: 4px; }
+
+.spp-tl-clip { position: absolute; height: 32px; top: 8px; border-radius: 3px; }
+.spp-tl-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.spp-tl-empty-label { color: #484f58; font-size: 10px; }
