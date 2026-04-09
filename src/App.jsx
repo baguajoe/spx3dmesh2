@@ -149,6 +149,7 @@ import HairAdvancedPanel from "./components/hair/HairAdvancedPanel.jsx";
 import "./styles/hair-advanced.css";
 import HairFXPanel from "./components/hair/HairFXPanel.jsx";
 import CollaboratePanel from "./components/collaboration/CollaboratePanel.jsx";
+import AnimGraphPanel from "./components/panels/AnimGraphPanel.jsx";
 import MeshScriptPanel from "./components/panels/MeshScriptPanel.jsx";
 import LightingCameraPanel from "./components/scene/LightingCameraPanel.jsx";
 // ── Gamepad + Pro Mesh ──
@@ -443,6 +444,7 @@ export default function App() {
     else if (toolId === "hair") setHairPanelOpen?.(true);
     else if (toolId === "collaborate") setCollaboratePanelOpen?.(true);
     else if (toolId === "mesh_script") setMeshScriptOpen?.(true);
+    else if (toolId === "anim_graph")   setAnimGraphOpen?.(true);
     else if (toolId === "lighting") setLightingCameraPanelOpen?.(true);
     else if (toolId === "camera") setLightingCameraPanelOpen?.(true);
     else if (toolId === "lighting_camera") setLightingCameraPanelOpen?.(true);
@@ -545,6 +547,7 @@ export default function App() {
   const [hairPanelOpen, setHairPanelOpen] = useState(false);
   const [collaboratePanelOpen, setCollaboratePanelOpen] = useState(false);
   const [meshScriptOpen, setMeshScriptOpen] = useState(false);
+  const [animGraphOpen, setAnimGraphOpen] = useState(false);
   const [lightingCameraPanelOpen, setLightingCameraPanelOpen] = useState(false);
   // ── Gamepad Animator + Pro Mesh ──
   const [gamepadOpen,   setGamepadOpen]   = useState(false);
@@ -3491,6 +3494,7 @@ export default function App() {
     if (fn === "push_action")         { const a=createAction("Action_"+Date.now()); setNlaActions(p=>[...p,a]); setStatus("Action pushed"); return; }
     if (fn === "collaborate")       { setCollaboratePanelOpen(true); return; }
     if (fn === "mesh_script")        { setMeshScriptOpen(true); return; }
+    if (fn === "anim_graph")          { setAnimGraphOpen(true); return; }
     if (fn === "collab_snapshot")   { const snap = createVersionSnapshot(sceneObjects, prompt("Version note:","v"+Date.now())||""); setStatus("Version snapshot saved — "+snap.message); return; }
     if (fn === "collab_comment")    { const pin = createCommentPin(meshRef.current?.position||{x:0,y:0,z:0}, prompt("Comment:",""),"user"); setStatus("Comment pin added"); return; }
     if (fn === "grease_pencil")     { setGreasePencilPanelOpen(true); return; }
@@ -4239,7 +4243,8 @@ export default function App() {
       {/* Collaborate Panel */}
       {collaboratePanelOpen && (
         <div className="spx-side-panel spx-side-panel--360">
-          <MeshScriptPanel open={meshScriptOpen} onClose={() => setMeshScriptOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
+          <AnimGraphPanel open={animGraphOpen} onClose={() => setAnimGraphOpen(false)} sceneRef={sceneRef} />
+        <MeshScriptPanel open={meshScriptOpen} onClose={() => setMeshScriptOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
         <CollaboratePanel
             sceneObjects={sceneObjects}
             onClose={() => setCollaboratePanelOpen(false)}

@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import * as THREE from 'three';
 import { createBrushSettings, getFalloff, BRUSH_TYPES } from '../../mesh/SculptEngine.js';
+import { createGPUSculptEngine } from '../../mesh/GPUSculptEngine.js';
 import { BRUSHES } from '../../mesh/SculptBrushes.js';
 const C={bg:'#06060f',panel:'#0d1117',border:'#21262d',teal:'#00ffc8',orange:'#FF6600',text:'#e0e0e0',dim:'#8b949e',font:'JetBrains Mono,monospace'};
 function Slider({label,value,min,max,step=0.01,onChange,unit=''}){return(<div className="ha-slider-wrap"><div className="ha-slider-row"><span>{label}</span><span className="ha-slider-val">{step<0.1?Number(value).toFixed(2):Math.round(value)}{unit}</span></div><input type='range' min={min} max={max} step={step} value={value} onChange={e=>onChange(parseFloat(e.target.value))} className="ha-slider"/></div>);}
@@ -9,6 +10,23 @@ function Section({title,color=C.teal,children,defaultOpen=true}){const [open,set
 const FALLOFFS=['smooth','linear','sharp','sphere','root','constant','cubic','sine','spike'];
 const BRUSH_LIST=Object.entries({...BRUSH_TYPES,...Object.fromEntries(Object.entries(BRUSHES).map(([k,v])=>[k,k]))});
 export default function FilmSculptPanel({meshRef,sceneRef,open=true,onClose}){
+  const gpuEngineRef = useRef(null);
+  const [gpuMode, setGpuMode] = useState(false);
+  const [gpuReady, setGpuReady] = useState(false);
+  const [gpuStatus, setGpuStatus] = useState('');
+  const initGPU = useCallback(async () => {
+    if (gpuEngineRef.current) return;
+    setGpuStatus('Initializing WebGPU...');
+    const engine = await createGPUSculptEngine();
+    gpuEngineRef.current = engine;
+    if (engine.isGPU) {
+      setGpuReady(true); setGpuMode(true);
+      setGpuStatus('WebGPU ready — GPU sculpt active');
+      if (meshRef?.current?.geometry) engine.uploadGeometry(meshRef.current.geometry);
+    } else {
+      setGpuStatus('WebGPU unavailable — using CPU fallback');
+    }
+  }, [meshRef]);
   const [brushType,setBrushType]=useState('draw');
   const [radius,setRadius]=useState(0.3);
   const [strength,setStrength]=useState(0.5);

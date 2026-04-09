@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import * as THREE from 'three';
 import { createCloth, stepCloth, applyClothToMesh } from '../../mesh/ClothSystem.js';
+import { createGPUClothSolver } from '../../mesh/GPUClothSolver.js';
 import '../../styles/panel-components.css';
 import '../../styles/fx-panels.css';
 
