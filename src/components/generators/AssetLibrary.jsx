@@ -62,35 +62,11 @@ const CATEGORIES = {
   },
 };
 
-const s = {
-  root: { display: "flex", height: "100%", background: C.bg, fontFamily: C.font, color: C.white, overflow: "hidden" },
-  left: { width: 220, background: C.bg2, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", overflowY: "auto", flexShrink: 0 },
-  main: { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
-  right: { width: 200, background: C.bg2, borderLeft: `1px solid ${C.border}`, display: "flex", flexDirection: "column", overflowY: "auto", flexShrink: 0 },
-  sectionLabel: { fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: C.muted, padding: "12px 12px 6px" },
-  row: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 12px", gap: 6 },
-  label: { fontSize: 10, color: C.muted, minWidth: 70 },
-  slider: { flex: 1, accentColor: C.teal, cursor: "pointer" },
-  val: { fontSize: 9, color: C.teal, width: 36, textAlign: "right" },
-  divider: { height: 1, background: C.border, margin: "6px 0" },
-  canvas: { flex: 1, display: "block", width: "100%", height: "100%" },
-  toolbar: { display: "flex", gap: 6, padding: "7px 10px", background: C.bg2, borderBottom: `1px solid ${C.border}`, alignItems: "center", flexShrink: 0, flexWrap: "wrap" },
-  statusBar: { display: "flex", gap: 12, padding: "6px 12px", background: C.bg2, borderTop: `1px solid ${C.border}`, fontSize: 9, color: C.muted, flexShrink: 0 },
-  btn: (v) => ({ background: v === "primary" ? C.teal : v === "danger" ? "#ff4444" : C.bg3, color: v === "primary" ? C.bg : C.white, border: `1px solid ${v === "primary" ? C.teal : v === "danger" ? "#ff4444" : C.border}`, borderRadius: 3, fontFamily: C.font, fontSize: 9, fontWeight: 700, padding: "5px 10px", cursor: "pointer" }),
-  btnRow: { display: "flex", gap: 4, padding: "6px 12px", flexWrap: "wrap" },
-  catBtn: (a) => ({ background: a ? `${C.teal}15` : "none", border: `none`, borderLeft: `2px solid ${a ? C.teal : "transparent"}`, padding: "7px 12px", cursor: "pointer", color: a ? C.teal : C.muted, fontFamily: C.font, fontSize: 10, textAlign: "left", width: "100%", display: "flex", alignItems: "center", gap: 6 }),
-  assetGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 5, padding: "0 10px 10px" },
-  assetCard: (placed) => ({ background: placed ? `${C.teal}10` : C.bg3, border: `1px solid ${placed ? C.teal : C.border}`, borderRadius: 4, padding: "8px 5px", cursor: "grab", textAlign: "center", fontFamily: C.font, fontSize: 9, color: placed ? C.teal : C.white, userSelect: "none", transition: "all 0.15s" }),
-  searchInput: { background: C.bg3, border: `1px solid ${C.border}`, borderRadius: 3, color: C.white, fontFamily: C.font, fontSize: 10, padding: "5px 10px", width: "calc(100% - 20px)", margin: "0 10px 8px", display: "block" },
-  placedItem: (sel) => ({ background: sel ? `${C.teal}15` : C.bg3, border: `1px solid ${sel ? C.teal : C.border}`, borderRadius: 3, padding: "5px 8px", cursor: "pointer", fontSize: 9, marginBottom: 3, display: "flex", justifyContent: "space-between", alignItems: "center" }),
-  tag: (c) => ({ display: "inline-block", fontSize: 8, padding: "2px 6px", borderRadius: 2, background: `${c}20`, color: c, border: `1px solid ${c}40` }),
-};
-
 function SliderRow({ label, value, min, max, step = 0.1, onChange, unit = "" }) {
   return (
-    <div style={s.row}>
-      <span style={s.label}>{label}</span>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(+e.target.value)} style={s.slider} />
+    <div className="spnl-row">
+      <span className="spnl-label">{label}</span>
+      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(+e.target.value)} className="spnl-slider" />
       <span style={s.val}>{value}{unit}</span>
     </div>
   );
@@ -244,31 +220,31 @@ export default function AssetLibrary({ scene }) {
   const currentAssets = search ? filteredAssets : CATEGORIES[category]?.assets || [];
 
   return (
-    <div style={s.root}>
+    <div className="spnl-root">
       {/* Left: Categories + Assets */}
       <div style={s.left}>
         <input style={s.searchInput} placeholder="🔍 Search assets..." value={search} onChange={e => setSearch(e.target.value)} />
         {!search && (
           <>
-            <div style={s.sectionLabel}>Categories</div>
+            <div className="spnl-section-label">Categories</div>
             {Object.entries(CATEGORIES).map(([k, v]) => (
               <button key={k} style={s.catBtn(category === k)} onClick={() => setCategory(k)}>
                 <span>{v.icon}</span><span>{v.label}</span>
-                <span style={{ marginLeft: "auto", fontSize: 8, color: C.muted }}>{v.assets.length}</span>
+                <span className="spnl-dim spnl-ml-auto">{v.assets.length}</span>
               </button>
             ))}
             <div style={s.divider} />
           </>
         )}
-        <div style={{ ...s.sectionLabel, paddingTop: search ? 12 : 4 }}>{search ? `Results (${currentAssets.length})` : CATEGORIES[category]?.label}</div>
+        <div className="spnl-section-label">{search ? `Results (${currentAssets.length})` : CATEGORIES[category]?.label}</div>
         <div style={s.assetGrid}>
           {currentAssets.map(a => {
             const cnt = placedRef.current.filter(p => p.assetId === a.id).length;
             return (
               <div key={a.id} style={s.assetCard(cnt > 0)} onClick={() => placeAsset(a)} title={`Click to place ${a.label}`}>
-                <div style={{ fontSize: 22, marginBottom: 3 }}>{a.icon}</div>
-                <div style={{ fontSize: 9 }}>{a.label}</div>
-                {cnt > 0 && <div style={{ color: C.teal, fontSize: 8, marginTop: 2 }}>×{cnt}</div>}
+                <div className="spnl-icon-lg">{a.icon}</div>
+                <div className="spnl-text-sm">{a.label}</div>
+                {cnt > 0 && <div className="spnl-teal">×{cnt}</div>}
               </div>
             );
           })}
@@ -278,9 +254,9 @@ export default function AssetLibrary({ scene }) {
       {/* Main Viewport */}
       <div style={s.main}>
         <div style={s.toolbar}>
-          <span style={{ fontSize: 10, color: C.muted }}>ASSET LIBRARY VIEWPORT</span>
+          <span className="spnl-dim">ASSET LIBRARY VIEWPORT</span>
           <span style={{ fontSize: 9, color: C.muted }}>CLICK ASSET → PLACE | DRAG → ORBIT | SCROLL → ZOOM</span>
-          <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+          <div className="spnl-ml-auto">
             <span style={s.tag(C.teal)}>OBJECTS: {stats.objects}</span>
           </div>
         </div>
@@ -288,28 +264,28 @@ export default function AssetLibrary({ scene }) {
         <div style={s.statusBar}>
           <span>OBJECTS: {stats.objects}</span>
           <span>TRIANGLES: {stats.tris.toLocaleString()}</span>
-          <span style={{ marginLeft: "auto", color: C.teal }}>CAT: {CATEGORIES[category]?.label.toUpperCase()}</span>
+          <span className="spnl-ml-auto">CAT: {CATEGORIES[category]?.label.toUpperCase()}</span>
         </div>
       </div>
 
       {/* Right: Controls + Placed */}
       <div style={s.right}>
-        <div style={s.sectionLabel}>Placement</div>
+        <div className="spnl-section-label">Placement</div>
         <SliderRow label="Scale" value={placeScale} min={0.1} max={5} step={0.05} onChange={setPlaceScale} />
         <SliderRow label="Rotation Y" value={placeRotY} min={0} max={360} step={5} onChange={setPlaceRotY} unit="°" />
-        <div style={s.row}>
-          <span style={s.label}>Randomize</span>
-          <input type="checkbox" checked={randomize} onChange={e => setRandomize(e.target.checked)} style={{ accentColor: C.teal }} />
+        <div className="spnl-row">
+          <span className="spnl-label">Randomize</span>
+          <input type="checkbox" checked={randomize} onChange={e => setRandomize(e.target.checked)} className="spnl-check-input" />
         </div>
 
         <div style={s.divider} />
-        <div style={s.btnRow}>
+        <div className="spnl-btn-row">
           <button style={s.btn("primary")} onClick={exportLibrary}>💾 EXPORT</button>
           <button style={s.btn("danger")} onClick={clearAll}>🗑️ CLEAR</button>
         </div>
 
         <div style={s.divider} />
-        <div style={s.sectionLabel}>Placed ({placedList.length})</div>
+        <div className="spnl-section-label">Placed ({placedList.length})</div>
         <div style={{ padding: "0 8px 8px", overflowY: "auto", flex: 1 }}>
           {placedList.slice().reverse().map(e => (
             <div key={e.id} style={s.placedItem(selected === e.id)} onClick={() => setSelected(e.id === selected ? null : e.id)}>
@@ -319,7 +295,7 @@ export default function AssetLibrary({ scene }) {
           ))}
         </div>
         {selected && (
-          <div style={s.btnRow}>
+          <div className="spnl-btn-row">
             <button style={s.btn("danger")} onClick={removeSelected}>DELETE SELECTED</button>
           </div>
         )}

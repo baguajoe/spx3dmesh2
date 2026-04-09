@@ -7,8 +7,8 @@ const C={bg:'#06060f',panel:'#0d1117',border:'#21262d',teal:'#00ffc8',orange:'#F
 function Knob({label,value,min,max,step=1,onChange,color=C.teal,unit=''}) {
   const pct=Math.min(1,Math.max(0,(value-min)/(max-min)));
   return (
-    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,minWidth:52}}>
-      <div style={{width:44,height:44,borderRadius:'50%',
+    <div className="spnl-knob">
+      <div className="spnl-knob-ring" style={{width:44,height:44,borderRadius:'50%',
         background:`conic-gradient(${color} 0% ${pct*100}%, #1a2030 ${pct*100}% 100%)`,
         display:'flex',alignItems:'center',justifyContent:'center',cursor:'ns-resize',border:'2px solid #1a2030'}}
         onMouseDown={e=>{
@@ -17,8 +17,8 @@ function Knob({label,value,min,max,step=1,onChange,color=C.teal,unit=''}) {
           const up=()=>{document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);};
           document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
         }}>
-        <div style={{width:30,height:30,borderRadius:'50%',background:C.panel,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <span style={{fontSize:8,fontWeight:700,color,fontFamily:C.font}}>{step<1?value.toFixed(1):Math.round(value)}{unit}</span>
+        <div className="spnl-knob-inner">
+          <span className="spnl-knob-val">{step<1?value.toFixed(1):Math.round(value)}{unit}</span>
         </div>
       </div>
       <span style={{fontSize:7,color:C.dim,letterSpacing:0.3,textTransform:'uppercase',textAlign:'center',fontFamily:C.font}}>{label}</span>
@@ -103,9 +103,7 @@ export default function CrowdPanel({sceneRef, open=true, onClose}) {
   if (!open) return null;
 
   return (
-    <div style={{width:340,background:C.panel,borderRadius:8,border:`1px solid ${C.border}`,
-      fontFamily:C.font,color:C.text,boxShadow:'0 16px 48px rgba(0,0,0,0.8)',
-      display:'flex',flexDirection:'column',maxHeight:700,overflow:'hidden'}}>
+    <div className="spnl-btn">
 
       <div style={{background:'linear-gradient(135deg,#0a1020,#0d1117)',borderBottom:`1px solid ${C.border}`,
         padding:'10px 14px',display:'flex',alignItems:'center',gap:10,flexShrink:0}}>

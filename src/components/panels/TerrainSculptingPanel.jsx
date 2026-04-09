@@ -3,25 +3,6 @@ import * as THREE from "three";
 import Knob from "../Knob";
 import { TerrainSystem } from "../../systems/TerrainSystem";
 
-const S = {
-  root: { background:"#06060f", color:"#e0e0e0", fontFamily:"JetBrains Mono,monospace", padding:16, height:"100%", overflowY:"auto" },
-  h2:   { color:"#00ffc8", fontSize:14, marginBottom:12, letterSpacing:1, borderBottom:"1px solid #1a1a2e", paddingBottom:8 },
-  section: { background:"#0d0d1a", border:"1px solid #1a1a2e", borderRadius:6, padding:12, marginBottom:10 },
-  sectionTitle: { fontSize:10, color:"#00ffc8", letterSpacing:1, marginBottom:10, textTransform:"uppercase" },
-  btn: (active) => ({
-    background: active ? "#00ffc8" : "#1a1a2e",
-    color: active ? "#06060f" : "#e0e0e0",
-    border: `1px solid ${active ? "#00ffc8" : "#333"}`,
-    borderRadius:4, padding:"5px 10px", fontFamily:"JetBrains Mono,monospace",
-    fontSize:10, cursor:"pointer", marginRight:4, marginBottom:4,
-  }),
-  btnPrimary: { background:"#00ffc8", color:"#06060f", border:"none", borderRadius:4, padding:"7px 14px", fontFamily:"JetBrains Mono,monospace", fontSize:11, fontWeight:700, cursor:"pointer", marginRight:6, marginBottom:6 },
-  btnOrange:  { background:"#FF6600", color:"#fff",    border:"none", borderRadius:4, padding:"7px 14px", fontFamily:"JetBrains Mono,monospace", fontSize:11, fontWeight:700, cursor:"pointer", marginRight:6, marginBottom:6 },
-  select: { width:"100%", background:"#0d0d1a", border:"1px solid #1a1a2e", color:"#e0e0e0", padding:"4px 8px", borderRadius:4, fontFamily:"JetBrains Mono,monospace", fontSize:11, marginBottom:8 },
-  stat:   { fontSize:10, color:"#00ffc8", marginBottom:4, letterSpacing:0.5 },
-  knobRow: { display:"flex", flexWrap:"wrap", gap:8, justifyContent:"flex-start", marginTop:6 },
-};
-
 const BRUSHES = ["Raise","Lower","Smooth","Flatten","Noise","Plateau","Crater","Ridge"];
 const PRESETS = ["Flat Plain","Rolling Hills","Mountain Range","Canyon","Volcanic Island","Coastal","Desert Dunes","Arctic"];
 
@@ -74,13 +55,13 @@ export default function TerrainSculptingPanel({ scene, camera }) {
   };
 
   return (
-    <div style={S.root}>
+    <div className="spnl-root">
       <div style={S.h2}>⛰ TERRAIN SCULPTING</div>
 
       {/* Preset */}
-      <div style={S.section}>
-        <div style={S.sectionTitle}>Preset</div>
-        <select value={preset} onChange={e => setPreset(e.target.value)} style={S.select}>
+      <div className="spnl-section">
+        <div className="spnl-section-title">Preset</div>
+        <select value={preset} onChange={e => setPreset(e.target.value)} className="spnl-select">
           {PRESETS.map(p => <option key={p}>{p}</option>)}
         </select>
         <div style={{ display:"flex", gap:6 }}>
@@ -92,8 +73,8 @@ export default function TerrainSculptingPanel({ scene, camera }) {
       </div>
 
       {/* Generation knobs */}
-      <div style={S.section}>
-        <div style={S.sectionTitle}>Generation Parameters</div>
+      <div className="spnl-section">
+        <div className="spnl-section-title">Generation Parameters</div>
         <div style={S.knobRow}>
           <Knob label="Resolution" value={resolution} min={32} max={256} step={16}
             onChange={v => setResolution(v)} size={52} unit="" />
@@ -107,8 +88,8 @@ export default function TerrainSculptingPanel({ scene, camera }) {
       </div>
 
       {/* Brush select */}
-      <div style={S.section}>
-        <div style={S.sectionTitle}>Sculpt Brush</div>
+      <div className="spnl-section">
+        <div className="spnl-section-title">Sculpt Brush</div>
         <div style={{ display:"flex", flexWrap:"wrap" }}>
           {BRUSHES.map(b => (
             <button key={b} style={S.btn(brush === b)} onClick={() => setBrush(b)}>{b}</button>
@@ -117,8 +98,8 @@ export default function TerrainSculptingPanel({ scene, camera }) {
       </div>
 
       {/* Brush knobs */}
-      <div style={S.section}>
-        <div style={S.sectionTitle}>Brush Controls</div>
+      <div className="spnl-section">
+        <div className="spnl-section-title">Brush Controls</div>
         <div style={S.knobRow}>
           <Knob label="Radius" value={brushSize} min={0.5} max={20} step={0.5}
             onChange={v => setBrushSize(v)} size={52} unit="u" />
@@ -130,8 +111,8 @@ export default function TerrainSculptingPanel({ scene, camera }) {
       </div>
 
       {/* View controls */}
-      <div style={S.section}>
-        <div style={S.sectionTitle}>View</div>
+      <div className="spnl-section">
+        <div className="spnl-section-title">View</div>
         <button style={S.btn(wireframe)} onClick={toggleWireframe}>Wireframe</button>
         <button style={S.btnOrange} onClick={exportHmap}>Export Heightmap</button>
       </div>

@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { createBrushSettings, getFalloff, BRUSH_TYPES } from '../../mesh/SculptEngine.js';
 import { BRUSHES } from '../../mesh/SculptBrushes.js';
 const C={bg:'#06060f',panel:'#0d1117',border:'#21262d',teal:'#00ffc8',orange:'#FF6600',text:'#e0e0e0',dim:'#8b949e',font:'JetBrains Mono,monospace'};
-function Slider({label,value,min,max,step=0.01,onChange,unit=''}){return(<div style={{marginBottom:5}}><div style={{display:'flex',justifyContent:'space-between',fontSize:9,color:C.dim,marginBottom:1}}><span>{label}</span><span style={{color:C.teal,fontWeight:700}}>{step<0.1?Number(value).toFixed(2):Math.round(value)}{unit}</span></div><input type='range' min={min} max={max} step={step} value={value} onChange={e=>onChange(parseFloat(e.target.value))} style={{width:'100%',accentColor:C.teal,cursor:'pointer',height:3}}/></div>);}
-function Toggle({label,value,onChange}){return(<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5}}><span style={{fontSize:9,color:C.dim}}>{label}</span><div onClick={()=>onChange(!value)} style={{width:32,height:16,borderRadius:8,cursor:'pointer',position:'relative',background:value?C.teal:C.border,transition:'background 0.2s'}}><div style={{position:'absolute',top:2,left:value?16:2,width:12,height:12,borderRadius:'50%',background:value?C.bg:'#555',transition:'left 0.2s'}}/></div></div>);}
+function Slider({label,value,min,max,step=0.01,onChange,unit=''}){return(<div style={{marginBottom:5}}><div style={{display:'flex',justifyContent:'space-between',fontSize:9,color:C.dim,marginBottom:1}}><span>{label}</span><span className="spnl-teal">{step<0.1?Number(value).toFixed(2):Math.round(value)}{unit}</span></div><input type='range' min={min} max={max} step={step} value={value} onChange={e=>onChange(parseFloat(e.target.value))} style={{width:'100%',accentColor:C.teal,cursor:'pointer',height:3}}/></div>);}
+function Toggle({label,value,onChange}){return(<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5}}><span className="spnl-dim">{label}</span><div onClick={()=>onChange(!value)} style={{width:32,height:16,borderRadius:8,cursor:'pointer',position:'relative',background:value?C.teal:C.border,transition:'background 0.2s'}}><div style={{position:'absolute',top:2,left:value?16:2,width:12,height:12,borderRadius:'50%',background:value?C.bg:'#555',transition:'left 0.2s'}}/></div></div>);}
 function Section({title,color=C.teal,children,defaultOpen=true}){const [open,setOpen]=useState(defaultOpen);return(<div style={{marginBottom:6}}><div onClick={()=>setOpen(v=>!v)} style={{display:'flex',alignItems:'center',gap:6,padding:'4px 8px',background:'#0a0f1a',borderRadius:4,cursor:'pointer',borderLeft:`2px solid ${color}`,marginBottom:open?5:0}}><span style={{color,fontSize:9}}>{open?'▾':'▸'}</span><span style={{fontSize:9,fontWeight:700,color:C.text,letterSpacing:1}}>{title}</span></div>{open&&<div style={{paddingLeft:8}}>{children}</div>}</div>);}
 const FALLOFFS=['smooth','linear','sharp','sphere','root','constant','cubic','sine','spike'];
 const BRUSH_LIST=Object.entries({...BRUSH_TYPES,...Object.fromEntries(Object.entries(BRUSHES).map(([k,v])=>[k,k]))});
@@ -38,7 +38,7 @@ export default function FilmSculptPanel({meshRef,sceneRef,open=true,onClose}){
   },[meshRef,smoothIterations]);
   const recomputeNormals=useCallback(()=>{const mesh=meshRef?.current;if(!mesh||!mesh.geometry)return;mesh.geometry.computeVertexNormals();mesh.geometry.attributes.normal.needsUpdate=true;},[meshRef]);
   if(!open)return null;
-  return(<div style={{width:250,background:C.panel,borderRadius:6,border:`1px solid ${C.border}`,fontFamily:C.font,color:C.text,fontSize:11,boxShadow:'0 8px 32px rgba(0,0,0,0.7)',display:'flex',flexDirection:'column',maxHeight:680}}>
+  return(<div className="spnl-btn">
     <div style={{background:'linear-gradient(90deg,#0a1520,#0d1117)',borderBottom:`1px solid ${C.border}`,padding:'8px 12px',display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
       <div style={{width:6,height:6,borderRadius:'50%',background:'#ff8844',boxShadow:'0 0 6px #ff8844'}}/><span style={{fontSize:11,fontWeight:700,letterSpacing:2,color:'#ff8844'}}>FILM SCULPT</span>
       {onClose&&<span onClick={onClose} style={{marginLeft:'auto',cursor:'pointer',color:C.dim}}>×</span>}
@@ -52,7 +52,7 @@ export default function FilmSculptPanel({meshRef,sceneRef,open=true,onClose}){
       <Section title='BRUSH SETTINGS' color={C.teal}>
         <Slider label='RADIUS'   value={radius}   min={0.01} max={2}  step={0.01} onChange={setRadius}/>
         <Slider label='STRENGTH' value={strength} min={0.01} max={1}  step={0.01} onChange={setStrength}/>
-        <div style={{fontSize:9,color:C.dim,marginBottom:4,letterSpacing:1}}>FALLOFF</div>
+        <div className="spnl-dim">FALLOFF</div>
         <div style={{display:'flex',flexWrap:'wrap',gap:3,marginBottom:6}}>{FALLOFFS.map(f=><div key={f} onClick={()=>setFalloff(f)} style={{padding:'2px 6px',borderRadius:3,cursor:'pointer',fontSize:8,fontWeight:700,border:`1px solid ${falloff===f?C.teal:C.border}`,background:falloff===f?'rgba(0,255,200,0.1)':C.bg,color:falloff===f?C.teal:C.dim}}>{f}</div>)}</div>
       </Section>
       <Section title='SYMMETRY' color='#88aaff' defaultOpen={false}>

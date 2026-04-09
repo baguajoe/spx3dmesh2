@@ -12,34 +12,11 @@ const SCENARIOS = {
   explosion: { label: "Explosion", icon: "💥" },
 };
 
-const s = {
-  root: { display: "flex", height: "100%", background: C.bg, fontFamily: C.font, color: C.white, overflow: "hidden" },
-  sidebar: { width: 250, background: C.bg2, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", overflowY: "auto", flexShrink: 0 },
-  main: { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
-  sectionLabel: { fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: C.muted, padding: "12px 12px 6px" },
-  row: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 12px", gap: 6 },
-  label: { fontSize: 10, color: C.muted, minWidth: 90 },
-  slider: { flex: 1, accentColor: C.teal, cursor: "pointer" },
-  val: { fontSize: 9, color: C.teal, width: 40, textAlign: "right" },
-  divider: { height: 1, background: C.border, margin: "6px 0" },
-  canvas: { flex: 1, display: "block", width: "100%", height: "100%" },
-  toolbar: { display: "flex", gap: 6, padding: "7px 10px", background: C.bg2, borderBottom: `1px solid ${C.border}`, alignItems: "center", flexShrink: 0 },
-  statusBar: { display: "flex", gap: 12, padding: "6px 12px", background: C.bg2, borderTop: `1px solid ${C.border}`, fontSize: 9, color: C.muted, flexShrink: 0 },
-  btn: (v) => ({ background: v === "primary" ? C.teal : v === "orange" ? C.orange : v === "danger" ? "#ff4444" : C.bg3, color: v === "primary" || v === "orange" ? C.bg : C.white, border: `1px solid ${v === "primary" ? C.teal : v === "orange" ? C.orange : v === "danger" ? "#ff4444" : C.border}`, borderRadius: 3, fontFamily: C.font, fontSize: 10, fontWeight: 700, padding: "6px 12px", cursor: "pointer" }),
-  btnRow: { display: "flex", gap: 6, padding: "8px 12px", flexWrap: "wrap" },
-  scenarioGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 5, padding: "0 10px 10px" },
-  scenarioBtn: (a) => ({ background: a ? `${C.orange}15` : C.bg3, border: `1px solid ${a ? C.orange : C.border}`, borderRadius: 4, padding: "8px 5px", cursor: "pointer", textAlign: "center", fontFamily: C.font, fontSize: 9, color: a ? C.orange : C.white }),
-  toggle: (on) => ({ width: 32, height: 16, borderRadius: 8, background: on ? C.teal : C.bg3, border: `1px solid ${on ? C.teal : C.border}`, cursor: "pointer", position: "relative", flexShrink: 0 }),
-  toggleDot: (on) => ({ position: "absolute", top: 2, left: on ? 16 : 2, width: 10, height: 10, borderRadius: "50%", background: on ? C.bg : C.muted, transition: "left 0.2s" }),
-  tag: (c) => ({ display: "inline-block", fontSize: 8, padding: "2px 6px", borderRadius: 2, background: `${c}20`, color: c, border: `1px solid ${c}40` }),
-  objRow: { display: "flex", justifyContent: "space-between", padding: "3px 12px", fontSize: 9, borderBottom: `1px solid ${C.border}10` },
-};
-
 function SliderRow({ label, value, min, max, step = 0.1, onChange, unit = "" }) {
   return (
-    <div style={s.row}>
-      <span style={s.label}>{label}</span>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(+e.target.value)} style={s.slider} />
+    <div className="spnl-row">
+      <span className="spnl-label">{label}</span>
+      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(+e.target.value)} className="spnl-slider" />
       <span style={s.val}>{value}{unit}</span>
     </div>
   );
@@ -505,9 +482,9 @@ export default function PhysicsSimulation({ scene }) {
   };
 
   return (
-    <div style={s.root}>
+    <div className="spnl-root">
       <div style={s.sidebar}>
-        <div style={s.sectionLabel}>Scenario</div>
+        <div className="spnl-section-label">Scenario</div>
         <div style={s.scenarioGrid}>
           {Object.entries(SCENARIOS).map(([k, v]) => (
             <button key={k} style={s.scenarioBtn(scenario === k)} onClick={() => setupScenario(k)}>
@@ -518,34 +495,34 @@ export default function PhysicsSimulation({ scene }) {
         </div>
 
         <div style={s.divider} />
-        <div style={s.sectionLabel}>Physics</div>
+        <div className="spnl-section-label">Physics</div>
         <SliderRow label="Gravity" value={gravity} min={-30} max={0} step={0.1} onChange={v => { setGravity(v); gravityRef.current = v; }} unit=" m/s²" />
         <SliderRow label="Restitution" value={restitution} min={0} max={1} step={0.05} onChange={setRestitution} />
         <SliderRow label="Friction" value={friction} min={0} max={1} step={0.05} onChange={setFriction} />
         <SliderRow label="Wind Force" value={wind} min={-10} max={10} step={0.5} onChange={v => { setWind(v); windRef.current = v; }} />
 
         <div style={s.divider} />
-        <div style={s.row}><span style={s.label}>Wireframe</span><Toggle value={showWireframe} onChange={setShowWireframe} /></div>
+        <div className="spnl-row"><span className="spnl-label">Wireframe</span><Toggle value={showWireframe} onChange={setShowWireframe} /></div>
 
         <div style={s.divider} />
-        <div style={s.sectionLabel}>Controls</div>
-        <div style={s.btnRow}>
+        <div className="spnl-section-label">Controls</div>
+        <div className="spnl-btn-row">
           <button style={s.btn(running ? "orange" : "primary")} onClick={() => setRunning(!running)}>
             {running ? "⏸ PAUSE" : "▶ RUN"}
           </button>
           <button style={s.btn()} onClick={() => setupScenario(scenario)}>↺ RESET</button>
         </div>
-        <div style={s.btnRow}>
+        <div className="spnl-btn-row">
           <button style={s.btn()} onClick={spawnRandom}>+ SPAWN</button>
           <button style={s.btn("danger")} onClick={applyExplosion}>💥 BLAST</button>
         </div>
 
         <div style={s.divider} />
-        <div style={s.sectionLabel}>Stats</div>
+        <div className="spnl-section-label">Stats</div>
         <div style={{ padding: "0 12px 12px" }}>
           {[["Bodies", stats.bodies, C.white], ["Sleeping", stats.sleeping, C.muted], ["FPS", stats.fps, C.teal]].map(([l, v, c]) => (
             <div key={l} style={s.objRow}>
-              <span style={{ color: C.muted }}>{l}</span>
+              <span className="spnl-dim">{l}</span>
               <span style={{ color: c, fontWeight: 700 }}>{v}</span>
             </div>
           ))}
@@ -554,8 +531,8 @@ export default function PhysicsSimulation({ scene }) {
 
       <div style={s.main}>
         <div style={s.toolbar}>
-          <span style={{ fontSize: 10, color: C.muted }}>PHYSICS — {SCENARIOS[scenario]?.label.toUpperCase()}</span>
-          <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+          <span className="spnl-dim">PHYSICS — {SCENARIOS[scenario]?.label.toUpperCase()}</span>
+          <div className="spnl-ml-auto">
             <span style={s.tag(running ? C.orange : C.muted)}>{running ? "SIMULATING" : "PAUSED"}</span>
             <span style={s.tag(C.teal)}>{stats.fps} FPS</span>
           </div>
@@ -566,7 +543,7 @@ export default function PhysicsSimulation({ scene }) {
           <span>SLEEPING: {stats.sleeping}</span>
           <span>GRAVITY: {gravity} m/s²</span>
           <span>WIND: {wind}</span>
-          <span style={{ marginLeft: "auto", color: C.teal }}>FPS: {stats.fps}</span>
+          <span className="spnl-ml-auto">FPS: {stats.fps}</span>
         </div>
       </div>
     </div>

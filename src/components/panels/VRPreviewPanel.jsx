@@ -1,20 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import * as THREE from "three";
 
-const S = {
-  root: { background:"#06060f", color:"#e0e0e0", fontFamily:"JetBrains Mono,monospace", padding:16, height:"100%", overflowY:"auto" },
-  h2: { color:"#00ffc8", fontSize:14, marginBottom:12, letterSpacing:1 },
-  label: { fontSize:11, color:"#aaa", display:"block", marginBottom:4 },
-  input: { width:"100%", background:"#0d0d1a", border:"1px solid #1a1a2e", color:"#e0e0e0", padding:"4px 8px", borderRadius:4, fontFamily:"JetBrains Mono,monospace", fontSize:11, marginBottom:10, boxSizing:"border-box" },
-  select: { width:"100%", background:"#0d0d1a", border:"1px solid #1a1a2e", color:"#e0e0e0", padding:"4px 8px", borderRadius:4, fontFamily:"JetBrains Mono,monospace", fontSize:11, marginBottom:10, boxSizing:"border-box" },
-  btn: { background:"#00ffc8", color:"#06060f", border:"none", borderRadius:4, padding:"7px 16px", fontFamily:"JetBrains Mono,monospace", fontSize:12, fontWeight:700, cursor:"pointer", marginRight:8, marginBottom:8 },
-  btnO: { background:"#FF6600", color:"#fff", border:"none", borderRadius:4, padding:"7px 16px", fontFamily:"JetBrains Mono,monospace", fontSize:12, fontWeight:700, cursor:"pointer", marginRight:8, marginBottom:8 },
-  btnRed: { background:"#cc2200", color:"#fff", border:"none", borderRadius:4, padding:"7px 16px", fontFamily:"JetBrains Mono,monospace", fontSize:12, fontWeight:700, cursor:"pointer", marginRight:8, marginBottom:8 },
-  section: { background:"#0d0d1a", border:"1px solid #1a1a2e", borderRadius:6, padding:12, marginBottom:12 },
-  stat: { fontSize:11, color:"#00ffc8", marginBottom:4 },
-  vr: { background:"#0d0d1a", borderRadius:6, padding:12, marginBottom:12, border:"2px solid #00ffc8" },
-};
-
 const HEADSETS = ["Meta Quest 2","Meta Quest 3","Valve Index","HTC Vive Pro 2","PlayStation VR2","Apple Vision Pro","Generic WebXR"];
 const VR_MODES = ["Sit-Down 360°","Room-Scale","Standing","Cinematic Viewer"];
 
@@ -120,29 +106,29 @@ export default function VRPreviewPanel({ scene, camera, renderer }){
   }
 
   return (
-    <div style={S.root}>
+    <div className="spnl-root">
       <div style={S.h2}>🥽 VR PREVIEW MODE</div>
 
-      <div style={S.section}>
-        <label style={S.label}>Target Headset</label>
-        <select style={S.select} value={headset} onChange={e=>setHeadset(e.target.value)}>
+      <div className="spnl-section">
+        <label className="spnl-label">Target Headset</label>
+        <select className="spnl-select" value={headset} onChange={e=>setHeadset(e.target.value)}>
           {HEADSETS.map(h=><option key={h}>{h}</option>)}
         </select>
-        <button style={S.btn} onClick={applyHeadsetProfile}>Apply Profile</button>
+        <button className="spnl-btn" onClick={applyHeadsetProfile}>Apply Profile</button>
 
-        <label style={S.label}>VR Mode</label>
-        <select style={S.select} value={vrMode} onChange={e=>setVrMode(e.target.value)}>
+        <label className="spnl-label">VR Mode</label>
+        <select className="spnl-select" value={vrMode} onChange={e=>setVrMode(e.target.value)}>
           {VR_MODES.map(m=><option key={m}>{m}</option>)}
         </select>
 
-        <label style={S.label}>IPD: {ipd}mm</label>
-        <input style={S.input} type="range" min={54} max={74} step={0.5} value={ipd} onChange={e=>setIpd(+e.target.value)}/>
+        <label className="spnl-label">IPD: {ipd}mm</label>
+        <input className="spnl-input" type="range" min={54} max={74} step={0.5} value={ipd} onChange={e=>setIpd(+e.target.value)}/>
 
-        <label style={S.label}>FOV: {fov}°</label>
-        <input style={S.input} type="range" min={60} max={140} step={1} value={fov} onChange={e=>setFov(+e.target.value)}/>
+        <label className="spnl-label">FOV: {fov}°</label>
+        <input className="spnl-input" type="range" min={60} max={140} step={1} value={fov} onChange={e=>setFov(+e.target.value)}/>
 
-        <label style={S.label}>World Scale: {scale.toFixed(2)}x</label>
-        <input style={S.input} type="range" min={0.1} max={3} step={0.01} value={scale} onChange={e=>setScale(+e.target.value)}/>
+        <label className="spnl-label">World Scale: {scale.toFixed(2)}x</label>
+        <input className="spnl-input" type="range" min={0.1} max={3} step={0.01} value={scale} onChange={e=>setScale(+e.target.value)}/>
 
         <div style={{display:"flex",gap:16,marginBottom:8}}>
           <label style={{...S.label,cursor:"pointer"}}><input type="checkbox" checked={comfort} onChange={e=>setComfort(e.target.checked)}/> Comfort Mode</label>
@@ -153,7 +139,7 @@ export default function VRPreviewPanel({ scene, camera, renderer }){
       <div style={S.vr}>
         <div style={{...S.label,color:"#00ffc8",marginBottom:8}}>XR Status: {status || "Ready"}</div>
         {!stereoActive
-          ? <button style={S.btn} onClick={enterStereoPreview}>👁 Enter Stereo Preview</button>
+          ? <button className="spnl-btn" onClick={enterStereoPreview}>👁 Enter Stereo Preview</button>
           : <button style={S.btnRed} onClick={exitStereoPreview}>✕ Exit Stereo Preview</button>
         }
         {xrSupported &&
@@ -163,10 +149,10 @@ export default function VRPreviewPanel({ scene, camera, renderer }){
         }
       </div>
 
-      <button style={S.btn} onClick={exportVRScene}>💾 Export VR Config</button>
+      <button className="spnl-btn" onClick={exportVRScene}>💾 Export VR Config</button>
 
-      <div style={S.section}>
-        <div style={S.label}>VR Optimization Guide</div>
+      <div className="spnl-section">
+        <div className="spnl-label">VR Optimization Guide</div>
         <div style={{fontSize:10,color:"#888",lineHeight:1.6}}>
           • Target 72–90 FPS for comfort<br/>
           • Keep draw calls under 200<br/>

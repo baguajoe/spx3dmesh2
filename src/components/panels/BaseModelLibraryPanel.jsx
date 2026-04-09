@@ -148,7 +148,7 @@ export default function BaseModelLibraryPanel({ scene, onLaunchGenerator }) {
   });
 
   return(
-    <div style={S.root}>
+    <div className="spnl-root">
       <div style={S.h2}>📚 BASE MODEL LIBRARY</div>
       <div style={{fontSize:10,color:"#888",marginBottom:12,lineHeight:1.6}}>
         Don't know where to start? Pick a base model below.<br/>

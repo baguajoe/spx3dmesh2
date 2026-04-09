@@ -88,12 +88,12 @@ export default function RotoscopePanel({sceneRef,rendererRef,currentFrame,setCur
     setVideoURL(null); setVideoFile(null);
   },[sceneRef]);
 
-  function Slider({label,value,min,max,step=0.01,onChange,unit=''}){return(<div style={{marginBottom:5}}><div style={{display:'flex',justifyContent:'space-between',fontSize:9,color:C.dim,marginBottom:1}}><span>{label}</span><span style={{color:C.teal,fontWeight:700}}>{step<0.1?Number(value).toFixed(2):Math.round(value)}{unit}</span></div><input type='range' min={min} max={max} step={step} value={value} onChange={e=>onChange(parseFloat(e.target.value))} style={{width:'100%',accentColor:C.teal,cursor:'pointer',height:3}}/></div>);}
-  function Toggle({label,value,onChange}){return(<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5}}><span style={{fontSize:9,color:C.dim}}>{label}</span><div onClick={()=>onChange(!value)} style={{width:32,height:16,borderRadius:8,cursor:'pointer',position:'relative',background:value?C.teal:C.border}}><div style={{position:'absolute',top:2,left:value?16:2,width:12,height:12,borderRadius:'50%',background:value?C.bg:'#555',transition:'left 0.15s'}}/></div></div>);}
+  function Slider({label,value,min,max,step=0.01,onChange,unit=''}){return(<div style={{marginBottom:5}}><div style={{display:'flex',justifyContent:'space-between',fontSize:9,color:C.dim,marginBottom:1}}><span>{label}</span><span className="spnl-teal">{step<0.1?Number(value).toFixed(2):Math.round(value)}{unit}</span></div><input type='range' min={min} max={max} step={step} value={value} onChange={e=>onChange(parseFloat(e.target.value))} style={{width:'100%',accentColor:C.teal,cursor:'pointer',height:3}}/></div>);}
+  function Toggle({label,value,onChange}){return(<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5}}><span className="spnl-dim">{label}</span><div onClick={()=>onChange(!value)} style={{width:32,height:16,borderRadius:8,cursor:'pointer',position:'relative',background:value?C.teal:C.border}}><div style={{position:'absolute',top:2,left:value?16:2,width:12,height:12,borderRadius:'50%',background:value?C.bg:'#555',transition:'left 0.15s'}}/></div></div>);}
   function Section({title,color=C.teal,children,defaultOpen=true}){const [open,setOpen]=useState(defaultOpen);return(<div style={{marginBottom:6}}><div onClick={()=>setOpen(v=>!v)} style={{display:'flex',alignItems:'center',gap:6,padding:'4px 8px',background:'#0a0f1a',borderRadius:4,cursor:'pointer',borderLeft:`2px solid ${color}`,marginBottom:open?5:0}}><span style={{color,fontSize:9}}>{open?'▾':'▸'}</span><span style={{fontSize:9,fontWeight:700,color:C.text,letterSpacing:1}}>{title}</span></div>{open&&<div style={{paddingLeft:8}}>{children}</div>}</div>);}
 
   if(!open) return null;
-  return(<div style={{width:260,background:C.panel,borderRadius:6,border:`1px solid ${C.border}`,fontFamily:C.font,color:C.text,fontSize:11,boxShadow:'0 8px 32px rgba(0,0,0,0.7)',display:'flex',flexDirection:'column',maxHeight:680}}>
+  return(<div className="spnl-btn">
     <div style={{background:'linear-gradient(90deg,#0a1520,#0d1117)',borderBottom:`1px solid ${C.border}`,padding:'8px 12px',display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
       <div style={{width:6,height:6,borderRadius:'50%',background:'#ff44aa',boxShadow:'0 0 6px #ff44aa'}}/><span style={{fontSize:11,fontWeight:700,letterSpacing:2,color:'#ff44aa'}}>ROTOSCOPE</span>
       {onClose&&<span onClick={onClose} style={{marginLeft:'auto',cursor:'pointer',color:C.dim}}>×</span>}
@@ -103,12 +103,12 @@ export default function RotoscopePanel({sceneRef,rendererRef,currentFrame,setCur
       {/* Video load */}
       <Section title='VIDEO SOURCE' color='#ff44aa'>
         {!videoURL?(<label style={{display:'block',padding:'10px',border:`2px dashed ${C.border}`,borderRadius:6,textAlign:'center',cursor:'pointer',color:C.dim,fontSize:9,letterSpacing:1}}>
-          <input type='file' accept='video/*' style={{display:'none'}} onChange={e=>e.target.files[0]&&loadVideo(e.target.files[0])}/>
+          <input type='file' accept='video/*' className="spx-hidden" onChange={e=>e.target.files[0]&&loadVideo(e.target.files[0])}/>
           ▶ CLICK TO LOAD VIDEO<br/><span style={{fontSize:8,opacity:0.6}}>MP4 / WebM / MOV</span>
         </label>):(
           <div>
             <div style={{fontSize:9,color:C.teal,marginBottom:4,fontWeight:700}}>✓ {videoFile?.name}</div>
-            <div style={{fontSize:9,color:C.dim,marginBottom:6}}>{totalFrames} frames @ {fps}fps</div>
+            <div className="spnl-dim">{totalFrames} frames @ {fps}fps</div>
             <button onClick={removeFromScene} style={{width:'100%',padding:'5px',background:'rgba(255,68,170,0.1)',border:'1px solid #ff44aa',borderRadius:4,color:'#ff44aa',fontFamily:C.font,fontSize:9,cursor:'pointer'}}>✕ REMOVE</button>
           </div>
         )}
@@ -144,12 +144,12 @@ export default function RotoscopePanel({sceneRef,rendererRef,currentFrame,setCur
       {videoURL&&<Section title='ONION SKIN' color='#aaffcc' defaultOpen={false}>
         <Toggle label='ONION SKIN' value={onionSkin} onChange={setOnionSkin}/>
         <Slider label='FRAMES' value={onionFrames} min={1} max={5} step={1} onChange={setOnionFrames}/>
-        <div style={{fontSize:9,color:C.dim}}>Shows ghost frames ±{onionFrames} around current frame</div>
+        <div className="spnl-dim">Shows ghost frames ±{onionFrames} around current frame</div>
       </Section>}
 
       {/* Tips */}
       <div style={{padding:'8px',background:C.bg,borderRadius:4,border:`1px solid ${C.border}`,fontSize:8,color:C.dim,lineHeight:1.6}}>
-        <div style={{color:C.teal,fontWeight:700,marginBottom:4}}>HOW TO USE</div>
+        <div className="spnl-teal">HOW TO USE</div>
         1. Load video — appears as plane in viewport<br/>
         2. Scrub timeline to match reference frame<br/>
         3. Move/rotate your mesh to match<br/>

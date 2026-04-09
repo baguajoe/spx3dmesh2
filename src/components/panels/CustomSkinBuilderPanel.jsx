@@ -43,7 +43,7 @@ function Knob({ label, value, min, max, step=0.01, onChange, color=C.teal, unit=
   }, [value, min, max, step, onChange]);
 
   return (
-    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:3, cursor:"ns-resize", userSelect:"none", minWidth:52 }}
+    <div className="spnl-knob"
       onMouseDown={onDrag} title={`${label}: ${value}${unit} (drag to adjust)`}>
       <svg width={40} height={40}>
         <circle cx={cx} cy={cy} r={r} fill="none" stroke={C.border} strokeWidth={2.5}/>
@@ -52,10 +52,10 @@ function Knob({ label, value, min, max, step=0.01, onChange, color=C.teal, unit=
         <circle cx={ex} cy={ey} r={3} fill={color}/>
         <circle cx={cx} cy={cy} r={4} fill={C.panel2} stroke={C.border} strokeWidth={1}/>
       </svg>
-      <div style={{ fontSize:9, color:color, fontFamily:C.font, letterSpacing:"0.05em" }}>
+      <div className="spnl-knob-val">
         {typeof value === "number" ? value.toFixed(step < 0.1 ? 2 : 1) : value}{unit}
       </div>
-      <div style={{ fontSize:8, color:C.t2, fontFamily:C.font, textAlign:"center", maxWidth:52 }}>{label}</div>
+      <div className="spnl-knob-label">{label}</div>
     </div>
   );
 }
@@ -63,17 +63,16 @@ function Knob({ label, value, min, max, step=0.01, onChange, color=C.teal, unit=
 // ── Color swatch picker ───────────────────────────────────────────────────────
 function ColorPicker({ label, value, onChange }) {
   return (
-    <div style={{ display:"flex", flexDirection:"column", gap:3 }}>
-      <div style={{ fontSize:9, color:C.t2, fontFamily:C.font }}>{label}</div>
-      <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-        <div style={{ width:28, height:28, background:value, border:`1px solid ${C.border}`,
-          borderRadius:3, cursor:"pointer", position:"relative" }}
+    <div className="spnl-color-wrap">
+      <div className="spnl-label">{label}</div>
+      <div className="spnl-row">
+        <div className="spnl-swatch" style={{ background:value }}
           onClick={() => document.getElementById(`cp_${label.replace(/\s/g,'')}`).click()}>
           <input id={`cp_${label.replace(/\s/g,'')}`} type="color" value={value}
             onChange={e => onChange(e.target.value)}
-            style={{ opacity:0, position:"absolute", inset:0, cursor:"pointer", width:"100%", height:"100%" }}/>
+            className="spnl-color-input-hidden"/>
         </div>
-        <span style={{ fontSize:9, color:C.t1, fontFamily:C.font }}>{value}</span>
+        <span className="spnl-text">{value}</span>
       </div>
     </div>
   );
@@ -82,7 +81,7 @@ function ColorPicker({ label, value, onChange }) {
 // ── Toggle ────────────────────────────────────────────────────────────────────
 function Toggle({ label, value, onChange }) {
   return (
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8 }}>
+    <div className="spnl-row spnl-row--between">
       <span style={{ fontSize:10, color:C.t1, fontFamily:C.font }}>{label}</span>
       <div onClick={() => onChange(!value)} style={{
         width:32, height:16, borderRadius:8, background: value ? C.teal : C.border,

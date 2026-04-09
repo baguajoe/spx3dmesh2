@@ -25,37 +25,11 @@ const MATERIALS_LIST = [
   { id: "tile", label: "Tile", color: "#ccddee" },
 ];
 
-const s = {
-  root: { display: "flex", height: "100%", background: C.bg, fontFamily: C.font, color: C.white, overflow: "hidden" },
-  left: { width: 56, background: C.bg2, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", alignItems: "center", padding: "8px 0", gap: 4, flexShrink: 0 },
-  toolBtn: (active) => ({ width: 40, height: 40, background: active ? `${C.teal}20` : "none", border: `1px solid ${active ? C.teal : "transparent"}`, borderRadius: 6, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", title: "tool", transition: "all 0.15s" }),
-  sidebar: { width: 230, background: C.bg2, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", overflowY: "auto", flexShrink: 0 },
-  main: { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
-  sectionLabel: { fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: C.muted, padding: "12px 12px 6px" },
-  row: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 12px", gap: 6 },
-  label: { fontSize: 10, color: C.muted, minWidth: 70 },
-  slider: { flex: 1, accentColor: C.teal, cursor: "pointer" },
-  val: { fontSize: 9, color: C.teal, width: 32, textAlign: "right" },
-  divider: { height: 1, background: C.border, margin: "6px 0" },
-  btn: (v) => ({ background: v === "primary" ? C.teal : v === "danger" ? "#ff4444" : C.bg3, color: v === "primary" ? C.bg : C.white, border: `1px solid ${v === "primary" ? C.teal : v === "danger" ? "#ff4444" : C.border}`, borderRadius: 3, fontFamily: C.font, fontSize: 10, fontWeight: 700, padding: "6px 12px", cursor: "pointer" }),
-  btnRow: { display: "flex", gap: 6, padding: "8px 12px", flexWrap: "wrap" },
-  matGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, padding: "0 12px 10px" },
-  matBtn: (active, color) => ({ background: active ? `${color}30` : C.bg3, border: `2px solid ${active ? color : C.border}`, borderRadius: 4, padding: "6px 4px", cursor: "pointer", textAlign: "center", fontFamily: C.font, fontSize: 9, color: active ? color : C.white }),
-  matSwatch: (color) => ({ width: 16, height: 16, borderRadius: 3, background: color, display: "inline-block", marginBottom: 2 }),
-  canvas: { flex: 1, display: "block", width: "100%", height: "100%" },
-  toolbar: { display: "flex", gap: 8, padding: "7px 12px", background: C.bg2, borderBottom: `1px solid ${C.border}`, alignItems: "center", flexShrink: 0, flexWrap: "wrap" },
-  tag: (c) => ({ display: "inline-block", fontSize: 8, padding: "2px 6px", borderRadius: 2, background: `${c}20`, color: c, border: `1px solid ${c}40` }),
-  statusBar: { display: "flex", gap: 16, padding: "6px 12px", background: C.bg2, borderTop: `1px solid ${C.border}`, fontSize: 9, color: C.muted, flexShrink: 0 },
-  input: { background: C.bg3, border: `1px solid ${C.border}`, borderRadius: 3, color: C.white, fontFamily: C.font, fontSize: 10, padding: "3px 8px", width: "100%" },
-  objList: { padding: "0 12px 10px", display: "flex", flexDirection: "column", gap: 3 },
-  objItem: (sel) => ({ background: sel ? `${C.teal}15` : C.bg3, border: `1px solid ${sel ? C.teal : C.border}`, borderRadius: 3, padding: "5px 8px", cursor: "pointer", fontSize: 9, display: "flex", justifyContent: "space-between", alignItems: "center" }),
-};
-
 function SliderRow({ label, value, min, max, step = 0.1, onChange, unit = "" }) {
   return (
-    <div style={s.row}>
-      <span style={s.label}>{label}</span>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(+e.target.value)} style={s.slider} />
+    <div className="spnl-row">
+      <span className="spnl-label">{label}</span>
+      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(+e.target.value)} className="spnl-slider" />
       <span style={s.val}>{value}{unit}</span>
     </div>
   );
@@ -341,7 +315,7 @@ export default function BuildingSimulator({ scene }) {
   };
 
   return (
-    <div style={s.root}>
+    <div className="spnl-root">
       {/* Tool strip */}
       <div style={s.left}>
         {TOOLS.map(t => (
@@ -353,7 +327,7 @@ export default function BuildingSimulator({ scene }) {
 
       {/* Sidebar */}
       <div style={s.sidebar}>
-        <div style={s.sectionLabel}>Active Tool: {TOOLS.find(t => t.id === tool)?.label}</div>
+        <div className="spnl-section-label">Active Tool: {TOOLS.find(t => t.id === tool)?.label}</div>
 
         {(tool === "wall" || tool === "floor") && (
           <>
@@ -393,7 +367,7 @@ export default function BuildingSimulator({ scene }) {
         <SliderRow label="Snap Grid" value={gridSnap} min={0.25} max={4} step={0.25} onChange={setGridSnap} unit="u" />
 
         <div style={s.divider} />
-        <div style={s.sectionLabel}>Material</div>
+        <div className="spnl-section-label">Material</div>
         <div style={s.matGrid}>
           {MATERIALS_LIST.map(m => (
             <div key={m.id} style={s.matBtn(matId === m.id, m.color)} onClick={() => setMatId(m.id)}>
@@ -404,7 +378,7 @@ export default function BuildingSimulator({ scene }) {
         </div>
 
         <div style={s.divider} />
-        <div style={s.sectionLabel}>Objects ({objList.length})</div>
+        <div className="spnl-section-label">Objects ({objList.length})</div>
         <div style={s.objList}>
           {objList.slice(-8).reverse().map(o => (
             <div key={o.id} style={s.objItem(selected === o.id)} onClick={() => setSelected(o.id)}>
@@ -415,7 +389,7 @@ export default function BuildingSimulator({ scene }) {
         </div>
 
         <div style={s.divider} />
-        <div style={s.btnRow}>
+        <div className="spnl-btn-row">
           <button style={s.btn("primary")} onClick={exportBuilding}>💾 EXPORT</button>
           <button style={s.btn("danger")} onClick={clearAll}>🗑️ CLEAR</button>
         </div>
@@ -424,9 +398,9 @@ export default function BuildingSimulator({ scene }) {
       {/* Viewport */}
       <div style={s.main}>
         <div style={s.toolbar}>
-          <span style={{ fontSize: 10, color: C.muted }}>BUILDING SIMULATOR</span>
+          <span className="spnl-dim">BUILDING SIMULATOR</span>
           <span style={{ fontSize: 9, color: C.teal, marginLeft: 8 }}>LEFT CLICK: Place  |  RIGHT DRAG: Orbit  |  SCROLL: Zoom</span>
-          <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+          <div className="spnl-ml-auto">
             <span style={s.tag(C.teal)}>TOOL: {tool.toUpperCase()}</span>
             <span style={s.tag(C.orange)}>LVL: {floorLevel}u</span>
           </div>
@@ -435,7 +409,7 @@ export default function BuildingSimulator({ scene }) {
         <div style={s.statusBar}>
           <span>OBJECTS: {stats.objects}</span>
           <span>TRIANGLES: {stats.tris.toLocaleString()}</span>
-          <span style={{ marginLeft: "auto", color: C.teal }}>MAT: {matId.toUpperCase()} | SNAP: {gridSnap}u</span>
+          <span className="spnl-ml-auto">MAT: {matId.toUpperCase()} | SNAP: {gridSnap}u</span>
         </div>
       </div>
     </div>

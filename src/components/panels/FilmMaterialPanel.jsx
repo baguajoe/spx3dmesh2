@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import * as THREE from 'three';
 const C = { bg:'#06060f', panel:'#0d1117', border:'#21262d', teal:'#00ffc8', orange:'#FF6600', text:'#e0e0e0', dim:'#8b949e', font:'JetBrains Mono,monospace' };
-function Slider({label,value,min,max,step=0.01,onChange,unit=''}){return(<div style={{marginBottom:5}}><div style={{display:'flex',justifyContent:'space-between',fontSize:9,color:C.dim,marginBottom:1}}><span>{label}</span><span style={{color:C.teal,fontWeight:700}}>{step<0.1?Number(value).toFixed(2):Math.round(value)}{unit}</span></div><input type='range' min={min} max={max} step={step} value={value} onChange={e=>onChange(parseFloat(e.target.value))} style={{width:'100%',accentColor:C.teal,cursor:'pointer',height:3}}/></div>);}
-function ColorRow({label,value,onChange}){return(<div style={{display:'flex',alignItems:'center',gap:8,marginBottom:5}}><span style={{fontSize:9,color:C.dim,flex:1}}>{label}</span><input type='color' value={value} onChange={e=>onChange(e.target.value)} style={{width:28,height:20,border:'none',background:'none',cursor:'pointer'}}/><span style={{fontSize:9,color:C.dim,width:52}}>{value}</span></div>);}
+function Slider({label,value,min,max,step=0.01,onChange,unit=''}){return(<div style={{marginBottom:5}}><div style={{display:'flex',justifyContent:'space-between',fontSize:9,color:C.dim,marginBottom:1}}><span>{label}</span><span className="spnl-teal">{step<0.1?Number(value).toFixed(2):Math.round(value)}{unit}</span></div><input type='range' min={min} max={max} step={step} value={value} onChange={e=>onChange(parseFloat(e.target.value))} style={{width:'100%',accentColor:C.teal,cursor:'pointer',height:3}}/></div>);}
+function ColorRow({label,value,onChange}){return(<div style={{display:'flex',alignItems:'center',gap:8,marginBottom:5}}><span className="spnl-dim">{label}</span><input type='color' value={value} onChange={e=>onChange(e.target.value)} style={{width:28,height:20,border:'none',background:'none',cursor:'pointer'}}/><span className="spnl-dim">{value}</span></div>);}
 function Section({title,color=C.teal,children,defaultOpen=true}){const [open,setOpen]=useState(defaultOpen);return(<div style={{marginBottom:6}}><div onClick={()=>setOpen(v=>!v)} style={{display:'flex',alignItems:'center',gap:6,padding:'4px 8px',background:'#0a0f1a',borderRadius:4,cursor:'pointer',borderLeft:`2px solid ${color}`,marginBottom:open?5:0}}><span style={{color,fontSize:9}}>{open?'▾':'▸'}</span><span style={{fontSize:9,fontWeight:700,color:C.text,letterSpacing:1}}>{title}</span></div>{open&&<div style={{paddingLeft:8}}>{children}</div>}</div>);}
 const PRESETS=[
   {label:'Chrome',  color:'#c8c8c8',r:0.05,m:1.0,cc:1.0,ccr:0.05,tr:0.0,sh:0.0},
@@ -37,7 +37,7 @@ export default function FilmMaterialPanel({sceneRef,open=true,onClose}){
   const applyAll=useCallback(()=>{const s=sceneRef?.current;if(!s)return;const m=buildMat();s.traverse(o=>{if(o.isMesh&&!o.userData.isHelper){o.material=m.clone();o.material.needsUpdate=true;}});},[buildMat,sceneRef]);
   const load=p=>{setColor(p.color);setRoughness(p.r);setMetalness(p.m);setClearcoat(p.cc);setCcr(p.ccr);setTransmission(p.tr);setSheen(p.sh);};
   if(!open)return null;
-  return(<div style={{width:250,background:C.panel,borderRadius:6,border:`1px solid ${C.border}`,fontFamily:C.font,color:C.text,fontSize:11,boxShadow:'0 8px 32px rgba(0,0,0,0.7)',display:'flex',flexDirection:'column',maxHeight:680}}>
+  return(<div className="spnl-btn">
     <div style={{background:'linear-gradient(90deg,#0a1520,#0d1117)',borderBottom:`1px solid ${C.border}`,padding:'8px 12px',display:'flex',alignItems:'center',gap:8}}>
       <div style={{width:6,height:6,borderRadius:'50%',background:'#aa88ff',boxShadow:'0 0 6px #aa88ff'}}/><span style={{fontSize:11,fontWeight:700,letterSpacing:2,color:'#aa88ff'}}>FILM MATERIAL</span>
       {onClose&&<span onClick={onClose} style={{marginLeft:'auto',cursor:'pointer',color:C.dim}}>×</span>}
