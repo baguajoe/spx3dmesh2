@@ -1304,3 +1304,14 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 1px s
 .tl-timecode          { color: var(--t0) !important; font-weight: 600 !important; font-size: 11px !important; }
 .spx-timeline-frame   { color: var(--t1) !important; }
 .spx-frame-num        { color: var(--t1) !important; font-weight: 500 !important; }
+
+/* ── Timeline brightness overrides ──────────────────────────────────── */
+.tl-frame-label        { color: #c8c8c8 !important; }
+.tl-frame-input        { color: #e0e0e0 !important; background: #1a1a2a !important; }
+.tl-btn                { color: #b0b0b0 !important; }
+.tl-btn--play          { color: #00ffc8 !important; }
+.spx-statusbar span    { color: #888888 !important; }
+.spx-statusbar span.tl-mode { color: #00ffc8 !important; }
+.tl-fps-select         { color: #c0c0c0 !important; background: #1a1a2a !important; }
+.spx-bottom-bar        { background: #0d0d1a !important; border-top: 1px solid #2a2a3a !important; }
+.spx-timeline          { background: #0d0d1a !important; }
