@@ -112,7 +112,7 @@ export default function CharacterTargetingPanel({ scene, onTargetChange }) {
           {selectedId ? `✓ Target: ${selected?.name}` : "No target selected — click mesh below"}
         </div>
         {selectedId && (
-          <div style={{marginBottom:8}}>
+          <div className="spnl-mb-sm">
             {selected?.hasSkeleton && <span style={S.tag}>RIGGED</span>}
             {selected?.hasMorphs   && <span style={S.tag}>MORPHS</span>}
             {selected?.userData?.isCharacter && <span style={S.tag}>CHARACTER</span>}

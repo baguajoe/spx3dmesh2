@@ -148,7 +148,7 @@ export default function ClothSimPanel({ meshRef, sceneRef, open=true, onClose })
           <Toggle label="SELF COLLISION" value={selfCollision} onChange={setSelfCollision}/>
         </Section>
 
-        <div className="fx-ctrl-grid fx-ctrl-grid--3" style={{marginTop:8}}>
+        <div className="fx-ctrl-grid fx-ctrl-grid--3" className="spnl-mt-sm">
           <button className="fx-btn fx-btn--sm fx-btn--muted" onClick={initCloth}>INIT</button>
           {!simulating
             ? <button className="fx-btn fx-btn--sm fx-btn--play"  onClick={startSim}>▶ PLAY</button>

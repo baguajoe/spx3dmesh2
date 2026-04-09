@@ -428,3 +428,17 @@
 .spnl-section-body-pl { padding-left: 8px; }
 .gen-sec-label--pb { padding-bottom: 6px; }
 .gen-sec-label--mt { margin-top: 8px; padding-bottom: 4px; }
+/* ── Additional panel utility classes ────────────────── */
+.spnl-col      { display: flex; flex-direction: column; gap: 6px; }
+.spnl-mb-sm    { margin-bottom: 6px; }
+.spnl-mb-xs    { margin-bottom: 4px; }
+.spnl-mt-sm    { margin-top: 8px; }
+.spnl-mt-xs    { margin-top: 4px; }
+.spnl-text--bold { font-weight: 600; }
+.spnl-tag      { padding: 2px 6px; border-radius: 3px; font-size: 9px; font-family: JetBrains Mono, monospace; }
+.spnl-tag--teal   { background: rgba(0,255,200,0.12); color: #00ffc8; border: 1px solid rgba(0,255,200,0.25); }
+.spnl-tag--orange { background: rgba(255,102,0,0.12); color: #FF6600; border: 1px solid rgba(255,102,0,0.25); }
+.nms-svg    { position: absolute; top: 40px; left: 0; width: 100%; height: calc(100% - 40px); pointer-events: none; }
+.nms-canvas { position: absolute; top: 40px; left: 0; right: 0; bottom: 0; }
+.spnl-seq-label        { font-size: 11px; flex: 1; color: #8b949e; font-family: JetBrains Mono, monospace; }
+.spnl-seq-label--active { color: #00ffc8; }

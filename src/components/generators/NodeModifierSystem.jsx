@@ -175,12 +175,12 @@ export default function NodeModifierSystem({ scene }) {
           <span className="nms-toolbar__label">NODE GRAPH</span>
           <span className="nms-toolbar__hint">DRAG NODES | ALT+DRAG PAN | CLICK OUTPUT SOCKET → INPUT TO CONNECT</span>
           <div className="nms-toolbar__right">
-            <span className="nms-tag" style={{background:'rgba(0,255,200,0.12)',color:'var(--teal)',border:'1px solid rgba(0,255,200,0.25)'}}>NODES: {nodes.length}</span>
-            <span className="nms-tag" style={{background:'rgba(255,102,0,0.12)',color:'var(--orange)',border:'1px solid rgba(255,102,0,0.25)'}}>WIRES: {connections.length}</span>
+            <span className="nms-tag" className="spnl-tag spnl-tag--teal">NODES: {nodes.length}</span>
+            <span className="nms-tag" className="spnl-tag spnl-tag--orange">WIRES: {connections.length}</span>
           </div>
         </div>
 
-        <svg style={{position:"absolute",top:40,left:0,width:"100%",height:"calc(100% - 40px)",pointerEvents:"none"}} ref={svgRef}>
+        <svg className="nms-svg" ref={svgRef}>
           <defs>
             <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
               <polygon points="0 0, 6 3, 0 6" fill="#00ffc8" opacity="0.6"/>
@@ -198,7 +198,7 @@ export default function NodeModifierSystem({ scene }) {
           })}
         </svg>
 
-        <div style={{position:"absolute",top:40,left:0,right:0,bottom:0}} onMouseDown={e=>{if(!e.target.closest(".graph-node"))handleGraphMouseDown(e,null);}}>
+        <div className="nms-canvas" onMouseDown={e=>{if(!e.target.closest(".graph-node"))handleGraphMouseDown(e,null);}}>
           {nodes.map(node=>{
             const def=NODE_TYPES[node.type];
             return (

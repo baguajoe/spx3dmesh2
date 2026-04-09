@@ -161,7 +161,7 @@ export default function BaseModelLibraryPanel({ scene, onLaunchGenerator }) {
           placeholder="Search models, tags..."
           value={filter} onChange={e=>setFilter(e.target.value)}
         />
-        <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+        <div className="spnl-row">
           {cats.map(c=>(
             <button key={c} style={{...S.btnO,padding:"2px 8px",fontSize:10,background:category===c?T.teal:T.panel,color:category===c?T.bg:T.muted,border:"1px solid "+(category===c?T.teal:"#333")}} onClick={()=>setCategory(c)}>
               {c.replace(/[🧍🐾🐉🧬]\s/,"")}
@@ -174,7 +174,7 @@ export default function BaseModelLibraryPanel({ scene, onLaunchGenerator }) {
         <div key={model.id} style={{...S.card,borderColor:selected===model.id?T.teal:T.border}} onClick={()=>selectModel(model)}>
           <div style={S.cardH}>{model.name}</div>
           <div style={S.cardD}>{model.desc}</div>
-          <div style={{marginTop:4}}>
+          <div className="spnl-mt-xs">
             {model.tags.map(t=><span key={t} style={S.badge}>{t}</span>)}
           </div>
           {selected===model.id && (

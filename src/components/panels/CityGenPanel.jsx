@@ -88,7 +88,7 @@ export default function CityGenPanel({sceneRef,open=true,onClose}) {
               <Knob label="Seed"    value={seed}      min={0}  max={999}step={1}   onChange={setSeed}      color='#ffaa44'/>
             </div>
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10,padding:'8px 10px',background:'#0a0f1a',borderRadius:5,border:`1px solid ${C.border}`}}>
-              <span style={{fontSize:9,color:C.dim}}>ROADS</span>
+              <span className="spnl-dim">ROADS</span>
               <div onClick={()=>setAddRoads(v=>!v)} style={{width:32,height:16,borderRadius:8,cursor:'pointer',position:'relative',background:addRoads?C.teal:C.border}}>
                 <div style={{position:'absolute',top:2,left:addRoads?16:2,width:12,height:12,borderRadius:'50%',background:addRoads?C.bg:'#555',transition:'left 0.15s'}}/>
               </div>

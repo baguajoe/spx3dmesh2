@@ -81,8 +81,8 @@ function ColorPicker({ label, value, onChange }) {
 // ── Toggle ────────────────────────────────────────────────────────────────────
 function Toggle({ label, value, onChange }) {
   return (
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8 }}>
-      <span style={{ fontSize:10, color:C.t1, fontFamily:C.font }}>{label}</span>
+    <div className="spnl-row spnl-row--between">
+      <span className="spnl-text">{label}</span>
       <div onClick={() => onChange(!value)} style={{
         width:32, height:16, borderRadius:8, background: value ? C.teal : C.border,
         cursor:"pointer", position:"relative", transition:"background 0.2s", flexShrink:0,
@@ -189,7 +189,7 @@ export default function CustomSkinBuilderPanel({ open, onClose, onApply, onDownl
           <div style={{ display:"flex", flexWrap:"wrap", gap:12, marginBottom:10 }}>
             <ColorPicker label="Base Color" value={params.baseColor} onChange={set("baseColor")}/>
           </div>
-          <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+          <div className="spnl-row">
             <Knob label="Roughness"  value={params.roughness}  min={0} max={1} onChange={set("roughness")}/>
             <Knob label="Metalness"  value={params.metalness}  min={0} max={1} onChange={set("metalness")} color={C.orange}/>
             <Knob label="Clearcoat"  value={params.clearcoat}  min={0} max={1} onChange={set("clearcoat")} color="#4a9eff"/>
@@ -202,7 +202,7 @@ export default function CustomSkinBuilderPanel({ open, onClose, onApply, onDownl
           <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:10 }}>
             <ColorPicker label="SSS Color" value={params.sssColor} onChange={set("sssColor")}/>
           </div>
-          <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+          <div className="spnl-row">
             <Knob label="Strength" value={params.sssStrength} min={0} max={1} onChange={set("sssStrength")} color="#ff8866"/>
             <Knob label="Radius"   value={params.sssRadius}   min={0} max={2} onChange={set("sssRadius")}   color="#ff8866"/>
           </div>
@@ -216,7 +216,7 @@ export default function CustomSkinBuilderPanel({ open, onClose, onApply, onDownl
           <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:10 }}>
             <ColorPicker label="Sheen Color" value={params.sheenColor} onChange={set("sheenColor")}/>
           </div>
-          <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+          <div className="spnl-row">
             <Knob label="Sheen"      value={params.sheen}      min={0} max={1} onChange={set("sheen")} color="#a78bfa"/>
             <Knob label="Anisotropy" value={params.anisotropy} min={0} max={1} onChange={set("anisotropy")} color="#a78bfa"/>
           </div>
@@ -224,7 +224,7 @@ export default function CustomSkinBuilderPanel({ open, onClose, onApply, onDownl
 
         {/* Transmission */}
         <Section title="Transmission / Glass" color="#4a9eff">
-          <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+          <div className="spnl-row">
             <Knob label="Transmit"  value={params.transmission} min={0} max={1} step={0.01} onChange={set("transmission")} color="#4a9eff"/>
             <Knob label="IOR"       value={params.ior}          min={1} max={2.5} step={0.01} onChange={set("ior")} color="#4a9eff"/>
             <Knob label="Thickness" value={params.thickness}    min={0} max={3}   step={0.1}  onChange={set("thickness")}/>
@@ -240,9 +240,9 @@ export default function CustomSkinBuilderPanel({ open, onClose, onApply, onDownl
             <Knob label="Age"          value={params.age}             min={0}  max={100} step={1}   onChange={set("age")} color={C.orange}/>
           </div>
           {/* Noise type */}
-          <div style={{ marginBottom:8 }}>
+          <div className="spnl-mb-sm">
             <div style={{ fontSize:9, color:C.t2, marginBottom:4 }}>Noise Type</div>
-            <div style={{ display:"flex", gap:4 }}>
+            <div className="spnl-row">
               {["perlin","voronoi","cellular"].map(n => (
                 <button key={n} onClick={() => set("noiseType")(n)} style={{
                   background: params.noiseType===n ? C.orange : C.panel2,
@@ -256,7 +256,7 @@ export default function CustomSkinBuilderPanel({ open, onClose, onApply, onDownl
           {/* Texture size */}
           <div>
             <div style={{ fontSize:9, color:C.t2, marginBottom:4 }}>Texture Size</div>
-            <div style={{ display:"flex", gap:4 }}>
+            <div className="spnl-row">
               {[512,1024,2048,4096].map(s => (
                 <button key={s} onClick={() => set("textureSize")(s)} style={{
                   background: params.textureSize===s ? C.teal : C.panel2,

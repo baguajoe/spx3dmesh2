@@ -311,7 +311,7 @@ export default function TwoDViewportPanel({ liveKeyframes }) {
         <input style={S.inp} type="range" min={8} max={60} step={1} value={fps} onChange={e=>setFps(+e.target.value)}/>
         <label style={S.lbl}><input type="checkbox" checked={playing} onChange={e=>setPlaying(e.target.checked)}/> Animate</label>
       </div>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+      <div className="spnl-row">
         {splitMode !== "Style B Only" && (
           <div>
             <div style={{...S.lbl,color:T.teal}}>{blending?"Blended":styleA}</div>
@@ -325,14 +325,14 @@ export default function TwoDViewportPanel({ liveKeyframes }) {
           </div>
         )}
       </div>
-      <div style={{marginTop:8}}>
+      <div className="spnl-mt-sm">
         <button style={S.btn} onClick={()=>setPlaying(!playing)}>{playing?"⏸ Pause":"▶ Play"}</button>
         <button style={S.btnO} onClick={exportFrame}>💾 Export Frame</button>
       </div>
       {status && <div style={{...S.stat,marginTop:8}}>{status}</div>}
       <div style={S.sec}>
         <div style={S.lbl}>Combinable Style Pairs</div>
-        <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+        <div className="spnl-row">
           {COMBINABLE_PAIRS.map(([a,b])=>(
             <button key={a+b} style={S.btnSm} onClick={()=>{setStyleA(a);setStyleB(b);setBlending(true);}}>
               {a} + {b}

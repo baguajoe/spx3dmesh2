@@ -83,7 +83,7 @@ export default function TerrainSculptingPanel({ scene, camera }) {
         <select value={preset} onChange={e => setPreset(e.target.value)} style={S.select}>
           {PRESETS.map(p => <option key={p}>{p}</option>)}
         </select>
-        <div style={{ display:"flex", gap:6 }}>
+        <div className="spnl-row">
           <button style={S.btnPrimary} onClick={buildTerrain}>Generate</button>
           <button style={S.btnOrange} onClick={() => setSeed(Math.floor(Math.random()*9999))}>
             Randomize

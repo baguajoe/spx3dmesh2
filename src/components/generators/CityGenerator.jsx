@@ -302,8 +302,8 @@ export default function CityGenerator({ scene }) {
         <div className="gen-toolbar">
           <span className="gen-toolbar__label">CITY VIEWPORT — {CITY_STYLES[style].label.toUpperCase()}</span>
           <div className="gen-toolbar__right">
-            <span className="gen-tag" style={{background:'rgba(0,255,200,0.12)',color:'var(--teal)',border:'1px solid rgba(0,255,200,0.25)'}}>DRAG ORBIT</span>
-            <span className="gen-tag" style={{background:'rgba(255,102,0,0.12)',color:'var(--orange)',border:'1px solid rgba(255,102,0,0.25)'}}>SCROLL ZOOM</span>
+            <span className="gen-tag" className="spnl-tag spnl-tag--teal">DRAG ORBIT</span>
+            <span className="gen-tag" className="spnl-tag spnl-tag--orange">SCROLL ZOOM</span>
             {nightMode && <span className="gen-tag" style={{background:'rgba(170,68,255,0.12)',color:'#aa44ff',border:'1px solid rgba(170,68,255,0.25)'}}>NIGHT MODE</span>}
           </div>
         </div>

@@ -17,7 +17,7 @@ function Slider({ label, value, min=0, max=1, step=0.01, onChange, unit='' }) {
 }
 function Select({ label, value, options, onChange }) {
   return (
-    <div style={{ marginBottom:6 }}>
+    <div className="spnl-mb-sm">
       {label && <div style={{ fontSize:10, color:'#888', marginBottom:2 }}>{label}</div>}
       <select value={value} onChange={e => onChange(e.target.value)} className="ha-select">
         {options.map(o => <option key={o} value={o}>{o}</option>)}

@@ -148,7 +148,7 @@ export default function EnvironmentGeneratorPanel({ scene, camera }) {
             onChange={v => { setTimeOfDay(v); todRef.current = v; if (envRef.current) envRef.current.setTimeOfDay(v); }}
             size={64} unit="h" accentColor="#FF6600" />
         </div>
-        <div style={{ marginTop:8 }}>
+        <div className="spnl-mt-sm">
           <button style={S.btn(animate)} onClick={() => setAnimate(!animate)}>
             {animate ? "⏸ Stop Animation" : "▶ Animate Day Cycle"}
           </button>

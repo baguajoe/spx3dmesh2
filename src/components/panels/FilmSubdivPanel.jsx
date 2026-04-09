@@ -34,7 +34,7 @@ export default function FilmSubdivPanel({meshRef,sceneRef,open=true,onClose}){
       <Section title='MULTIRES LEVELS' color='#44aaff'>
         {levels.length===0&&<div className="spnl-dim">No levels — init stack first</div>}
         <div className="spnl-level-list">
-          {levels.map((l,i)=><div key={i} onClick={()=>goToLevel(i)} style={{display:'flex',justifyContent:'space-between',padding:'4px 8px',borderRadius:4,cursor:'pointer',border:`1px solid ${currentLevel===i?'#44aaff':C.border}`,background:currentLevel===i?'rgba(68,170,255,0.1)':C.bg}}><span style={{fontSize:9,fontWeight:700,color:currentLevel===i?'#44aaff':C.dim}}>Level {i}</span><span style={{fontSize:9,color:C.dim}}>{l.verts.toLocaleString()} verts</span></div>)}
+          {levels.map((l,i)=><div key={i} onClick={()=>goToLevel(i)} style={{display:'flex',justifyContent:'space-between',padding:'4px 8px',borderRadius:4,cursor:'pointer',border:`1px solid ${currentLevel===i?'#44aaff':C.border}`,background:currentLevel===i?'rgba(68,170,255,0.1)':C.bg}}><span style={{fontSize:9,fontWeight:700,color:currentLevel===i?'#44aaff':C.dim}}>Level {i}</span><span className="spnl-dim">{l.verts.toLocaleString()} verts</span></div>)}
         </div>
         <div className="spnl-grid-2">
           <button onClick={initStack} className="spnl-btn">INIT</button>

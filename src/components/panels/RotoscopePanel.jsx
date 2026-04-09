@@ -89,7 +89,7 @@ export default function RotoscopePanel({sceneRef,rendererRef,currentFrame,setCur
   },[sceneRef]);
 
   function Slider({label,value,min,max,step=0.01,onChange,unit=''}){return(<div className="ha-slider-wrap"><div className="ha-slider-row"><span>{label}</span><span className="ha-slider-val">{step<0.1?Number(value).toFixed(2):Math.round(value)}{unit}</span></div><input type='range' min={min} max={max} step={step} value={value} onChange={e=>onChange(parseFloat(e.target.value))} className="ha-slider"/></div>);}
-  function Toggle({label,value,onChange}){return(<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5}}><span style={{fontSize:9,color:C.dim}}>{label}</span><div onClick={()=>onChange(!value)} style={{width:32,height:16,borderRadius:8,cursor:'pointer',position:'relative',background:value?C.teal:C.border}}><div style={{position:'absolute',top:2,left:value?16:2,width:12,height:12,borderRadius:'50%',background:value?C.bg:'#555',transition:'left 0.15s'}}/></div></div>);}
+  function Toggle({label,value,onChange}){return(<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5}}><span className="spnl-dim">{label}</span><div onClick={()=>onChange(!value)} style={{width:32,height:16,borderRadius:8,cursor:'pointer',position:'relative',background:value?C.teal:C.border}}><div style={{position:'absolute',top:2,left:value?16:2,width:12,height:12,borderRadius:'50%',background:value?C.bg:'#555',transition:'left 0.15s'}}/></div></div>);}
   function Section({title,color=C.teal,children,defaultOpen=true}){const [open,setOpen]=useState(defaultOpen);return(<div className="spnl-section-wrap"><div onClick={()=>setOpen(v=>!v)} className="spnl-section-hdr" style={{borderLeftColor:color}}><span className="spnl-section-arrow" style={{color}}>{open?'▾':'▸'}</span><span className="spnl-section-name">{title}</span></div>{open&&<div className="spnl-section-body-pl">{children}</div>}</div>);}
 
   if(!open) return null;
@@ -144,7 +144,7 @@ export default function RotoscopePanel({sceneRef,rendererRef,currentFrame,setCur
       {videoURL&&<Section title='ONION SKIN' color='#aaffcc' defaultOpen={false}>
         <Toggle label='ONION SKIN' value={onionSkin} onChange={setOnionSkin}/>
         <Slider label='FRAMES' value={onionFrames} min={1} max={5} step={1} onChange={setOnionFrames}/>
-        <div style={{fontSize:9,color:C.dim}}>Shows ghost frames ±{onionFrames} around current frame</div>
+        <div className="spnl-dim">Shows ghost frames ±{onionFrames} around current frame</div>
       </Section>}
 
       {/* Tips */}

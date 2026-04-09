@@ -259,7 +259,7 @@ export default function ShapeShifterPanel({ scene, selectedMeshName }) {
           <label style={S.lbl}>Blend A→B: {(blend*100).toFixed(0)}%</label>
           <input style={S.inp} type="range" min={0} max={1} step={0.001} value={blend}
             onChange={e=>{ setBlend(+e.target.value); applyCurrentBlend(+e.target.value); }}/>
-          <div style={{display:"flex",gap:8,marginBottom:8}}>
+          <div className="spnl-row">
             <button style={S.btnSm} onClick={()=>{setBlend(0);applyCurrentBlend(0);}}>← Full A</button>
             <button style={S.btnSm} onClick={()=>{setBlend(0.5);applyCurrentBlend(0.5);}}>50/50</button>
             <button style={S.btnSm} onClick={()=>{setBlend(1);applyCurrentBlend(1);}}>Full B →</button>
@@ -279,8 +279,8 @@ export default function ShapeShifterPanel({ scene, selectedMeshName }) {
       {mode === "Sequence Chain" && <div style={S.sec}>
         <div style={S.h3}>Morph Sequence ({sequence.length} forms)</div>
         {sequence.map((f,i) => (
-          <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-            <span style={{fontSize:11,color:seqIdx===i?T.teal:T.muted,flex:1}}>{i+1}. {f}</span>
+          <div key={i} className="spnl-row">
+            <span className={`spnl-seq-label${seqIdx===i?' spnl-seq-label--active':''}`}>{i+1}. {f}</span>
             <button style={S.btnSm} onClick={()=>removeFromSequence(i)}>✕</button>
           </div>
         ))}
@@ -297,7 +297,7 @@ export default function ShapeShifterPanel({ scene, selectedMeshName }) {
 
       <div style={S.sec}>
         <div style={S.h3}>Form Cards</div>
-        <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+        <div className="spnl-row">
           {FORM_NAMES.map(f => (
             <button key={f} style={{
               ...S.btnSm,
