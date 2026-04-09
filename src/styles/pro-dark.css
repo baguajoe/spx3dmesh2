@@ -150,15 +150,15 @@ input, select { font-family: inherit; }
 .spx-workspaces {
   display: flex; align-items: stretch; height: var(--tabs-h);
   background: var(--d1); border-bottom: 1px solid var(--b2);
-  padding: 0 4px; gap: 1px; overflow-x: auto;
-  scrollbar-width: none; z-index: 90;
+  padding: 0 2px; gap: 0px; overflow-x: auto;
+  scrollbar-width: none; z-index: 90; flex-wrap: nowrap;
 }
 .spx-workspaces::-webkit-scrollbar { display: none; }
 
 .spx-workspace {
-  display: flex; align-items: center; padding: 0 8px;
-  font-family: var(--mono); font-size: 8.5px; font-weight: 500;
-  letter-spacing: 0.08em; text-transform: uppercase; color: var(--t1);
+  display: flex; align-items: center; padding: 0 6px;
+  font-family: var(--mono); font-size: 8px; font-weight: 500;
+  letter-spacing: 0.05em; text-transform: uppercase; color: var(--t1);
   background: transparent; border: none;
   border-bottom: 2px solid transparent; margin-bottom: -1px;
   cursor: pointer; white-space: nowrap;
