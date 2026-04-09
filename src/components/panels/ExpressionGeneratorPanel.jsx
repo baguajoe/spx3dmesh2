@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 
 function Slider({ label, value, min=0, max=1, step=0.01, onChange, unit='' }) {
   return (
-    <div style={{ marginBottom: 5 }}>
+    <div className="ha-slider-wrap">
       <div style={{ display:'flex', justifyContent:'space-between', fontSize:10, color:'#888' }}>
         <span>{label}</span>
         <span style={{ color:'#00ffc8', fontWeight:600 }}>
@@ -19,10 +19,7 @@ function Select({ label, value, options, onChange }) {
   return (
     <div style={{ marginBottom:6 }}>
       {label && <div style={{ fontSize:10, color:'#888', marginBottom:2 }}>{label}</div>}
-      <select value={value} onChange={e => onChange(e.target.value)} style={{
-        width:'100%', background:'#0d1117', color:'#e0e0e0',
-        border:'1px solid #21262d', padding:'3px 6px', borderRadius:4, fontSize:11, cursor:'pointer',
-      }}>
+      <select value={value} onChange={e => onChange(e.target.value)} className="ha-select">
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
     </div>

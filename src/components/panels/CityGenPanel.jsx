@@ -7,14 +7,14 @@ const C={bg:'#06060f',panel:'#0d1117',border:'#21262d',teal:'#00ffc8',orange:'#F
 function Knob({label,value,min,max,step=1,onChange,color=C.teal,unit=''}) {
   const pct=Math.min(1,Math.max(0,(value-min)/(max-min)));
   return (
-    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,minWidth:52}}>
+    <div className="spnl-knob">
       <div style={{width:42,height:42,borderRadius:'50%',background:`conic-gradient(${color} 0% ${pct*100}%, #1a2030 ${pct*100}% 100%)`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'ns-resize',border:'2px solid #1a2030'}}
         onMouseDown={e=>{const sy=e.clientY,sv=value;const mv=ev=>{const d=(sy-ev.clientY)/80*(max-min);onChange(Math.min(max,Math.max(min,step<1?parseFloat((sv+d).toFixed(2)):Math.round(sv+d))));};const up=()=>{document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);};document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);}}>
         <div style={{width:28,height:28,borderRadius:'50%',background:C.panel,display:'flex',alignItems:'center',justifyContent:'center'}}>
           <span style={{fontSize:7,fontWeight:700,color,fontFamily:C.font}}>{step<1?value.toFixed(1):Math.round(value)}{unit}</span>
         </div>
       </div>
-      <span style={{fontSize:7,color:C.dim,letterSpacing:0.3,textTransform:'uppercase',textAlign:'center',fontFamily:C.font}}>{label}</span>
+      <span className="spnl-knob-label">{label}</span>
     </div>
   );
 }

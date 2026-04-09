@@ -88,9 +88,9 @@ const s = {
 
 function SliderRow({ label, value, min, max, step = 0.1, onChange, unit = "" }) {
   return (
-    <div style={s.row}>
-      <span style={s.label}>{label}</span>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(+e.target.value)} style={s.slider} />
+    <div className="spnl-row">
+      <span className="spnl-label">{label}</span>
+      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(+e.target.value)} className="spnl-slider" />
       <span style={s.val}>{value}{unit}</span>
     </div>
   );
@@ -244,7 +244,7 @@ export default function AssetLibrary({ scene }) {
   const currentAssets = search ? filteredAssets : CATEGORIES[category]?.assets || [];
 
   return (
-    <div style={s.root}>
+    <div className="spnl-root">
       {/* Left: Categories + Assets */}
       <div style={s.left}>
         <input style={s.searchInput} placeholder="🔍 Search assets..." value={search} onChange={e => setSearch(e.target.value)} />
@@ -254,7 +254,7 @@ export default function AssetLibrary({ scene }) {
             {Object.entries(CATEGORIES).map(([k, v]) => (
               <button key={k} style={s.catBtn(category === k)} onClick={() => setCategory(k)}>
                 <span>{v.icon}</span><span>{v.label}</span>
-                <span style={{ marginLeft: "auto", fontSize: 8, color: C.muted }}>{v.assets.length}</span>
+                <span className="spnl-dim spnl-ml-auto">{v.assets.length}</span>
               </button>
             ))}
             <div style={s.divider} />
@@ -266,9 +266,9 @@ export default function AssetLibrary({ scene }) {
             const cnt = placedRef.current.filter(p => p.assetId === a.id).length;
             return (
               <div key={a.id} style={s.assetCard(cnt > 0)} onClick={() => placeAsset(a)} title={`Click to place ${a.label}`}>
-                <div style={{ fontSize: 22, marginBottom: 3 }}>{a.icon}</div>
-                <div style={{ fontSize: 9 }}>{a.label}</div>
-                {cnt > 0 && <div style={{ color: C.teal, fontSize: 8, marginTop: 2 }}>×{cnt}</div>}
+                <div className="spnl-icon-lg">{a.icon}</div>
+                <div className="spnl-text-sm">{a.label}</div>
+                {cnt > 0 && <div className="spnl-teal spnl-text-xs">×{cnt}</div>}
               </div>
             );
           })}
@@ -278,9 +278,9 @@ export default function AssetLibrary({ scene }) {
       {/* Main Viewport */}
       <div style={s.main}>
         <div style={s.toolbar}>
-          <span style={{ fontSize: 10, color: C.muted }}>ASSET LIBRARY VIEWPORT</span>
+          <span className="spnl-dim">ASSET LIBRARY VIEWPORT</span>
           <span style={{ fontSize: 9, color: C.muted }}>CLICK ASSET → PLACE | DRAG → ORBIT | SCROLL → ZOOM</span>
-          <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+          <div className="spnl-row spnl-ml-auto">
             <span style={s.tag(C.teal)}>OBJECTS: {stats.objects}</span>
           </div>
         </div>
@@ -288,7 +288,7 @@ export default function AssetLibrary({ scene }) {
         <div style={s.statusBar}>
           <span>OBJECTS: {stats.objects}</span>
           <span>TRIANGLES: {stats.tris.toLocaleString()}</span>
-          <span style={{ marginLeft: "auto", color: C.teal }}>CAT: {CATEGORIES[category]?.label.toUpperCase()}</span>
+          <span className="spnl-teal spnl-ml-auto">CAT: {CATEGORIES[category]?.label.toUpperCase()}</span>
         </div>
       </div>
 
@@ -297,9 +297,9 @@ export default function AssetLibrary({ scene }) {
         <div style={s.sectionLabel}>Placement</div>
         <SliderRow label="Scale" value={placeScale} min={0.1} max={5} step={0.05} onChange={setPlaceScale} />
         <SliderRow label="Rotation Y" value={placeRotY} min={0} max={360} step={5} onChange={setPlaceRotY} unit="°" />
-        <div style={s.row}>
-          <span style={s.label}>Randomize</span>
-          <input type="checkbox" checked={randomize} onChange={e => setRandomize(e.target.checked)} style={{ accentColor: C.teal }} />
+        <div className="spnl-row">
+          <span className="spnl-label">Randomize</span>
+          <input type="checkbox" checked={randomize} onChange={e => setRandomize(e.target.checked)} className="spnl-check-input" />
         </div>
 
         <div style={s.divider} />

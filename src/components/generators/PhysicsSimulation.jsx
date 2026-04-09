@@ -37,9 +37,9 @@ const s = {
 
 function SliderRow({ label, value, min, max, step = 0.1, onChange, unit = "" }) {
   return (
-    <div style={s.row}>
-      <span style={s.label}>{label}</span>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(+e.target.value)} style={s.slider} />
+    <div className="spnl-row">
+      <span className="spnl-label">{label}</span>
+      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(+e.target.value)} className="spnl-slider" />
       <span style={s.val}>{value}{unit}</span>
     </div>
   );
@@ -505,7 +505,7 @@ export default function PhysicsSimulation({ scene }) {
   };
 
   return (
-    <div style={s.root}>
+    <div className="spnl-root">
       <div style={s.sidebar}>
         <div style={s.sectionLabel}>Scenario</div>
         <div style={s.scenarioGrid}>
@@ -525,7 +525,7 @@ export default function PhysicsSimulation({ scene }) {
         <SliderRow label="Wind Force" value={wind} min={-10} max={10} step={0.5} onChange={v => { setWind(v); windRef.current = v; }} />
 
         <div style={s.divider} />
-        <div style={s.row}><span style={s.label}>Wireframe</span><Toggle value={showWireframe} onChange={setShowWireframe} /></div>
+        <div className="spnl-row"><span className="spnl-label">Wireframe</span><Toggle value={showWireframe} onChange={setShowWireframe} /></div>
 
         <div style={s.divider} />
         <div style={s.sectionLabel}>Controls</div>
@@ -554,8 +554,8 @@ export default function PhysicsSimulation({ scene }) {
 
       <div style={s.main}>
         <div style={s.toolbar}>
-          <span style={{ fontSize: 10, color: C.muted }}>PHYSICS — {SCENARIOS[scenario]?.label.toUpperCase()}</span>
-          <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+          <span className="spnl-dim">PHYSICS — {SCENARIOS[scenario]?.label.toUpperCase()}</span>
+          <div className="spnl-row spnl-ml-auto">
             <span style={s.tag(running ? C.orange : C.muted)}>{running ? "SIMULATING" : "PAUSED"}</span>
             <span style={s.tag(C.teal)}>{stats.fps} FPS</span>
           </div>
@@ -566,7 +566,7 @@ export default function PhysicsSimulation({ scene }) {
           <span>SLEEPING: {stats.sleeping}</span>
           <span>GRAVITY: {gravity} m/s²</span>
           <span>WIND: {wind}</span>
-          <span style={{ marginLeft: "auto", color: C.teal }}>FPS: {stats.fps}</span>
+          <span className="spnl-teal spnl-ml-auto">FPS: {stats.fps}</span>
         </div>
       </div>
     </div>

@@ -53,9 +53,9 @@ const s = {
 
 function SliderRow({ label, value, min, max, step = 0.1, onChange, unit = "" }) {
   return (
-    <div style={s.row}>
-      <span style={s.label}>{label}</span>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(+e.target.value)} style={s.slider} />
+    <div className="spnl-row">
+      <span className="spnl-label">{label}</span>
+      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(+e.target.value)} className="spnl-slider" />
       <span style={s.val}>{value}{unit}</span>
     </div>
   );
@@ -341,7 +341,7 @@ export default function BuildingSimulator({ scene }) {
   };
 
   return (
-    <div style={s.root}>
+    <div className="spnl-root">
       {/* Tool strip */}
       <div style={s.left}>
         {TOOLS.map(t => (
@@ -424,9 +424,9 @@ export default function BuildingSimulator({ scene }) {
       {/* Viewport */}
       <div style={s.main}>
         <div style={s.toolbar}>
-          <span style={{ fontSize: 10, color: C.muted }}>BUILDING SIMULATOR</span>
+          <span className="spnl-dim">BUILDING SIMULATOR</span>
           <span style={{ fontSize: 9, color: C.teal, marginLeft: 8 }}>LEFT CLICK: Place  |  RIGHT DRAG: Orbit  |  SCROLL: Zoom</span>
-          <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+          <div className="spnl-row spnl-ml-auto">
             <span style={s.tag(C.teal)}>TOOL: {tool.toUpperCase()}</span>
             <span style={s.tag(C.orange)}>LVL: {floorLevel}u</span>
           </div>
@@ -435,7 +435,7 @@ export default function BuildingSimulator({ scene }) {
         <div style={s.statusBar}>
           <span>OBJECTS: {stats.objects}</span>
           <span>TRIANGLES: {stats.tris.toLocaleString()}</span>
-          <span style={{ marginLeft: "auto", color: C.teal }}>MAT: {matId.toUpperCase()} | SNAP: {gridSnap}u</span>
+          <span className="spnl-teal spnl-ml-auto">MAT: {matId.toUpperCase()} | SNAP: {gridSnap}u</span>
         </div>
       </div>
     </div>

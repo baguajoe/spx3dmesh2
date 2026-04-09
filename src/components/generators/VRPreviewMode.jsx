@@ -41,9 +41,9 @@ function Toggle({ value, onChange }) {
 
 function SliderRow({ label, value, min, max, step = 0.1, onChange, unit = "" }) {
   return (
-    <div style={s.row}>
-      <span style={s.label}>{label}</span>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(+e.target.value)} style={s.slider} />
+    <div className="spnl-row">
+      <span className="spnl-label">{label}</span>
+      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(+e.target.value)} className="spnl-slider" />
       <span style={s.val}>{value}{unit}</span>
     </div>
   );
@@ -341,7 +341,7 @@ export default function VRPreviewMode({ scene }) {
   };
 
   return (
-    <div style={s.root}>
+    <div className="spnl-root">
       <div style={s.sidebar}>
         <div style={s.sectionLabel}>Environment</div>
         <div style={s.envGrid}>
@@ -357,12 +357,12 @@ export default function VRPreviewMode({ scene }) {
         <div style={s.sectionLabel}>Avatar</div>
         <SliderRow label="Height" value={avatarHeight} min={0.5} max={2.5} step={0.05} onChange={setAvatarHeight} unit="m" />
         <SliderRow label="Scale" value={avatarScale} min={0.5} max={2} step={0.05} onChange={setAvatarScale} />
-        <div style={s.row}><span style={s.label}>Show Avatar</span><Toggle value={showAvatar} onChange={setShowAvatar} /></div>
+        <div className="spnl-row"><span className="spnl-label">Show Avatar</span><Toggle value={showAvatar} onChange={setShowAvatar} /></div>
 
         <div style={s.divider} />
         <div style={s.sectionLabel}>VR Camera</div>
         <SliderRow label="FOV" value={fov} min={60} max={120} step={1} onChange={setFov} unit="°" />
-        <div style={s.row}><span style={s.label}>Head Tracking</span><Toggle value={headTracking} onChange={setHeadTracking} /></div>
+        <div className="spnl-row"><span className="spnl-label">Head Tracking</span><Toggle value={headTracking} onChange={setHeadTracking} /></div>
 
         <div style={s.divider} />
         <div style={s.sectionLabel}>Movement</div>
@@ -376,7 +376,7 @@ export default function VRPreviewMode({ scene }) {
 
         <div style={s.divider} />
         <div style={s.sectionLabel}>Comfort Zone</div>
-        <div style={s.row}><span style={s.label}>Show Grid</span><Toggle value={showComfort} onChange={setShowComfort} /></div>
+        <div className="spnl-row"><span className="spnl-label">Show Grid</span><Toggle value={showComfort} onChange={setShowComfort} /></div>
 
         <div style={s.divider} />
         <div style={s.sectionLabel}>Teleport</div>
@@ -396,9 +396,9 @@ export default function VRPreviewMode({ scene }) {
 
       <div style={s.main}>
         <div style={s.toolbar}>
-          <span style={{ fontSize: 10, color: C.muted }}>VR PREVIEW — {ENVIRONMENTS.find(e => e.id === environment)?.label.toUpperCase()}</span>
+          <span className="spnl-dim">VR PREVIEW — {ENVIRONMENTS.find(e => e.id === environment)?.label.toUpperCase()}</span>
           {vrMode && <span style={{ ...s.tag(C.purple), animation: "none" }}>VR SPLIT-SCREEN</span>}
-          <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+          <div className="spnl-row spnl-ml-auto">
             <span style={s.tag(C.teal)}>H: {avatarHeight}m</span>
             <span style={s.tag(C.orange)}>FOV: {fov}°</span>
           </div>
