@@ -3982,10 +3982,19 @@ export default function App() {
               <text x="4"  y="47" fontSize="8" fill="#44e" fontFamily="monospace">Z</text>
             </svg>
           </div>
-          {/* Viewport label */}
-          <div className="spx-viewport-label">
-            User Perspective
-          </div>
+          {/* Viewport labels */}
+            <div className="spx-viewport-label">
+              {editMode === 'edit' ? (selectMode === 'vert' ? 'VERTEX' : selectMode === 'edge' ? 'EDGE' : 'FACE') + ' EDIT' : 'Perspective'} · {activeWorkspace}
+            </div>
+          )}
+          {quadView && (
+            <div className="spx-quad-labels">
+              <div className="spx-quad-label spx-quad-label--tl">Perspective</div>
+              <div className="spx-quad-label spx-quad-label--tr">Top</div>
+              <div className="spx-quad-label spx-quad-label--bl">Front</div>
+              <div className="spx-quad-label spx-quad-label--br">Right</div>
+            </div>
+          )}
           {boxSelect && (
             <div className="spx-box-select" style={{left:boxSelect.x,top:boxSelect.y,width:boxSelect.w,height:boxSelect.h}}/>
           )}
