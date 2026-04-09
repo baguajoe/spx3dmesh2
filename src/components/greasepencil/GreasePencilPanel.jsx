@@ -1,33 +1,18 @@
-
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   createLayer, createStroke, addStrokeToFrame,
   buildStrokeMesh, getStrokesAtFrame, clearFrame, duplicateFrame,
 } from "../../mesh/GreasePencil.js";
 
-const s = {
-  overlay: { position:"fixed",inset:0,zIndex:8600,background:"rgba(0,0,0,0.75)",display:"flex",alignItems:"stretch",justifyContent:"flex-end" },
-  panel: { width:480,background:"#0d1117",borderLeft:"1px solid #21262d",display:"flex",flexDirection:"column",overflow:"hidden" },
-  header: { display:"flex",alignItems:"center",gap:10,padding:"12px 16px",borderBottom:"1px solid #21262d",flexShrink:0 },
-  logo: { background:"#00ffc8",color:"#000",fontSize:10,fontWeight:800,padding:"2px 6px",borderRadius:4 },
-  body: { flex:1,overflow:"auto",padding:14,display:"flex",flexDirection:"column",gap:12 },
-  label: { fontSize:10,color:"#6b7280",letterSpacing:1,textTransform:"uppercase",marginBottom:4 },
-  btn: { padding:"5px 12px",borderRadius:6,border:"1px solid #21262d",background:"#1a1a2e",color:"#e0e0e0",cursor:"pointer",fontSize:11 },
-  btnActive: { padding:"5px 12px",borderRadius:6,border:"1px solid #00ffc8",background:"rgba(0,255,200,0.1)",color:"#00ffc8",cursor:"pointer",fontSize:11 },
-  row: { display:"flex",gap:6,flexWrap:"wrap",alignItems:"center" },
-  canvas: { width:"100%",borderRadius:8,border:"1px solid #21262d",background:"#06060f",cursor:"crosshair",display:"block" },
-  close: { marginLeft:"auto",padding:"4px 10px",border:"1px solid #21262d",borderRadius:6,background:"transparent",color:"#6b7280",cursor:"pointer" },
-};
-
 export default function GreasePencilPanel({ open, onClose, sceneRef, setStatus }) {
   const canvasRef = useRef(null);
-  const [layers, setLayers] = useState([createLayer("GP_Layer_1")]);
+  const [layers,      setLayers]      = useState([createLayer("GP_Layer_1")]);
   const [activeLayer, setActiveLayer] = useState(0);
-  const [frame, setFrame] = useState(1);
-  const [color, setColor] = useState("#00ffc8");
-  const [thickness, setThickness] = useState(3);
-  const [tool, setTool] = useState("draw");
-  const [onionSkin, setOnionSkin] = useState(true);
+  const [frame,       setFrame]       = useState(1);
+  const [color,       setColor]       = useState("#00ffc8");
+  const [thickness,   setThickness]   = useState(3);
+  const [tool,        setTool]        = useState("draw");
+  const [onionSkin,   setOnionSkin]   = useState(true);
   const drawing = useRef(false);
   const pts = useRef([]);
 
@@ -65,10 +50,7 @@ export default function GreasePencilPanel({ open, onClose, sceneRef, setStatus }
     return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
   };
 
-  const onMouseDown = (e) => {
-    drawing.current = true;
-    pts.current = [getXY(e, canvasRef.current)];
-  };
+  const onMouseDown = (e) => { drawing.current = true; pts.current = [getXY(e, canvasRef.current)]; };
   const onMouseMove = (e) => {
     if (!drawing.current) return;
     pts.current.push(getXY(e, canvasRef.current));
@@ -123,89 +105,88 @@ export default function GreasePencilPanel({ open, onClose, sceneRef, setStatus }
         if (mesh) sceneRef.current.add(mesh);
       });
     });
-    setStatus("Grease Pencil strokes sent to 3D scene");
+    setStatus("SPX Sketch strokes sent to 3D scene");
   };
 
   if (!open) return null;
   return (
-    <div style={s.overlay} onClick={onClose}>
-      <div style={s.panel} onClick={e => e.stopPropagation()}>
-        <div style={s.header}>
-          <span style={s.logo}>SPX</span>
-          <strong style={{color:"#e0e0e0"}}>Grease Pencil</strong>
-          <span style={{color:"#6b7280",fontSize:12}}>2D annotation in 3D space</span>
-          <button style={s.close} onClick={onClose}>✕</button>
+    <div className="gp-overlay" onClick={onClose}>
+      <div className="gp-panel" onClick={e => e.stopPropagation()}>
+        <div className="gp-header">
+          <span className="gp-logo">SPX</span>
+          <strong className="gp-title">SPX Sketch</strong>
+          <span className="gp-subtitle">2D annotation in 3D space</span>
+          <button className="gp-close" onClick={onClose}>✕</button>
         </div>
-        <div style={s.body}>
-          {/* Tools */}
+
+        <div className="gp-body">
           <div>
-            <div style={s.label}>Tool</div>
-            <div style={s.row}>
+            <div className="gp-label">Tool</div>
+            <div className="gp-row">
               {["draw","erase"].map(t => (
-                <button key={t} style={tool===t?s.btnActive:s.btn} onClick={() => setTool(t)}>
+                <button key={t} className={`gp-btn${tool===t?" gp-btn--active":""}`}
+                  onClick={() => setTool(t)}>
                   {t === "draw" ? "✏️ Draw" : "⬜ Erase"}
                 </button>
               ))}
-              <label style={s.btn}>
-                <input type="checkbox" checked={onionSkin} onChange={e => setOnionSkin(e.target.checked)} style={{marginRight:4}} />
+              <label className="gp-btn">
+                <input type="checkbox" checked={onionSkin}
+                  onChange={e => setOnionSkin(e.target.checked)}
+                  className="gp-checkbox" />
                 Onion Skin
               </label>
             </div>
           </div>
 
-          {/* Color + thickness */}
-          <div style={s.row}>
+          <div className="gp-row">
             <div>
-              <div style={s.label}>Color</div>
+              <div className="gp-label">Color</div>
               <input type="color" value={color} onChange={e => setColor(e.target.value)}
-                style={{width:40,height:32,borderRadius:6,border:"1px solid #21262d",background:"none",cursor:"pointer"}} />
+                className="gp-color-input" />
             </div>
-            <div style={{flex:1}}>
-              <div style={s.label}>Thickness: {thickness}px</div>
-              <input type="range" min={1} max={20} value={thickness} onChange={e => setThickness(Number(e.target.value))}
-                style={{width:"100%",accentColor:"#00ffc8"}} />
-            </div>
-          </div>
-
-          {/* Canvas */}
-          <div>
-            <div style={s.label}>Draw (Frame {frame})</div>
-            <canvas ref={canvasRef} width={420} height={280} style={s.canvas}
-              onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp} />
-          </div>
-
-          {/* Frame controls */}
-          <div>
-            <div style={s.label}>Frame</div>
-            <div style={s.row}>
-              <button style={s.btn} onClick={() => setFrame(f => Math.max(1, f-1))}>◀</button>
-              <span style={{color:"#e0e0e0",minWidth:40,textAlign:"center"}}>{frame}</span>
-              <button style={s.btn} onClick={() => setFrame(f => f+1)}>▶</button>
-              <button style={s.btn} onClick={dupFrame}>⊕ Dup Frame</button>
-              <button style={s.btn} onClick={clearCurrent}>🗑 Clear</button>
+            <div className="gp-thickness">
+              <div className="gp-label">Thickness: {thickness}px</div>
+              <input type="range" min={1} max={20} value={thickness}
+                onChange={e => setThickness(Number(e.target.value))}
+                className="gp-slider" />
             </div>
           </div>
 
-          {/* Layers */}
           <div>
-            <div style={s.label}>Layers</div>
+            <div className="gp-label">Draw (Frame {frame})</div>
+            <canvas ref={canvasRef} width={420} height={280}
+              className="gp-canvas"
+              onMouseDown={onMouseDown} onMouseMove={onMouseMove}
+              onMouseUp={onMouseUp} onMouseLeave={onMouseUp} />
+          </div>
+
+          <div>
+            <div className="gp-label">Frame</div>
+            <div className="gp-row">
+              <button className="gp-btn" onClick={() => setFrame(f => Math.max(1, f-1))}>◀</button>
+              <span className="gp-frame-num">{frame}</span>
+              <button className="gp-btn" onClick={() => setFrame(f => f+1)}>▶</button>
+              <button className="gp-btn" onClick={dupFrame}>⊕ Dup Frame</button>
+              <button className="gp-btn" onClick={clearCurrent}>🗑 Clear</button>
+            </div>
+          </div>
+
+          <div>
+            <div className="gp-label">Layers</div>
             {layers.map((l, i) => (
-              <div key={i} onClick={() => setActiveLayer(i)}
-                style={{...{padding:"6px 10px",borderRadius:6,marginBottom:4,cursor:"pointer",border:"1px solid",
-                  borderColor: i===activeLayer?"#00ffc8":"#21262d",
-                  background: i===activeLayer?"rgba(0,255,200,0.07)":"transparent",
-                  color: i===activeLayer?"#00ffc8":"#e0e0e0",fontSize:12}}}>
+              <div key={i}
+                className={`gp-layer${i===activeLayer?" gp-layer--active":""}`}
+                onClick={() => setActiveLayer(i)}>
                 {l.name}
               </div>
             ))}
-            <button style={s.btn} onClick={addLayer}>+ Add Layer</button>
+            <button className="gp-btn" onClick={addLayer}>+ Add Layer</button>
           </div>
 
-          {/* Actions */}
           <div>
-            <div style={s.label}>Actions</div>
-            <div style={s.row}>
-              <button style={s.btnActive} onClick={sendToScene}>📤 Send to 3D Scene</button>
+            <div className="gp-label">Actions</div>
+            <div className="gp-row">
+              <button className="gp-btn gp-btn--active" onClick={sendToScene}>📤 Send to 3D Scene</button>
             </div>
           </div>
         </div>
