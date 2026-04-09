@@ -216,8 +216,8 @@ export default function NodeModifierSystem({ scene }) {
                       return (
                         <div key={`out-${si}`} style={{position:"absolute",right:-SOCKET_R,top:NODE_H_BASE-node.y+si*SOCKET_SPACING+SOCKET_SPACING/2-node.y,cursor:"crosshair"}}
                           onMouseDown={e=>{e.stopPropagation();setWiring({fromNode:node.id,fromSock:si});}}>
-                          <div style={{width:SOCKET_R*2,height:SOCKET_R*2,borderRadius:"50%",background:col,border:"1.5px solid #06060f",marginTop:si*SOCKET_SPACING}}/>
-                          <span style={{position:"absolute",right:SOCKET_R*2+4,top:-2,fontSize:8,color:col,whiteSpace:"nowrap"}}>{sock}</span>
+                          <div className="nms-socket-dot" style={{background:col,marginTop:si*SOCKET_SPACING}}/>
+                          <span className="nms-socket-label" style={{color:col}}>{sock}</span>
                         </div>
                       );
                     })}

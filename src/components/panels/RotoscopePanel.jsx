@@ -93,21 +93,21 @@ export default function RotoscopePanel({sceneRef,rendererRef,currentFrame,setCur
   function Section({title,color=C.teal,children,defaultOpen=true}){const [open,setOpen]=useState(defaultOpen);return(<div className="spnl-section-wrap"><div onClick={()=>setOpen(v=>!v)} className="spnl-section-hdr" style={{borderLeftColor:color}}><span className="spnl-section-arrow" style={{color}}>{open?'▾':'▸'}</span><span className="spnl-section-name">{title}</span></div>{open&&<div className="spnl-section-body-pl">{children}</div>}</div>);}
 
   if(!open) return null;
-  return(<div style={{width:260,background:C.panel,borderRadius:6,border:`1px solid ${C.border}`,fontFamily:C.font,color:C.text,fontSize:11,boxShadow:'0 8px 32px rgba(0,0,0,0.7)',display:'flex',flexDirection:'column',maxHeight:680}}>
+  return(<div className="spnl-panel-container" style={{maxWidth:260}}>
     <div className="spnl-panel-hdr">
-      <div style={{width:6,height:6,borderRadius:'50%',background:'#ff44aa',boxShadow:'0 0 6px #ff44aa'}}/><span style={{fontSize:11,fontWeight:700,letterSpacing:2,color:'#ff44aa'}}>ROTOSCOPE</span>
+      <div style={{width:6,height:6,borderRadius:'50%',background:'#ff44aa',boxShadow:'0 0 6px #ff44aa'}}/><span className="spnl-hdr-title" style={{color:'#ff44aa'}}>ROTOSCOPE</span>
       {onClose&&<span onClick={onClose} className="spnl-close">×</span>}
     </div>
     <div className="spnl-panel-scroll">
 
       {/* Video load */}
       <Section title='VIDEO SOURCE' color='#ff44aa'>
-        {!videoURL?(<label style={{display:'block',padding:'10px',border:`2px dashed ${C.border}`,borderRadius:6,textAlign:'center',cursor:'pointer',color:C.dim,fontSize:9,letterSpacing:1}}>
+        {!videoURL?(<label className="spnl-drop-zone">
           <input type='file' accept='video/*' className="spx-hidden" onChange={e=>e.target.files[0]&&loadVideo(e.target.files[0])}/>
-          ▶ CLICK TO LOAD VIDEO<br/><span style={{fontSize:8,opacity:0.6}}>MP4 / WebM / MOV</span>
+          ▶ CLICK TO LOAD VIDEO<br/><span className="spnl-dim">MP4 / WebM / MOV</span>
         </label>):(
           <div>
-            <div style={{fontSize:9,color:C.teal,marginBottom:4,fontWeight:700}}>✓ {videoFile?.name}</div>
+            <div className="spnl-teal">✓ {videoFile?.name}</div>
             <div className="spnl-dim">{totalFrames} frames @ {fps}fps</div>
             <button onClick={removeFromScene} style={{width:'100%',padding:'5px',background:'rgba(255,68,170,0.1)',border:'1px solid #ff44aa',borderRadius:4,color:'#ff44aa',fontFamily:C.font,fontSize:9,cursor:'pointer'}}>✕ REMOVE</button>
           </div>
@@ -116,7 +116,7 @@ export default function RotoscopePanel({sceneRef,rendererRef,currentFrame,setCur
 
       {/* Transport */}
       {videoURL&&<Section title='TRANSPORT' color={C.teal}>
-        <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8}}>
+        <div className="spnl-row">
           <button onClick={()=>setCurrentFrame(0)} style={{padding:'4px 8px',background:C.bg,border:`1px solid ${C.border}`,borderRadius:4,color:C.dim,cursor:'pointer',fontSize:10}}>⏮</button>
           <button onClick={()=>setCurrentFrame(f=>Math.max(0,f-1))} style={{padding:'4px 8px',background:C.bg,border:`1px solid ${C.border}`,borderRadius:4,color:C.dim,cursor:'pointer',fontSize:10}}>◀</button>
           <button onClick={()=>setPlaying(p=>!p)} style={{flex:1,padding:'6px',background:playing?'rgba(255,102,0,0.15)':'rgba(0,255,200,0.1)',border:`1px solid ${playing?C.orange:C.teal}`,borderRadius:4,color:playing?C.orange:C.teal,cursor:'pointer',fontSize:12,fontWeight:700}}>{playing?'⏸':'▶'}</button>

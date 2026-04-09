@@ -316,7 +316,7 @@ export default function ShapeShifterPanel({ scene, selectedMeshName }) {
       }
       <button style={S.btnO} onClick={()=>applyCurrentBlend(blend)}>✓ Apply</button>
       <button style={S.btnSm} onClick={exportMorphData}>💾 Export JSON</button>
-      {status && <div style={{...S.stat,marginTop:8}}>{status}</div>}
+      {status && <div className="spnl-teal" style={{marginTop:8}}>{status}</div>}
       {selectedMeshName && <div style={{...S.stat,color:T.orange}}>Target: {selectedMeshName}</div>}
     </div>
   );

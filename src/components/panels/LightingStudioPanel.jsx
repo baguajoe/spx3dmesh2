@@ -175,14 +175,14 @@ export default function LightingStudioPanel({ scene, renderer }){
           {LIGHT_TYPES.map(t=><option key={t}>{t}</option>)}
         </select>
         <label style={S.label}>Color</label>
-        <input style={{...S.input,padding:2,height:32}} type="color" value={color} onChange={e=>setColor(e.target.value)}/>
+        <input className="spnl-input" style={{padding:2,height:32}} type="color" value={color} onChange={e=>setColor(e.target.value)}/>
         <label style={S.label}>Intensity: {intensity.toFixed(2)}</label>
         <input style={S.input} type="range" min={0} max={5} step={0.05} value={intensity} onChange={e=>setIntensity(+e.target.value)}/>
         <label style={S.label}>Position X:{posX} Y:{posY} Z:{posZ}</label>
         <input style={S.input} type="range" min={-50} max={50} value={posX} onChange={e=>setPosX(+e.target.value)}/>
         <input style={S.input} type="range" min={0} max={100} value={posY} onChange={e=>setPosY(+e.target.value)}/>
         <input style={S.input} type="range" min={-50} max={50} value={posZ} onChange={e=>setPosZ(+e.target.value)}/>
-        <label style={{...S.label,cursor:"pointer"}}><input type="checkbox" checked={castShadow} onChange={e=>setCastShadow(e.target.checked)}/> Cast Shadow</label>
+        <label className="spnl-label" style={{cursor:'pointer'}}><input type="checkbox" checked={castShadow} onChange={e=>setCastShadow(e.target.checked)}/> Cast Shadow</label>
         <button style={S.btn} onClick={addLight}>+ Add Light</button>
       </div>
       {lights.length>0 && (
@@ -198,7 +198,7 @@ export default function LightingStudioPanel({ scene, renderer }){
       )}
       <button style={S.btnO} onClick={clearAll}>🗑 Clear All</button>
       <button style={S.btn} onClick={exportSetup}>💾 Export</button>
-      {status && <div style={{...S.stat,marginTop:8}}>{status}</div>}
+      {status && <div className="spnl-teal" style={{marginTop:8}}>{status}</div>}
     </div>
   );
 }

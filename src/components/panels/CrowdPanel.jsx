@@ -138,9 +138,9 @@ export default function CrowdPanel({sceneRef, open=true, onClose}) {
                 <span className="spnl-icon-md">{b.icon}</span>
                 <div>
                   <div className="spnl-behavior-label" style={{color:behavior===b.id?b.color:'#e0e0e0'}}>{b.label}</div>
-                  <div style={{fontSize:8,color:C.dim}}>{b.desc}</div>
+                  <div className="spnl-dim">{b.desc}</div>
                 </div>
-                {behavior===b.id&&<div style={{marginLeft:'auto',width:6,height:6,borderRadius:'50%',background:b.color}}/>}
+                {behavior===b.id&&<div className="spnl-behavior-dot" style={{background:b.color}}/>}
               </div>
             ))}
           </div>
@@ -148,8 +148,8 @@ export default function CrowdPanel({sceneRef, open=true, onClose}) {
 
         {/* Knobs */}
         <div className="spnl-mb">
-          <div style={{fontSize:9,fontWeight:700,color:C.dim,letterSpacing:2,marginBottom:10}}>PARAMETERS</div>
-          <div style={{display:'flex',justifyContent:'space-around',flexWrap:'wrap',gap:8,marginBottom:10}}>
+          <div className="spnl-section-label">PARAMETERS</div>
+          <div className="spnl-row spnl-row--around">
             <Knob label="Agents"  value={count}      min={10}  max={500} step={10}  onChange={setCount}     color='#88ffaa'/>
             <Knob label="Bounds"  value={bounds}     min={5}   max={60}  step={1}   onChange={setBounds}    color='#44aaff'/>
             <Knob label="Speed"   value={speed}      min={0.1} max={5}   step={0.1} onChange={setSpeed}     color={C.teal}/>

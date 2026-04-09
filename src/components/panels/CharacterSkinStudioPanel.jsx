@@ -79,13 +79,13 @@ function Badges({ items, active, onSelect }) {
 }
 function NumInput({ label, value, min, max, step = 1, onChange, unit = '' }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+    <div className="ha-color-row">
       <span className="ha-color-label">{label}</span>
       <input type="number" value={value} min={min} max={max} step={step}
         onChange={e => onChange(parseFloat(e.target.value))}
         style={{ width: 60, background: '#0d1117', color: '#e0e0e0',
           border: '1px solid #21262d', padding: '2px 4px', borderRadius: 3, fontSize: 11, textAlign: 'right' }} />
-      {unit && <span style={{ fontSize: 9, color: '#555' }}>{unit}</span>}
+      {unit && <span className="ha-color-hex">{unit}</span>}
     </div>
   );
 }

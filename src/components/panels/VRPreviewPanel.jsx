@@ -145,8 +145,8 @@ export default function VRPreviewPanel({ scene, camera, renderer }){
         <input style={S.input} type="range" min={0.1} max={3} step={0.01} value={scale} onChange={e=>setScale(+e.target.value)}/>
 
         <div style={{display:"flex",gap:16,marginBottom:8}}>
-          <label style={{...S.label,cursor:"pointer"}}><input type="checkbox" checked={comfort} onChange={e=>setComfort(e.target.checked)}/> Comfort Mode</label>
-          <label style={{...S.label,cursor:"pointer"}}><input type="checkbox" checked={grid} onChange={e=>setGrid(e.target.checked)}/> Floor Grid</label>
+          <label className="spnl-label" style={{cursor:'pointer'}}><input type="checkbox" checked={comfort} onChange={e=>setComfort(e.target.checked)}/> Comfort Mode</label>
+          <label className="spnl-label" style={{cursor:'pointer'}}><input type="checkbox" checked={grid} onChange={e=>setGrid(e.target.checked)}/> Floor Grid</label>
         </div>
       </div>
 

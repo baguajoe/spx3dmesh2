@@ -133,12 +133,12 @@ export default function BuildingSimulatorPanel({ scene }){
           {ROOF_TYPES.map(r=><option key={r}>{r}</option>)}
         </select>
         <label style={S.label}>Accent Color</label>
-        <input style={{...S.input,padding:2,height:32}} type="color" value={color} onChange={e=>setColor(e.target.value)}/>
-        <label style={{...S.label,cursor:"pointer"}}><input type="checkbox" checked={setback} onChange={e=>setSetback(e.target.checked)}/> Setback per 4 Floors</label>
+        <input className="spnl-input" style={{padding:2,height:32}} type="color" value={color} onChange={e=>setColor(e.target.value)}/>
+        <label className="spnl-label" style={{cursor:'pointer'}}><input type="checkbox" checked={setback} onChange={e=>setSetback(e.target.checked)}/> Setback per 4 Floors</label>
       </div>
       <button style={S.btn} onClick={build}>⚡ Build</button>
       <button style={S.btnO} onClick={clearBuilding}>🗑 Clear</button>
-      {status && <div style={{...S.stat,marginTop:8}}>{status}</div>}
+      {status && <div className="spnl-teal" style={{marginTop:8}}>{status}</div>}
       {stats && (
         <div style={S.section}>
           <div style={S.stat}>Type: {stats.archetype}</div>

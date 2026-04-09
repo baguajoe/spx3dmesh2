@@ -85,13 +85,13 @@ function Badges({ items, active, onSelect }) {
 
 function NumInput({ label, value, min, max, step = 1, onChange, unit = '' }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+    <div className="ha-color-row">
       <span className="ha-color-label">{label}</span>
       <input type="number" value={value} min={min} max={max} step={step}
         onChange={e => onChange(parseFloat(e.target.value))}
         style={{ width: 60, background: '#0d1117', color: '#e0e0e0',
           border: '1px solid #21262d', padding: '2px 4px', borderRadius: 3, fontSize: 11, textAlign: 'right' }} />
-      {unit && <span style={{ fontSize: 9, color: '#555' }}>{unit}</span>}
+      {unit && <span className="ha-color-hex">{unit}</span>}
     </div>
   );
 }
@@ -266,7 +266,7 @@ export default function ModelGeneratorPanel({ onGenerate }) {
         <Check label="Smooth Normals"   value={addNormals}   onChange={setAddNormals}   />
         <Check label="UV Channel 2"     value={addUV2}       onChange={setAddUV2}       />
       </Section>
-      <div style={{ display:'flex', gap:6 }}>
+      <div className="spnl-row">
         <RandBtn onClick={randomize} />
         <GenBtn label={generating ? '\u23f3 Generating\u2026' : '\u26a1 Generate Model'} onClick={handleGenerate} disabled={generating} />
       </div>

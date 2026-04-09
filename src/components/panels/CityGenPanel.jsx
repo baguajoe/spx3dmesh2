@@ -10,8 +10,8 @@ function Knob({label,value,min,max,step=1,onChange,color=C.teal,unit=''}) {
     <div className="spnl-knob">
       <div style={{width:42,height:42,borderRadius:'50%',background:`conic-gradient(${color} 0% ${pct*100}%, #1a2030 ${pct*100}% 100%)`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'ns-resize',border:'2px solid #1a2030'}}
         onMouseDown={e=>{const sy=e.clientY,sv=value;const mv=ev=>{const d=(sy-ev.clientY)/80*(max-min);onChange(Math.min(max,Math.max(min,step<1?parseFloat((sv+d).toFixed(2)):Math.round(sv+d))));};const up=()=>{document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);};document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);}}>
-        <div style={{width:28,height:28,borderRadius:'50%',background:C.panel,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <span style={{fontSize:7,fontWeight:700,color,fontFamily:C.font}}>{step<1?value.toFixed(1):Math.round(value)}{unit}</span>
+        <div className="spnl-knob-inner">
+          <span className="spnl-knob-val" style={{color}}>{step<1?value.toFixed(1):Math.round(value)}{unit}</span>
         </div>
       </div>
       <span className="spnl-knob-label">{label}</span>
@@ -65,22 +65,22 @@ export default function CityGenPanel({sceneRef,open=true,onClose}) {
 
   if(!open) return null;
   return (
-    <div style={{width:320,background:C.panel,borderRadius:8,border:`1px solid ${C.border}`,fontFamily:C.font,color:C.text,boxShadow:'0 16px 48px rgba(0,0,0,0.8)',display:'flex',flexDirection:'column',maxHeight:680}}>
-      <div className="spnl-panel-hdr" style={{padding:'10px 14px',display:'flex',alignItems:'center',gap:10,flexShrink:0}}>
-        <div style={{width:8,height:8,borderRadius:'50%',background:'#44aaff',boxShadow:'0 0 10px #44aaff'}}/>
+    <div className="spnl-panel-container" style={{maxWidth:320}}>
+      <div className="spnl-panel-hdr" className="spnl-panel-hdr">
+        <div className="spnl-hdr-dot spnl-hdr-dot--blue"/>
         <span style={{fontSize:12,fontWeight:700,letterSpacing:3,color:'#44aaff'}}>CITY GENERATOR</span>
         {onClose&&<span onClick={onClose} className="spnl-close">×</span>}
       </div>
       <div className="spnl-status-bar">{status}</div>
       <div className="spnl-panel-scroll">
-        <div style={{display:'flex',gap:4,marginBottom:12,padding:'3px',background:'#0a0f1a',borderRadius:6}}>
+        <div className="spnl-tab-row">
           {['city','building'].map(m=>(
             <div key={m} onClick={()=>setMode(m)} style={{flex:1,padding:'5px 0',textAlign:'center',borderRadius:4,cursor:'pointer',fontSize:9,fontWeight:700,letterSpacing:1,background:mode===m?'#1a2535':'transparent',color:mode===m?C.teal:C.dim,border:`1px solid ${mode===m?C.teal:'transparent'}`}}>{m==='city'?'FULL CITY':'SINGLE BUILDING'}</div>
           ))}
         </div>
         {mode==='city'?(
           <>
-            <div style={{fontSize:9,fontWeight:700,color:C.dim,letterSpacing:2,marginBottom:10}}>CITY PARAMETERS</div>
+            <div className="spnl-section-label">CITY PARAMETERS</div>
             <div style={{display:'flex',justifyContent:'space-around',flexWrap:'wrap',gap:8,marginBottom:14}}>
               <Knob label="Grid"    value={gridSize}  min={2}  max={16} step={1}   onChange={setGridSize}  color='#44aaff'/>
               <Knob label="Block"   value={blockSize} min={2}  max={10} step={0.5} onChange={setBlockSize} color='#88ccff'/>

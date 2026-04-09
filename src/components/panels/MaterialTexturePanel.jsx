@@ -217,19 +217,19 @@ export default function MaterialTexturePanel({ scene }){
           {Object.keys(MAT_PRESETS).map(p=><option key={p}>{p}</option>)}
         </select>
         <label style={S.label}>Base Color</label>
-        <input style={{...S.input,padding:2,height:32}} type="color" value={color} onChange={e=>setColor(e.target.value)}/>
+        <input className="spnl-input" style={{padding:2,height:32}} type="color" value={color} onChange={e=>setColor(e.target.value)}/>
         <label style={S.label}>Roughness: {roughness.toFixed(2)}</label>
         <input style={S.input} type="range" min={0} max={1} step={0.01} value={roughness} onChange={e=>setRoughness(+e.target.value)}/>
         <label style={S.label}>Metalness: {metalness.toFixed(2)}</label>
         <input style={S.input} type="range" min={0} max={1} step={0.01} value={metalness} onChange={e=>setMetalness(+e.target.value)}/>
         <label style={S.label}>Emissive Color</label>
-        <input style={{...S.input,padding:2,height:32}} type="color" value={emissive} onChange={e=>setEmissive(e.target.value)}/>
+        <input className="spnl-input" style={{padding:2,height:32}} type="color" value={emissive} onChange={e=>setEmissive(e.target.value)}/>
         <label style={S.label}>Emissive Intensity: {emissiveInt.toFixed(2)}</label>
         <input style={S.input} type="range" min={0} max={3} step={0.01} value={emissiveInt} onChange={e=>setEmissiveInt(+e.target.value)}/>
         <div style={{display:"flex",gap:16,marginBottom:8}}>
-          <label style={{...S.label,cursor:"pointer"}}><input type="checkbox" checked={transparent} onChange={e=>setTransparent(e.target.checked)}/> Transparent</label>
-          <label style={{...S.label,cursor:"pointer"}}><input type="checkbox" checked={wireframe} onChange={e=>setWireframe(e.target.checked)}/> Wireframe</label>
-          <label style={{...S.label,cursor:"pointer"}}><input type="checkbox" checked={flatShade} onChange={e=>setFlatShade(e.target.checked)}/> Flat Shade</label>
+          <label className="spnl-label" style={{cursor:'pointer'}}><input type="checkbox" checked={transparent} onChange={e=>setTransparent(e.target.checked)}/> Transparent</label>
+          <label className="spnl-label" style={{cursor:'pointer'}}><input type="checkbox" checked={wireframe} onChange={e=>setWireframe(e.target.checked)}/> Wireframe</label>
+          <label className="spnl-label" style={{cursor:'pointer'}}><input type="checkbox" checked={flatShade} onChange={e=>setFlatShade(e.target.checked)}/> Flat Shade</label>
         </div>
         {transparent && <>
           <label style={S.label}>Opacity: {opacity.toFixed(2)}</label>

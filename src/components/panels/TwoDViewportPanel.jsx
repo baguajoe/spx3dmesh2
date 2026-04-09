@@ -329,7 +329,7 @@ export default function TwoDViewportPanel({ liveKeyframes }) {
         <button style={S.btn} onClick={()=>setPlaying(!playing)}>{playing?"⏸ Pause":"▶ Play"}</button>
         <button style={S.btnO} onClick={exportFrame}>💾 Export Frame</button>
       </div>
-      {status && <div style={{...S.stat,marginTop:8}}>{status}</div>}
+      {status && <div className="spnl-teal" style={{marginTop:8}}>{status}</div>}
       <div style={S.sec}>
         <div style={S.lbl}>Combinable Style Pairs</div>
         <div className="spnl-row">

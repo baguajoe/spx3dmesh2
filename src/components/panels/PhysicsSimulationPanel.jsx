@@ -252,7 +252,7 @@ export default function PhysicsSimulationPanel({ scene }){
         : <button style={S.btnRed} onClick={pause}>⏸ Pause</button>
       }
       <button style={S.btnO} onClick={clearSim}>🗑 Reset</button>
-      {status && <div style={{...S.stat,marginTop:8}}>{status}</div>}
+      {status && <div className="spnl-teal" style={{marginTop:8}}>{status}</div>}
       {running && <div style={S.stat}>Frame: {frameCount}</div>}
     </div>
   );

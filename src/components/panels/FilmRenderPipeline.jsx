@@ -74,7 +74,7 @@ export default function FilmRenderPipeline({rendererRef,sceneRef,cameraRef,open=
       </Section>
       <Section title='RENDER PASSES' color='#ff88aa'>
         <div className="spnl-level-list">
-          {Object.entries(PASS_TYPES).map(([k,v])=><div key={k} onClick={()=>setPasses(p=>({...p,[k]:!p[k]}))} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'3px 6px',borderRadius:4,cursor:'pointer',border:`1px solid ${passes[k]?'#ff88aa':C.border}`,background:passes[k]?'rgba(255,136,170,0.08)':C.bg}}><div className="spnl-row"><div style={{width:8,height:8,borderRadius:2,background:v.color}}/><span style={{fontSize:9,color:passes[k]?C.text:C.dim,fontWeight:passes[k]?700:400}}>{v.label}</span></div><span style={{fontSize:8,color:C.dim}}>{passes[k]?'ON':'OFF'}</span></div>)}
+          {Object.entries(PASS_TYPES).map(([k,v])=><div key={k} onClick={()=>setPasses(p=>({...p,[k]:!p[k]}))} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'3px 6px',borderRadius:4,cursor:'pointer',border:`1px solid ${passes[k]?'#ff88aa':C.border}`,background:passes[k]?'rgba(255,136,170,0.08)':C.bg}}><div className="spnl-row"><div style={{width:8,height:8,borderRadius:2,background:v.color}}/><span style={{fontSize:9,color:passes[k]?C.text:C.dim,fontWeight:passes[k]?700:400}}>{v.label}</span></div><span className="spnl-dim">{passes[k]?'ON':'OFF'}</span></div>)}
         </div>
         <button onClick={renderAllPasses} disabled={rendering} style={{width:'100%',padding:'6px 0',background:'rgba(255,136,170,0.1)',border:'1px solid #ff88aa',borderRadius:4,color:'#ff88aa',fontFamily:C.font,fontSize:9,fontWeight:700,cursor:'pointer',letterSpacing:1,opacity:rendering?0.5:1}}>RENDER ALL PASSES</button>
       </Section>
