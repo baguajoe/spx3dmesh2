@@ -1,6 +1,20 @@
 import React, { useState, useRef } from "react";
 import * as THREE from "three";
 
+const S = {
+  root: { background:"#06060f", color:"#e0e0e0", fontFamily:"JetBrains Mono,monospace", padding:16, height:"100%", overflowY:"auto" },
+  h2: { color:"#00ffc8", fontSize:14, marginBottom:12, letterSpacing:1 },
+  label: { fontSize:11, color:"#aaa", display:"block", marginBottom:4 },
+  input: { width:"100%", background:"#0d0d1a", border:"1px solid #1a1a2e", color:"#e0e0e0", padding:"4px 8px", borderRadius:4, fontFamily:"JetBrains Mono,monospace", fontSize:11, marginBottom:10, boxSizing:"border-box" },
+  select: { width:"100%", background:"#0d0d1a", border:"1px solid #1a1a2e", color:"#e0e0e0", padding:"4px 8px", borderRadius:4, fontFamily:"JetBrains Mono,monospace", fontSize:11, marginBottom:10, boxSizing:"border-box" },
+  btn: { background:"#00ffc8", color:"#06060f", border:"none", borderRadius:4, padding:"7px 16px", fontFamily:"JetBrains Mono,monospace", fontSize:12, fontWeight:700, cursor:"pointer", marginRight:8, marginBottom:8 },
+  btnO: { background:"#FF6600", color:"#fff", border:"none", borderRadius:4, padding:"7px 16px", fontFamily:"JetBrains Mono,monospace", fontSize:12, fontWeight:700, cursor:"pointer", marginRight:8, marginBottom:8 },
+  btnSm: { background:"#1a1a2e", color:"#00ffc8", border:"1px solid #00ffc8", borderRadius:4, padding:"3px 10px", fontFamily:"JetBrains Mono,monospace", fontSize:10, cursor:"pointer", marginLeft:6 },
+  section: { background:"#0d0d1a", border:"1px solid #1a1a2e", borderRadius:6, padding:12, marginBottom:12 },
+  stat: { fontSize:11, color:"#00ffc8", marginBottom:4 },
+  lightRow: { display:"flex", alignItems:"center", justifyContent:"space-between", padding:"4px 0", borderBottom:"1px solid #0d0d1a" },
+};
+
 const LIGHT_TYPES = ["Directional","Point","Spot","Hemisphere","Rect Area","Ambient"];
 const PRESETS_L = ["Studio 3-Point","HDRI Outdoor Day","Night Scene","Sunset Golden Hour","Horror Dark","Sci-Fi Neon","Cinematic Dramatic","Overcast Soft"];
 const SHADOW_MAPS = ["Basic","PCF","PCFSoft","VSM"];
@@ -143,37 +157,37 @@ export default function LightingStudioPanel({ scene, renderer }){
   }
 
   return (
-    <div className="spnl-root">
+    <div style={S.root}>
       <div style={S.h2}>💡 LIGHTING STUDIO</div>
-      <div className="spnl-section">
-        <label className="spnl-label">Preset</label>
-        <select className="spnl-select" value={preset} onChange={e=>{setPreset(e.target.value); applyPreset(e.target.value);}}>
+      <div style={S.section}>
+        <label style={S.label}>Preset</label>
+        <select style={S.select} value={preset} onChange={e=>{setPreset(e.target.value); applyPreset(e.target.value);}}>
           {PRESETS_L.map(p=><option key={p}>{p}</option>)}
         </select>
-        <label className="spnl-label">Shadow Map Type</label>
-        <select className="spnl-select" value={shadowMap} onChange={e=>{setShadowMap(e.target.value); applyRendererShadow(e.target.value);}}>
+        <label style={S.label}>Shadow Map Type</label>
+        <select style={S.select} value={shadowMap} onChange={e=>{setShadowMap(e.target.value); applyRendererShadow(e.target.value);}}>
           {SHADOW_MAPS.map(s=><option key={s}>{s}</option>)}
         </select>
       </div>
-      <div className="spnl-section">
-        <label className="spnl-label">Light Type</label>
-        <select className="spnl-select" value={type} onChange={e=>setType(e.target.value)}>
+      <div style={S.section}>
+        <label style={S.label}>Light Type</label>
+        <select style={S.select} value={type} onChange={e=>setType(e.target.value)}>
           {LIGHT_TYPES.map(t=><option key={t}>{t}</option>)}
         </select>
-        <label className="spnl-label">Color</label>
+        <label style={S.label}>Color</label>
         <input style={{...S.input,padding:2,height:32}} type="color" value={color} onChange={e=>setColor(e.target.value)}/>
-        <label className="spnl-label">Intensity: {intensity.toFixed(2)}</label>
-        <input className="spnl-input" type="range" min={0} max={5} step={0.05} value={intensity} onChange={e=>setIntensity(+e.target.value)}/>
-        <label className="spnl-label">Position X:{posX} Y:{posY} Z:{posZ}</label>
-        <input className="spnl-input" type="range" min={-50} max={50} value={posX} onChange={e=>setPosX(+e.target.value)}/>
-        <input className="spnl-input" type="range" min={0} max={100} value={posY} onChange={e=>setPosY(+e.target.value)}/>
-        <input className="spnl-input" type="range" min={-50} max={50} value={posZ} onChange={e=>setPosZ(+e.target.value)}/>
+        <label style={S.label}>Intensity: {intensity.toFixed(2)}</label>
+        <input style={S.input} type="range" min={0} max={5} step={0.05} value={intensity} onChange={e=>setIntensity(+e.target.value)}/>
+        <label style={S.label}>Position X:{posX} Y:{posY} Z:{posZ}</label>
+        <input style={S.input} type="range" min={-50} max={50} value={posX} onChange={e=>setPosX(+e.target.value)}/>
+        <input style={S.input} type="range" min={0} max={100} value={posY} onChange={e=>setPosY(+e.target.value)}/>
+        <input style={S.input} type="range" min={-50} max={50} value={posZ} onChange={e=>setPosZ(+e.target.value)}/>
         <label style={{...S.label,cursor:"pointer"}}><input type="checkbox" checked={castShadow} onChange={e=>setCastShadow(e.target.checked)}/> Cast Shadow</label>
-        <button className="spnl-btn" onClick={addLight}>+ Add Light</button>
+        <button style={S.btn} onClick={addLight}>+ Add Light</button>
       </div>
       {lights.length>0 && (
-        <div className="spnl-section">
-          <div className="spnl-label">Active Lights ({lights.length})</div>
+        <div style={S.section}>
+          <div style={S.label}>Active Lights ({lights.length})</div>
           {lights.map(l=>(
             <div key={l.id} style={S.lightRow}>
               <span style={{fontSize:10}}>#{l.id} {l.type} <span style={{color:l.color}}>■</span> {l.intensity.toFixed(1)}</span>
@@ -183,7 +197,7 @@ export default function LightingStudioPanel({ scene, renderer }){
         </div>
       )}
       <button style={S.btnO} onClick={clearAll}>🗑 Clear All</button>
-      <button className="spnl-btn" onClick={exportSetup}>💾 Export</button>
+      <button style={S.btn} onClick={exportSetup}>💾 Export</button>
       {status && <div style={{...S.stat,marginTop:8}}>{status}</div>}
     </div>
   );

@@ -3,6 +3,28 @@ import * as THREE from "three";
 import Knob from "../Knob";
 import { EnvironmentSystem } from "../../systems/EnvironmentSystem";
 
+const S = {
+  root: { background:"#06060f", color:"#e0e0e0", fontFamily:"JetBrains Mono,monospace", padding:16, height:"100%", overflowY:"auto" },
+  h2:   { color:"#00ffc8", fontSize:14, marginBottom:12, letterSpacing:1, borderBottom:"1px solid #1a1a2e", paddingBottom:8 },
+  section: { background:"#0d0d1a", border:"1px solid #1a1a2e", borderRadius:6, padding:12, marginBottom:10 },
+  sectionTitle: { fontSize:10, color:"#00ffc8", letterSpacing:1, marginBottom:10, textTransform:"uppercase" },
+  btn: (active) => ({
+    background: active ? "#00ffc8" : "#1a1a2e",
+    color: active ? "#06060f" : "#e0e0e0",
+    border: `1px solid ${active ? "#00ffc8" : "#333"}`,
+    borderRadius:4, padding:"5px 10px", fontFamily:"JetBrains Mono,monospace",
+    fontSize:10, cursor:"pointer", marginRight:4, marginBottom:4,
+  }),
+  btnPrimary: { background:"#00ffc8", color:"#06060f", border:"none", borderRadius:4, padding:"7px 14px", fontFamily:"JetBrains Mono,monospace", fontSize:11, fontWeight:700, cursor:"pointer", marginRight:6, marginBottom:6 },
+  btnOrange:  { background:"#FF6600", color:"#fff",    border:"none", borderRadius:4, padding:"7px 14px", fontFamily:"JetBrains Mono,monospace", fontSize:11, fontWeight:700, cursor:"pointer", marginRight:6, marginBottom:6 },
+  select: { width:"100%", background:"#0d0d1a", border:"1px solid #1a1a2e", color:"#e0e0e0", padding:"4px 8px", borderRadius:4, fontFamily:"JetBrains Mono,monospace", fontSize:11, marginBottom:8 },
+  stat: { fontSize:10, color:"#00ffc8", marginBottom:4, letterSpacing:0.5 },
+  knobRow: { display:"flex", flexWrap:"wrap", gap:8, justifyContent:"flex-start", marginTop:6 },
+  colorRow: { display:"flex", gap:8, alignItems:"center", marginBottom:8 },
+  colorLabel: { fontSize:10, color:"#888", minWidth:70 },
+  colorInput: { width:40, height:24, border:"1px solid #1a1a2e", borderRadius:3, cursor:"pointer", background:"none" },
+};
+
 const PRESETS = ["Day Clear","Day Overcast","Sunset","Night","Foggy Morning","Studio","Alien World","Arctic Tundra"];
 
 export default function EnvironmentGeneratorPanel({ scene, camera }) {
@@ -78,21 +100,21 @@ export default function EnvironmentGeneratorPanel({ scene, camera }) {
   };
 
   return (
-    <div className="spnl-root">
+    <div style={S.root}>
       <div style={S.h2}>🌅 ENVIRONMENT GENERATOR</div>
 
       {/* Preset */}
-      <div className="spnl-section">
-        <div className="spnl-section-title">Preset</div>
-        <select value={preset} onChange={e => loadPreset(e.target.value)} className="spnl-select">
+      <div style={S.section}>
+        <div style={S.sectionTitle}>Preset</div>
+        <select value={preset} onChange={e => loadPreset(e.target.value)} style={S.select}>
           {PRESETS.map(p => <option key={p}>{p}</option>)}
         </select>
         <button style={S.btnPrimary} onClick={buildEnv}>Build Environment</button>
       </div>
 
       {/* Sun knobs */}
-      <div className="spnl-section">
-        <div className="spnl-section-title">Sun / Atmosphere</div>
+      <div style={S.section}>
+        <div style={S.sectionTitle}>Sun / Atmosphere</div>
         <div style={S.knobRow}>
           <Knob label="Elevation" value={sunEl} min={-30} max={90} step={1}
             onChange={setSunEl} size={52} unit="°" />
@@ -108,8 +130,8 @@ export default function EnvironmentGeneratorPanel({ scene, camera }) {
       </div>
 
       {/* Fog knobs */}
-      <div className="spnl-section">
-        <div className="spnl-section-title">Fog</div>
+      <div style={S.section}>
+        <div style={S.sectionTitle}>Fog</div>
         <div style={S.knobRow}>
           <Knob label="Near" value={fogNear} min={0} max={500} step={5}
             onChange={setFogNear} size={52} unit="u" />
@@ -119,8 +141,8 @@ export default function EnvironmentGeneratorPanel({ scene, camera }) {
       </div>
 
       {/* Time of day */}
-      <div className="spnl-section">
-        <div className="spnl-section-title">Time of Day</div>
+      <div style={S.section}>
+        <div style={S.sectionTitle}>Time of Day</div>
         <div style={S.knobRow}>
           <Knob label="Hour" value={timeOfDay} min={0} max={23.9} step={0.1}
             onChange={v => { setTimeOfDay(v); todRef.current = v; if (envRef.current) envRef.current.setTimeOfDay(v); }}
@@ -134,8 +156,8 @@ export default function EnvironmentGeneratorPanel({ scene, camera }) {
       </div>
 
       {/* Sky colors */}
-      <div className="spnl-section">
-        <div className="spnl-section-title">Sky Colors</div>
+      <div style={S.section}>
+        <div style={S.sectionTitle}>Sky Colors</div>
         <div style={S.colorRow}>
           <span style={S.colorLabel}>Zenith</span>
           <input type="color" value={skyZenith} onChange={e => setSkyZenith(e.target.value)} style={S.colorInput} />

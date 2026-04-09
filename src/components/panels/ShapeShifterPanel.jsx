@@ -236,7 +236,7 @@ export default function ShapeShifterPanel({ scene, selectedMeshName }) {
   }
 
   return (
-    <div className="spnl-root">
+    <div style={S.root}>
       <div style={S.h2}>🔀 SHAPE SHIFTER</div>
 
       <div style={S.sec}>
@@ -311,7 +311,7 @@ export default function ShapeShifterPanel({ scene, selectedMeshName }) {
       </div>
 
       {!animating
-        ? <button className="spnl-btn" onClick={()=>setAnimating(true)}>▶ Animate Shift</button>
+        ? <button style={S.btn} onClick={()=>setAnimating(true)}>▶ Animate Shift</button>
         : <button style={{...S.btn,background:"#cc2200",color:"#fff"}} onClick={()=>setAnimating(false)}>⏹ Stop</button>
       }
       <button style={S.btnO} onClick={()=>applyCurrentBlend(blend)}>✓ Apply</button>

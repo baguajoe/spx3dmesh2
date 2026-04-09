@@ -7,11 +7,11 @@ const C={bg:'#06060f',panel:'#0d1117',border:'#21262d',teal:'#00ffc8',orange:'#F
 function Knob({label,value,min,max,step=1,onChange,color=C.teal,unit=''}) {
   const pct=Math.min(1,Math.max(0,(value-min)/(max-min)));
   return (
-    <div className="spnl-knob">
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,minWidth:52}}>
       <div style={{width:42,height:42,borderRadius:'50%',background:`conic-gradient(${color} 0% ${pct*100}%, #1a2030 ${pct*100}% 100%)`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'ns-resize',border:'2px solid #1a2030'}}
         onMouseDown={e=>{const sy=e.clientY,sv=value;const mv=ev=>{const d=(sy-ev.clientY)/80*(max-min);onChange(Math.min(max,Math.max(min,step<1?parseFloat((sv+d).toFixed(2)):Math.round(sv+d))));};const up=()=>{document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);};document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);}}>
         <div style={{width:28,height:28,borderRadius:'50%',background:C.panel,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <span className="spnl-knob-val">{step<1?value.toFixed(1):Math.round(value)}{unit}</span>
+          <span style={{fontSize:7,fontWeight:700,color,fontFamily:C.font}}>{step<1?value.toFixed(1):Math.round(value)}{unit}</span>
         </div>
       </div>
       <span style={{fontSize:7,color:C.dim,letterSpacing:0.3,textTransform:'uppercase',textAlign:'center',fontFamily:C.font}}>{label}</span>
@@ -65,7 +65,7 @@ export default function CityGenPanel({sceneRef,open=true,onClose}) {
 
   if(!open) return null;
   return (
-    <div className="spnl-btn">
+    <div style={{width:320,background:C.panel,borderRadius:8,border:`1px solid ${C.border}`,fontFamily:C.font,color:C.text,boxShadow:'0 16px 48px rgba(0,0,0,0.8)',display:'flex',flexDirection:'column',maxHeight:680}}>
       <div style={{background:'linear-gradient(135deg,#0a1020,#0d1117)',borderBottom:`1px solid ${C.border}`,padding:'10px 14px',display:'flex',alignItems:'center',gap:10,flexShrink:0}}>
         <div style={{width:8,height:8,borderRadius:'50%',background:'#44aaff',boxShadow:'0 0 10px #44aaff'}}/>
         <span style={{fontSize:12,fontWeight:700,letterSpacing:3,color:'#44aaff'}}>CITY GENERATOR</span>
@@ -88,7 +88,7 @@ export default function CityGenPanel({sceneRef,open=true,onClose}) {
               <Knob label="Seed"    value={seed}      min={0}  max={999}step={1}   onChange={setSeed}      color='#ffaa44'/>
             </div>
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10,padding:'8px 10px',background:'#0a0f1a',borderRadius:5,border:`1px solid ${C.border}`}}>
-              <span className="spnl-dim">ROADS</span>
+              <span style={{fontSize:9,color:C.dim}}>ROADS</span>
               <div onClick={()=>setAddRoads(v=>!v)} style={{width:32,height:16,borderRadius:8,cursor:'pointer',position:'relative',background:addRoads?C.teal:C.border}}>
                 <div style={{position:'absolute',top:2,left:addRoads?16:2,width:12,height:12,borderRadius:'50%',background:addRoads?C.bg:'#555',transition:'left 0.15s'}}/>
               </div>

@@ -1,6 +1,19 @@
 import React, { useState, useRef, useEffect } from "react";
 import * as THREE from "three";
 
+const S = {
+  root: { background:"#06060f", color:"#e0e0e0", fontFamily:"JetBrains Mono,monospace", padding:16, height:"100%", overflowY:"auto" },
+  h2: { color:"#00ffc8", fontSize:14, marginBottom:12, letterSpacing:1 },
+  label: { fontSize:11, color:"#aaa", display:"block", marginBottom:4 },
+  input: { width:"100%", background:"#0d0d1a", border:"1px solid #1a1a2e", color:"#e0e0e0", padding:"4px 8px", borderRadius:4, fontFamily:"JetBrains Mono,monospace", fontSize:11, marginBottom:10, boxSizing:"border-box" },
+  select: { width:"100%", background:"#0d0d1a", border:"1px solid #1a1a2e", color:"#e0e0e0", padding:"4px 8px", borderRadius:4, fontFamily:"JetBrains Mono,monospace", fontSize:11, marginBottom:10, boxSizing:"border-box" },
+  btn: { background:"#00ffc8", color:"#06060f", border:"none", borderRadius:4, padding:"7px 16px", fontFamily:"JetBrains Mono,monospace", fontSize:12, fontWeight:700, cursor:"pointer", marginRight:8, marginBottom:8 },
+  btnO: { background:"#FF6600", color:"#fff", border:"none", borderRadius:4, padding:"7px 16px", fontFamily:"JetBrains Mono,monospace", fontSize:12, fontWeight:700, cursor:"pointer", marginRight:8, marginBottom:8 },
+  btnRed: { background:"#cc2200", color:"#fff", border:"none", borderRadius:4, padding:"7px 16px", fontFamily:"JetBrains Mono,monospace", fontSize:12, fontWeight:700, cursor:"pointer", marginRight:8, marginBottom:8 },
+  section: { background:"#0d0d1a", border:"1px solid #1a1a2e", borderRadius:6, padding:12, marginBottom:12 },
+  stat: { fontSize:11, color:"#00ffc8", marginBottom:4 },
+};
+
 const SIM_TYPES = ["Rigid Body Drop","Domino Chain","Ball Pit","Cloth Simulation","Spring Chain","Pendulum Array","Wrecking Ball","Avalanche"];
 const SHAPES = ["Box","Sphere","Cylinder","Cone","Torus"];
 
@@ -214,28 +227,28 @@ export default function PhysicsSimulationPanel({ scene }){
   useEffect(()=>()=>cancelAnimationFrame(raf.current),[]);
 
   return (
-    <div className="spnl-root">
+    <div style={S.root}>
       <div style={S.h2}>⚛ PHYSICS SIMULATION</div>
-      <div className="spnl-section">
-        <label className="spnl-label">Simulation Type</label>
-        <select className="spnl-select" value={simType} onChange={e=>setSimType(e.target.value)}>
+      <div style={S.section}>
+        <label style={S.label}>Simulation Type</label>
+        <select style={S.select} value={simType} onChange={e=>setSimType(e.target.value)}>
           {SIM_TYPES.map(s=><option key={s}>{s}</option>)}
         </select>
-        <label className="spnl-label">Shape</label>
-        <select className="spnl-select" value={shape} onChange={e=>setShape(e.target.value)}>
+        <label style={S.label}>Shape</label>
+        <select style={S.select} value={shape} onChange={e=>setShape(e.target.value)}>
           {SHAPES.map(s=><option key={s}>{s}</option>)}
         </select>
-        <label className="spnl-label">Object Count: {count}</label>
-        <input className="spnl-input" type="range" min={2} max={100} value={count} onChange={e=>setCount(+e.target.value)}/>
-        <label className="spnl-label">Gravity: {gravity.toFixed(2)} m/s²</label>
-        <input className="spnl-input" type="range" min={-30} max={5} step={0.1} value={gravity} onChange={e=>setGravity(+e.target.value)}/>
-        <label className="spnl-label">Restitution (Bounce): {restitution.toFixed(2)}</label>
-        <input className="spnl-input" type="range" min={0} max={1} step={0.01} value={restitution} onChange={e=>setRestitution(+e.target.value)}/>
-        <label className="spnl-label">Friction: {friction.toFixed(2)}</label>
-        <input className="spnl-input" type="range" min={0} max={1} step={0.01} value={friction} onChange={e=>setFriction(+e.target.value)}/>
+        <label style={S.label}>Object Count: {count}</label>
+        <input style={S.input} type="range" min={2} max={100} value={count} onChange={e=>setCount(+e.target.value)}/>
+        <label style={S.label}>Gravity: {gravity.toFixed(2)} m/s²</label>
+        <input style={S.input} type="range" min={-30} max={5} step={0.1} value={gravity} onChange={e=>setGravity(+e.target.value)}/>
+        <label style={S.label}>Restitution (Bounce): {restitution.toFixed(2)}</label>
+        <input style={S.input} type="range" min={0} max={1} step={0.01} value={restitution} onChange={e=>setRestitution(+e.target.value)}/>
+        <label style={S.label}>Friction: {friction.toFixed(2)}</label>
+        <input style={S.input} type="range" min={0} max={1} step={0.01} value={friction} onChange={e=>setFriction(+e.target.value)}/>
       </div>
       {!running
-        ? <button className="spnl-btn" onClick={start}>▶ Start Sim</button>
+        ? <button style={S.btn} onClick={start}>▶ Start Sim</button>
         : <button style={S.btnRed} onClick={pause}>⏸ Pause</button>
       }
       <button style={S.btnO} onClick={clearSim}>🗑 Reset</button>

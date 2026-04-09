@@ -1,6 +1,19 @@
 import React, { useState, useRef } from "react";
 import * as THREE from "three";
 
+const S = {
+  root: { background:"#06060f", color:"#e0e0e0", fontFamily:"JetBrains Mono,monospace", padding:16, height:"100%", overflowY:"auto" },
+  h2: { color:"#00ffc8", fontSize:14, marginBottom:12, letterSpacing:1 },
+  label: { fontSize:11, color:"#aaa", display:"block", marginBottom:4 },
+  input: { width:"100%", background:"#0d0d1a", border:"1px solid #1a1a2e", color:"#e0e0e0", padding:"4px 8px", borderRadius:4, fontFamily:"JetBrains Mono,monospace", fontSize:11, marginBottom:10, boxSizing:"border-box" },
+  select: { width:"100%", background:"#0d0d1a", border:"1px solid #1a1a2e", color:"#e0e0e0", padding:"4px 8px", borderRadius:4, fontFamily:"JetBrains Mono,monospace", fontSize:11, marginBottom:10, boxSizing:"border-box" },
+  btn: { background:"#00ffc8", color:"#06060f", border:"none", borderRadius:4, padding:"7px 16px", fontFamily:"JetBrains Mono,monospace", fontSize:12, fontWeight:700, cursor:"pointer", marginRight:8, marginBottom:8 },
+  btnO: { background:"#FF6600", color:"#fff", border:"none", borderRadius:4, padding:"7px 16px", fontFamily:"JetBrains Mono,monospace", fontSize:12, fontWeight:700, cursor:"pointer", marginRight:8, marginBottom:8 },
+  section: { background:"#0d0d1a", border:"1px solid #1a1a2e", borderRadius:6, padding:12, marginBottom:12 },
+  stat: { fontSize:11, color:"#00ffc8", marginBottom:4 },
+  prev: { width:80, height:80, borderRadius:6, border:"2px solid #00ffc8", display:"inline-block", verticalAlign:"middle", marginRight:10 },
+};
+
 const MAT_PRESETS = {
   "PBR Metal": { color:"#667788", roughness:0.1, metalness:1.0, envMapIntensity:1.0 },
   "Rough Stone": { color:"#667766", roughness:0.95, metalness:0.0 },
@@ -196,37 +209,37 @@ export default function MaterialTexturePanel({ scene }){
   }
 
   return (
-    <div className="spnl-root">
+    <div style={S.root}>
       <div style={S.h2}>🎨 MATERIAL & TEXTURE STUDIO</div>
-      <div className="spnl-section">
-        <label className="spnl-label">Material Preset</label>
-        <select className="spnl-select" value={selectedPreset} onChange={e=>loadPreset(e.target.value)}>
+      <div style={S.section}>
+        <label style={S.label}>Material Preset</label>
+        <select style={S.select} value={selectedPreset} onChange={e=>loadPreset(e.target.value)}>
           {Object.keys(MAT_PRESETS).map(p=><option key={p}>{p}</option>)}
         </select>
-        <label className="spnl-label">Base Color</label>
+        <label style={S.label}>Base Color</label>
         <input style={{...S.input,padding:2,height:32}} type="color" value={color} onChange={e=>setColor(e.target.value)}/>
-        <label className="spnl-label">Roughness: {roughness.toFixed(2)}</label>
-        <input className="spnl-input" type="range" min={0} max={1} step={0.01} value={roughness} onChange={e=>setRoughness(+e.target.value)}/>
-        <label className="spnl-label">Metalness: {metalness.toFixed(2)}</label>
-        <input className="spnl-input" type="range" min={0} max={1} step={0.01} value={metalness} onChange={e=>setMetalness(+e.target.value)}/>
-        <label className="spnl-label">Emissive Color</label>
+        <label style={S.label}>Roughness: {roughness.toFixed(2)}</label>
+        <input style={S.input} type="range" min={0} max={1} step={0.01} value={roughness} onChange={e=>setRoughness(+e.target.value)}/>
+        <label style={S.label}>Metalness: {metalness.toFixed(2)}</label>
+        <input style={S.input} type="range" min={0} max={1} step={0.01} value={metalness} onChange={e=>setMetalness(+e.target.value)}/>
+        <label style={S.label}>Emissive Color</label>
         <input style={{...S.input,padding:2,height:32}} type="color" value={emissive} onChange={e=>setEmissive(e.target.value)}/>
-        <label className="spnl-label">Emissive Intensity: {emissiveInt.toFixed(2)}</label>
-        <input className="spnl-input" type="range" min={0} max={3} step={0.01} value={emissiveInt} onChange={e=>setEmissiveInt(+e.target.value)}/>
+        <label style={S.label}>Emissive Intensity: {emissiveInt.toFixed(2)}</label>
+        <input style={S.input} type="range" min={0} max={3} step={0.01} value={emissiveInt} onChange={e=>setEmissiveInt(+e.target.value)}/>
         <div style={{display:"flex",gap:16,marginBottom:8}}>
           <label style={{...S.label,cursor:"pointer"}}><input type="checkbox" checked={transparent} onChange={e=>setTransparent(e.target.checked)}/> Transparent</label>
           <label style={{...S.label,cursor:"pointer"}}><input type="checkbox" checked={wireframe} onChange={e=>setWireframe(e.target.checked)}/> Wireframe</label>
           <label style={{...S.label,cursor:"pointer"}}><input type="checkbox" checked={flatShade} onChange={e=>setFlatShade(e.target.checked)}/> Flat Shade</label>
         </div>
         {transparent && <>
-          <label className="spnl-label">Opacity: {opacity.toFixed(2)}</label>
-          <input className="spnl-input" type="range" min={0} max={1} step={0.01} value={opacity} onChange={e=>setOpacity(+e.target.value)}/>
+          <label style={S.label}>Opacity: {opacity.toFixed(2)}</label>
+          <input style={S.input} type="range" min={0} max={1} step={0.01} value={opacity} onChange={e=>setOpacity(+e.target.value)}/>
         </>}
-        <button className="spnl-btn" onClick={applyToSelected}>✓ Apply Material</button>
+        <button style={S.btn} onClick={applyToSelected}>✓ Apply Material</button>
       </div>
-      <div className="spnl-section">
-        <label className="spnl-label">Procedural Texture</label>
-        <select className="spnl-select" value={pattern} onChange={e=>setPattern(e.target.value)}>
+      <div style={S.section}>
+        <label style={S.label}>Procedural Texture</label>
+        <select style={S.select} value={pattern} onChange={e=>setPattern(e.target.value)}>
           {TEXTURE_PATTERNS.map(p=><option key={p}>{p}</option>)}
         </select>
         <div style={{display:"flex",gap:12,marginBottom:8}}>
@@ -240,8 +253,8 @@ export default function MaterialTexturePanel({ scene }){
           </div>
         </div>
         {texPreview && <img src={texPreview} style={{width:80,height:80,borderRadius:4,border:"2px solid #00ffc8",marginBottom:8,display:"block"}} alt="preview"/>}
-        <button className="spnl-btn" onClick={generateTexture}>👁 Preview</button>
-        <button className="spnl-btn" onClick={applyTexture}>✓ Apply Texture</button>
+        <button style={S.btn} onClick={generateTexture}>👁 Preview</button>
+        <button style={S.btn} onClick={applyTexture}>✓ Apply Texture</button>
         <button style={S.btnO} onClick={downloadTexture}>💾 Download PNG</button>
       </div>
       {status && <div style={{...S.stat,marginTop:4}}>{status}</div>}

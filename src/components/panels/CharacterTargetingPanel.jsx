@@ -104,7 +104,7 @@ export default function CharacterTargetingPanel({ scene, onTargetChange }) {
   const selected = meshList.find(m => m.id === selectedId);
 
   return (
-    <div className="spnl-root">
+    <div style={S.root}>
       <div style={S.h2}>🎯 CHARACTER TARGETING</div>
 
       <div style={S.sec}>
@@ -119,7 +119,7 @@ export default function CharacterTargetingPanel({ scene, onTargetChange }) {
             <div style={{fontSize:10,color:T.muted,marginTop:4}}>{selected?.polyCount?.toLocaleString()} verts</div>
           </div>
         )}
-        <button className="spnl-btn" onClick={scanScene}>🔍 Scan Scene</button>
+        <button style={S.btn} onClick={scanScene}>🔍 Scan Scene</button>
         {selectedId && <button style={S.btnO} onClick={clearSelection}>✕ Clear Target</button>}
       </div>
 

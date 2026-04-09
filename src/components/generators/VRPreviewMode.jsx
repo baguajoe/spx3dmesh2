@@ -11,15 +11,39 @@ const ENVIRONMENTS = [
   { id: "abstract", label: "Abstract", icon: "🔷", floor: "#0a0020", wall: "#100030", accent: C.purple },
 ];
 
+const s = {
+  root: { display: "flex", height: "100%", background: C.bg, fontFamily: C.font, color: C.white, overflow: "hidden" },
+  sidebar: { width: 240, background: C.bg2, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", overflowY: "auto", flexShrink: 0 },
+  main: { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
+  sectionLabel: { fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: C.muted, padding: "12px 12px 6px" },
+  row: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 12px", gap: 6 },
+  label: { fontSize: 10, color: C.muted, minWidth: 90 },
+  slider: { flex: 1, accentColor: C.teal, cursor: "pointer" },
+  val: { fontSize: 9, color: C.teal, width: 40, textAlign: "right" },
+  divider: { height: 1, background: C.border, margin: "6px 0" },
+  canvas: { flex: 1, display: "block", width: "100%", height: "100%" },
+  toolbar: { display: "flex", gap: 6, padding: "7px 10px", background: C.bg2, borderBottom: `1px solid ${C.border}`, alignItems: "center", flexShrink: 0, flexWrap: "wrap" },
+  statusBar: { display: "flex", gap: 12, padding: "6px 12px", background: C.bg2, borderTop: `1px solid ${C.border}`, fontSize: 9, color: C.muted, flexShrink: 0 },
+  btn: (v) => ({ background: v === "primary" ? C.teal : v === "orange" ? C.orange : v === "purple" ? C.purple : C.bg3, color: v === "primary" || v === "orange" || v === "purple" ? C.bg : C.white, border: `1px solid ${v === "primary" ? C.teal : v === "orange" ? C.orange : v === "purple" ? C.purple : C.border}`, borderRadius: 3, fontFamily: C.font, fontSize: 10, fontWeight: 700, padding: "6px 12px", cursor: "pointer" }),
+  btnRow: { display: "flex", gap: 6, padding: "8px 12px", flexWrap: "wrap" },
+  envGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 5, padding: "0 10px 10px" },
+  envBtn: (a) => ({ background: a ? `${C.teal}15` : C.bg3, border: `1px solid ${a ? C.teal : C.border}`, borderRadius: 4, padding: "8px 5px", cursor: "pointer", textAlign: "center", fontFamily: C.font, fontSize: 9, color: a ? C.teal : C.white }),
+  toggle: (on) => ({ width: 32, height: 16, borderRadius: 8, background: on ? C.teal : C.bg3, border: `1px solid ${on ? C.teal : C.border}`, cursor: "pointer", position: "relative", flexShrink: 0 }),
+  toggleDot: (on) => ({ position: "absolute", top: 2, left: on ? 16 : 2, width: 10, height: 10, borderRadius: "50%", background: on ? C.bg : C.muted, transition: "left 0.2s" }),
+  tag: (c) => ({ display: "inline-block", fontSize: 8, padding: "2px 6px", borderRadius: 2, background: `${c}20`, color: c, border: `1px solid ${c}40` }),
+  headsetOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, pointerEvents: "none" },
+  vrBtn: { background: `${C.purple}20`, border: `1px solid ${C.purple}`, borderRadius: 6, fontFamily: C.font, fontSize: 11, fontWeight: 700, padding: "10px 20px", cursor: "pointer", color: C.purple, letterSpacing: 2 },
+};
+
 function Toggle({ value, onChange }) {
   return <div style={s.toggle(value)} onClick={() => onChange(!value)}><div style={s.toggleDot(value)} /></div>;
 }
 
 function SliderRow({ label, value, min, max, step = 0.1, onChange, unit = "" }) {
   return (
-    <div className="spnl-row">
-      <span className="spnl-label">{label}</span>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(+e.target.value)} className="spnl-slider" />
+    <div style={s.row}>
+      <span style={s.label}>{label}</span>
+      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(+e.target.value)} style={s.slider} />
       <span style={s.val}>{value}{unit}</span>
     </div>
   );
@@ -317,9 +341,9 @@ export default function VRPreviewMode({ scene }) {
   };
 
   return (
-    <div className="spnl-root">
+    <div style={s.root}>
       <div style={s.sidebar}>
-        <div className="spnl-section-label">Environment</div>
+        <div style={s.sectionLabel}>Environment</div>
         <div style={s.envGrid}>
           {ENVIRONMENTS.map(env => (
             <button key={env.id} style={s.envBtn(environment === env.id)} onClick={() => changeEnvironment(env.id)}>
@@ -330,18 +354,18 @@ export default function VRPreviewMode({ scene }) {
         </div>
 
         <div style={s.divider} />
-        <div className="spnl-section-label">Avatar</div>
+        <div style={s.sectionLabel}>Avatar</div>
         <SliderRow label="Height" value={avatarHeight} min={0.5} max={2.5} step={0.05} onChange={setAvatarHeight} unit="m" />
         <SliderRow label="Scale" value={avatarScale} min={0.5} max={2} step={0.05} onChange={setAvatarScale} />
-        <div className="spnl-row"><span className="spnl-label">Show Avatar</span><Toggle value={showAvatar} onChange={setShowAvatar} /></div>
+        <div style={s.row}><span style={s.label}>Show Avatar</span><Toggle value={showAvatar} onChange={setShowAvatar} /></div>
 
         <div style={s.divider} />
-        <div className="spnl-section-label">VR Camera</div>
+        <div style={s.sectionLabel}>VR Camera</div>
         <SliderRow label="FOV" value={fov} min={60} max={120} step={1} onChange={setFov} unit="°" />
-        <div className="spnl-row"><span className="spnl-label">Head Tracking</span><Toggle value={headTracking} onChange={setHeadTracking} /></div>
+        <div style={s.row}><span style={s.label}>Head Tracking</span><Toggle value={headTracking} onChange={setHeadTracking} /></div>
 
         <div style={s.divider} />
-        <div className="spnl-section-label">Movement</div>
+        <div style={s.sectionLabel}>Movement</div>
         <SliderRow label="Walk Speed" value={moveSpeed} min={0.5} max={10} step={0.5} onChange={setMoveSpeed} unit="m/s" />
         <div style={{ padding: "0 12px 8px", fontSize: 9, color: C.muted, lineHeight: 1.6 }}>
           WASD / ARROWS — Move<br />
@@ -351,11 +375,11 @@ export default function VRPreviewMode({ scene }) {
         </div>
 
         <div style={s.divider} />
-        <div className="spnl-section-label">Comfort Zone</div>
-        <div className="spnl-row"><span className="spnl-label">Show Grid</span><Toggle value={showComfort} onChange={setShowComfort} /></div>
+        <div style={s.sectionLabel}>Comfort Zone</div>
+        <div style={s.row}><span style={s.label}>Show Grid</span><Toggle value={showComfort} onChange={setShowComfort} /></div>
 
         <div style={s.divider} />
-        <div className="spnl-section-label">Teleport</div>
+        <div style={s.sectionLabel}>Teleport</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, padding: "0 10px 10px" }}>
           {[["Center", 0, 0], ["North", 0, -6], ["South", 0, 6], ["East", 6, 0], ["West", -6, 0], ["Corner", 6, 6]].map(([label, x, z]) => (
             <button key={label} style={{ ...s.btn(), fontSize: 9, padding: "5px 4px" }} onClick={() => teleport(x, z)}>{label}</button>
@@ -363,7 +387,7 @@ export default function VRPreviewMode({ scene }) {
         </div>
 
         <div style={s.divider} />
-        <div className="spnl-btn-row">
+        <div style={s.btnRow}>
           <button style={s.btn(vrMode ? "orange" : "purple")} onClick={() => setVrMode(!vrMode)}>
             {vrMode ? "EXIT VR" : "🥽 VR MODE"}
           </button>
@@ -372,9 +396,9 @@ export default function VRPreviewMode({ scene }) {
 
       <div style={s.main}>
         <div style={s.toolbar}>
-          <span className="spnl-dim">VR PREVIEW — {ENVIRONMENTS.find(e => e.id === environment)?.label.toUpperCase()}</span>
+          <span style={{ fontSize: 10, color: C.muted }}>VR PREVIEW — {ENVIRONMENTS.find(e => e.id === environment)?.label.toUpperCase()}</span>
           {vrMode && <span style={{ ...s.tag(C.purple), animation: "none" }}>VR SPLIT-SCREEN</span>}
-          <div className="spnl-ml-auto">
+          <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
             <span style={s.tag(C.teal)}>H: {avatarHeight}m</span>
             <span style={s.tag(C.orange)}>FOV: {fov}°</span>
           </div>
@@ -402,7 +426,7 @@ export default function VRPreviewMode({ scene }) {
           <span>POS: [{stats.pos.join(", ")}]</span>
           <span>FPS: {stats.fps}</span>
           <span>HEIGHT: {avatarHeight}m</span>
-          <span className="spnl-ml-auto">{vrMode ? "VR ACTIVE" : "DESKTOP MODE"}</span>
+          <span style={{ marginLeft: "auto", color: vrMode ? C.purple : C.teal }}>{vrMode ? "VR ACTIVE" : "DESKTOP MODE"}</span>
         </div>
       </div>
     </div>

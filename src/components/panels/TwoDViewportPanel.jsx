@@ -286,7 +286,7 @@ export default function TwoDViewportPanel({ liveKeyframes }) {
   const canPair = COMBINABLE_PAIRS.some(([a,b]) => (a===styleA&&b===styleB)||(a===styleB&&b===styleA));
 
   return (
-    <div className="spnl-root">
+    <div style={S.root}>
       <div style={S.h2}>🎬 2D VIEWPORT</div>
       <div style={S.sec}>
         <label style={S.lbl}>Style A</label>
@@ -326,7 +326,7 @@ export default function TwoDViewportPanel({ liveKeyframes }) {
         )}
       </div>
       <div style={{marginTop:8}}>
-        <button className="spnl-btn" onClick={()=>setPlaying(!playing)}>{playing?"⏸ Pause":"▶ Play"}</button>
+        <button style={S.btn} onClick={()=>setPlaying(!playing)}>{playing?"⏸ Pause":"▶ Play"}</button>
         <button style={S.btnO} onClick={exportFrame}>💾 Export Frame</button>
       </div>
       {status && <div style={{...S.stat,marginTop:8}}>{status}</div>}

@@ -83,7 +83,7 @@ export default function FilmAssetLibrary({ sceneRef, open=true, onClose }) {
 
   if(!open) return null;
   return (
-    <div className="spnl-btn">
+    <div style={{width:260,background:C.panel,borderRadius:6,border:`1px solid ${C.border}`,fontFamily:C.font,color:C.text,fontSize:11,boxShadow:'0 8px 32px rgba(0,0,0,0.7)',display:'flex',flexDirection:'column',maxHeight:640}}>
       <div style={{background:'linear-gradient(90deg,#0a1520,#0d1117)',borderBottom:`1px solid ${C.border}`,padding:'8px 12px',display:'flex',alignItems:'center',gap:8}}>
         <div style={{width:6,height:6,borderRadius:'50%',background:C.orange,boxShadow:`0 0 6px ${C.orange}`}}/>
         <span style={{fontSize:11,fontWeight:700,letterSpacing:2,color:C.orange}}>ASSET LIBRARY</span>
