@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import '../styles/panel-components.css';
-import '../styles/film-post.css';
+import '../../styles/panel-components.css';
+import '../../styles/film-post.css';
 
 function Slider({ label, value, min, max, step=0.01, onChange, unit='' }) {
   return (
