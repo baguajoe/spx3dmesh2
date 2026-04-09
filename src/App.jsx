@@ -442,6 +442,7 @@ export default function App() {
     else if (toolId === "pattern") { setPatternPanelOpen?.(true); ensureWorkspaceMesh("pattern"); }
     else if (toolId === "hair") setHairPanelOpen?.(true);
     else if (toolId === "collaborate") setCollaboratePanelOpen?.(true);
+    else if (toolId === "mesh_script") setMeshScriptOpen?.(true);
     else if (toolId === "lighting") setLightingCameraPanelOpen?.(true);
     else if (toolId === "camera") setLightingCameraPanelOpen?.(true);
     else if (toolId === "lighting_camera") setLightingCameraPanelOpen?.(true);
