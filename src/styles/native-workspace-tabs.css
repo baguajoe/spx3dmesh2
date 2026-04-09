@@ -263,3 +263,14 @@
   background: #1a1a2a !important;
   margin: 4px auto !important;
 }
+
+/* ── Final UI polish ─────────────────────────────────────────── */
+.spx-native-workspace-tab {
+  color: #707888 !important;
+}
+.spx-native-workspace-tab:not(.spx-tab-group__trigger).is-active {
+  color: #ffffff !important;
+  border-bottom-color: #ffffff !important;
+  background: rgba(255,255,255,0.06) !important;
+}
+.spx-tab-group__trigger { color: #707888 !important; }

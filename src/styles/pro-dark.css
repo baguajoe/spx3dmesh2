@@ -1315,3 +1315,17 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 1px s
 .tl-fps-select         { color: #c0c0c0 !important; background: #1a1a2a !important; }
 .spx-bottom-bar        { background: #0d0d1a !important; border-top: 1px solid #2a2a3a !important; }
 .spx-timeline          { background: #0d0d1a !important; }
+
+/* ── Tool strip icon brightness ──────────────────────────────── */
+.spx-tool-strip button,
+.spx-tool-strip .spx-tool-btn { color: #6a7080 !important; }
+.spx-tool-strip button:hover,
+.spx-tool-strip .spx-tool-btn:hover { color: #d0d8e8 !important; }
+.spx-tool-strip button.is-active { color: #00ffc8 !important; }
+
+/* ── Timeline brightness ─────────────────────────────────────── */
+.tl-frame-label, .tl-frame-input { color: #d0d0d0 !important; }
+.tl-btn { color: #a0a8b8 !important; }
+.tl-btn--play { color: #00ffc8 !important; }
+.spx-statusbar { background: #08080f !important; }
+.spx-statusbar span { color: #707888 !important; }
