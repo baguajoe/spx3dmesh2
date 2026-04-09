@@ -3983,10 +3983,10 @@ export default function App() {
             </svg>
           </div>
           {/* Viewport labels */}
-            <div className="spx-viewport-label">
+          {quadView === false && <div className="spx-viewport-label">
               {editMode === 'edit' ? (selectMode === 'vert' ? 'VERTEX' : selectMode === 'edge' ? 'EDGE' : 'FACE') + ' EDIT' : 'Perspective'} · {activeWorkspace}
-            </div>
-          )}
+            </div>}
+          {/* end single label */}
           {quadView && (
             <div className="spx-quad-labels">
               <div className="spx-quad-label spx-quad-label--tl">Perspective</div>
