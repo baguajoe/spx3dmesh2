@@ -603,6 +603,40 @@ export default function App() {
 
 
 
+  
+  // ── Electron native menu → handleApplyFunction ──────────────────────────
+  useEffect(() => {
+    const MAP = {
+      'menu:save':         'exportSpxScene',
+      'menu:export-glb':   'exportGLB',
+      'menu:export-bvh':   'exportBVH',
+      'menu:undo':         'undo',
+      'menu:redo':         'redo',
+      'menu:render-start': 'takeSnapshot',
+      'menu:render-preview':'takeSnapshot',
+      'menu:mesh-script':  'mesh_script',
+      'menu:collaborate':  'collaborate',
+    };
+    const listeners = [];
+    Object.entries(MAP).forEach(([channel, fn]) => {
+      const cb = () => handleApplyFunction(fn);
+      window.electronAPI.onMenuEvent(channel, cb);
+      listeners.push([channel, cb]);
+    });
+    // File opened via native dialog
+    window.electronAPI.onMenuEvent('file:opened', ({ ext, data, name }) => {
+      if (ext === 'glb' || ext === 'gltf') handleApplyFunction('importGLBData', { data, name });
+      else if (ext === 'bvh') handleApplyFunction('importBVHData', { data, name });
+    });
+    // Script run via native dialog
+    window.electronAPI.onMenuEvent('script:run', ({ code, lang }) => {
+      if (lang === 'js') handleApplyFunction('mesh_script_run', { code });
+    });
+    return () => {
+      listeners.forEach(([channel]) => window.electronAPI.removeMenuListener?.(channel));
+    };
+  }, [handleApplyFunction]);
+
   const [clothingPanelOpen, setClothingPanelOpen] = useState(false);
   const [fabricPanelOpen, setFabricPanelOpen] = useState(false);
 
