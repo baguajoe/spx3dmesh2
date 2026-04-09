@@ -1,0 +1,123 @@
+/* ═══════════════════════════════════════════════════════
+   SPXPerformancePanel CSS
+   ═══════════════════════════════════════════════════════ */
+
+.spp-panel {
+  width: 100%;
+  background: #0d1117;
+  color: #c8c8c8;
+  font-family: JetBrains Mono, monospace;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.spp-header {
+  background: #161b22;
+  border-bottom: 1px solid #21262d;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.spp-btn {
+  padding: 4px 10px;
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #c8c8c8;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: JetBrains Mono, monospace;
+  transition: background 0.1s;
+}
+
+.spp-btn:hover { background: #30363d; }
+
+.spp-btn--primary {
+  background: rgba(0,255,200,0.12);
+  border-color: #00ffc8;
+  color: #00ffc8;
+}
+
+.spp-btn--primary:hover { background: rgba(0,255,200,0.2); }
+
+.spp-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.spp-label {
+  font-size: 10px;
+  color: #8b949e;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.spp-section {
+  border-bottom: 1px solid #21262d;
+  overflow: hidden;
+}
+
+.spp-section-header {
+  padding: 7px 12px;
+  cursor: pointer;
+  background: #161b22;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #00ffc8;
+  user-select: none;
+  transition: background 0.1s;
+}
+
+.spp-section-header:hover { background: #1c2128; }
+
+.spp-section-body {
+  padding: 8px 12px;
+  background: #0d1117;
+}
+
+.spp-timeline {
+  height: 48px;
+  background: #06060f;
+  border: 1px solid #21262d;
+  border-radius: 4px;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.spp-slider {
+  width: 100%;
+  accent-color: #00ffc8;
+  cursor: pointer;
+}
+
+.spp-analysis-box {
+  background: #06060f;
+  border: 1px solid #21262d;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 10px;
+  color: #8b949e;
+  margin-top: 4px;
+  white-space: pre-wrap;
+  font-family: JetBrains Mono, monospace;
+}
+
+.spp-score {
+  font-weight: 700;
+  font-size: 12px;
+}

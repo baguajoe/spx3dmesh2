@@ -33,7 +33,7 @@ function OutlinerRow({ obj, depth, activeObjId, onSelect, onRename, onDelete, on
     <>
       <div
         className={`outliner-row${isActive ? " outliner-row--active" : ""}`}
-        style={{ paddingLeft: `${8 + depth * 14}px` }}
+        className="outliner-row-indent" style={{ paddingLeft: `${8 + depth * 14}px` }}
         onClick={() => onSelect(obj.id)}
         onDoubleClick={handleRename}
       >

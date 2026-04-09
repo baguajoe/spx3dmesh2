@@ -32,205 +32,15 @@ import {
   getAIAnimationAdvice,
 } from "../mesh/SPXPerformance.js";
 
-const S = {
-  panel: {
-    width: "100%",
-    background: "#0d1117",
-    color: "#c8c8c8",
-    fontFamily: "JetBrains Mono, monospace",
-    fontSize: 11,
-    display: "flex",
-    flexDirection: "column",
-    gap: 0,
-    height: "100%",
-    overflow: "hidden",
-  },
-  header: {
-    background: "#161b22",
-    borderBottom: "1px solid #21262d",
-    padding: "6px 10px",
-    fontWeight: 700,
-    fontSize: 12,
-    color: "#00ffc8",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  section: {
-    borderBottom: "1px solid #21262d",
-    overflow: "hidden",
-  },
-  sectionHeader: {
-    padding: "5px 10px",
-    background: "#161b22",
-    cursor: "pointer",
-    fontWeight: 600,
-    fontSize: 11,
-    color: "#8b949e",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    userSelect: "none",
-  },
-  sectionBody: {
-    padding: "8px 10px",
-    display: "flex",
-    flexDirection: "column",
-    gap: 6,
-  },
-  btn: {
-    background: "#21262d",
-    border: "1px solid #30363d",
-    color: "#c8c8c8",
-    borderRadius: 3,
-    padding: "4px 8px",
-    cursor: "pointer",
-    fontSize: 11,
-    fontFamily: "JetBrains Mono, monospace",
-    textAlign: "left",
-  },
-  btnPrimary: {
-    background: "#00ffc820",
-    border: "1px solid #00ffc8",
-    color: "#00ffc8",
-    borderRadius: 3,
-    padding: "4px 8px",
-    cursor: "pointer",
-    fontSize: 11,
-    fontFamily: "JetBrains Mono, monospace",
-  },
-  btnDanger: {
-    background: "#ff000015",
-    border: "1px solid #f85149",
-    color: "#f85149",
-    borderRadius: 3,
-    padding: "4px 8px",
-    cursor: "pointer",
-    fontSize: 11,
-    fontFamily: "JetBrains Mono, monospace",
-  },
-  btnOrange: {
-    background: "#FF660015",
-    border: "1px solid #FF6600",
-    color: "#FF6600",
-    borderRadius: 3,
-    padding: "4px 8px",
-    cursor: "pointer",
-    fontSize: 11,
-    fontFamily: "JetBrains Mono, monospace",
-  },
-  input: {
-    background: "#0d1117",
-    border: "1px solid #30363d",
-    color: "#c8c8c8",
-    borderRadius: 3,
-    padding: "3px 6px",
-    fontSize: 11,
-    fontFamily: "JetBrains Mono, monospace",
-    width: "100%",
-    boxSizing: "border-box",
-  },
-  row: {
-    display: "flex",
-    gap: 4,
-    alignItems: "center",
-  },
-  label: {
-    color: "#8b949e",
-    fontSize: 10,
-    minWidth: 60,
-  },
-  clipItem: {
-    background: "#161b22",
-    border: "1px solid #21262d",
-    borderRadius: 3,
-    padding: "4px 8px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 4,
-  },
-  clipItemActive: {
-    background: "#00ffc810",
-    border: "1px solid #00ffc8",
-    borderRadius: 3,
-    padding: "4px 8px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 4,
-  },
-  timeline: {
-    background: "#0d1117",
-    border: "1px solid #21262d",
-    borderRadius: 3,
-    height: 48,
-    position: "relative",
-    overflow: "hidden",
-    cursor: "pointer",
-  },
-  status: {
-    padding: "4px 10px",
-    background: "#161b22",
-    borderTop: "1px solid #21262d",
-    color: "#8b949e",
-    fontSize: 10,
-    minHeight: 20,
-  },
-  analysisBox: {
-    background: "#161b22",
-    border: "1px solid #21262d",
-    borderRadius: 3,
-    padding: 6,
-    fontSize: 10,
-    color: "#8b949e",
-    whiteSpace: "pre-wrap",
-    maxHeight: 80,
-    overflowY: "auto",
-  },
-  aiBox: {
-    background: "#161b22",
-    border: "1px solid #21262d",
-    borderRadius: 3,
-    padding: 6,
-    fontSize: 10,
-    color: "#c8c8c8",
-    whiteSpace: "pre-wrap",
-    maxHeight: 120,
-    overflowY: "auto",
-  },
-  textarea: {
-    background: "#0d1117",
-    border: "1px solid #30363d",
-    color: "#c8c8c8",
-    borderRadius: 3,
-    padding: "4px 6px",
-    fontSize: 11,
-    fontFamily: "JetBrains Mono, monospace",
-    width: "100%",
-    boxSizing: "border-box",
-    resize: "vertical",
-    minHeight: 40,
-  },
-  slider: {
-    width: "100%",
-    accentColor: "#00ffc8",
-  },
-  score: (v) => ({
-    color: v >= 80 ? "#00ffc8" : v >= 50 ? "#FF6600" : "#f85149",
-    fontWeight: 700,
-  }),
-};
-
 function Section({ title, defaultOpen = false, children }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div style={S.section}>
-      <div style={S.sectionHeader} onClick={() => setOpen(o => !o)}>
+    <div className="spp-section">
+      <div className="spp-section-header" onClick={() => setOpen(o => !o)}>
         <span>{title}</span>
         <span>{open ? "▾" : "▸"}</span>
       </div>
-      {open && <div style={S.sectionBody}>{children}</div>}
+      {open && <div className="spp-section-body">{children}</div>}
     </div>
   );
 }
@@ -443,9 +253,9 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
   const activeClip = session.clips.find(c => c.id === session.activeClipId);
 
   return (
-    <div style={S.panel}>
+    <div className="spp-panel">
       {/* Header */}
-      <div style={S.header}>
+      <div className="spp-header">
         <span>⬡ SPX Performance</span>
         <button style={{ ...S.btn, fontSize: 10, padding: "2px 6px" }} onClick={handleRenameSession}>
           {session.name}
@@ -456,7 +266,7 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
 
         {/* ── Clip Library ── */}
         <Section title="▸ Clip Library" defaultOpen={true}>
-          <button style={S.btnPrimary} onClick={handleImportBVH}>
+          <button className="spp-btn spp-btn--primary" onClick={handleImportBVH}>
             ⊕ Import BVH File
           </button>
           {session.clips.length === 0 && (
@@ -471,7 +281,7 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
               onClick={() => handleSetActive(clip.id)}
             >
               {renaming === clip.id ? (
-                <div style={S.row}>
+                <div className="spp-row">
                   <input
                     style={{ ...S.input, width: 100 }}
                     value={renameVal}
@@ -479,8 +289,8 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
                     onKeyDown={e => e.key === "Enter" && handleRenameClip(clip.id)}
                     autoFocus
                   />
-                  <button style={S.btnPrimary} onClick={() => handleRenameClip(clip.id)}>✓</button>
-                  <button style={S.btn} onClick={() => setRenaming(null)}>✕</button>
+                  <button className="spp-btn spp-btn--primary" onClick={() => handleRenameClip(clip.id)}>✓</button>
+                  <button className="spp-btn" onClick={() => setRenaming(null)}>✕</button>
                 </div>
               ) : (
                 <>
@@ -493,7 +303,7 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
                       {clip.frames?.length || 0}f · {clip.duration?.toFixed(2)}s · {clip.source || "bvh"}
                     </div>
                   </div>
-                  <div style={S.row}>
+                  <div className="spp-row">
                     <button style={{ ...S.btn, padding: "2px 5px" }} title="Rename"
                       onClick={e => { e.stopPropagation(); setRenaming(clip.id); setRenameVal(clip.name); }}>✏</button>
                     <button style={{ ...S.btn, padding: "2px 5px" }} title="Duplicate"
@@ -512,17 +322,17 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
           <div style={{ color: "#484f58", fontSize: 10 }}>
             Active: {activeClip ? activeClip.name : "none"}
           </div>
-          <div style={S.row}>
-            <button style={S.btn} onClick={handleCleanClip}>
+          <div className="spp-row">
+            <button className="spp-btn" onClick={handleCleanClip}>
               ⟳ Smooth + Foot Lock
             </button>
-            <button style={S.btn} onClick={handleAnalyzeClip}>
+            <button className="spp-btn" onClick={handleAnalyzeClip}>
               ⬡ Analyze
             </button>
           </div>
           {analysisResult && (
-            <div style={S.analysisBox}>
-              <span style={S.score(analysisResult.score)}>Score: {analysisResult.score}/100</span>{"\n"}
+            <div className="spp-analysis-box">
+              <span className="spp-score" style={{color: analysisResult.score>=80?'#00ffc8':analysisResult.score>=50?'#ffaa00':'#ff4444'}}>Score: {analysisResult.score}/100</span>{"\n"}
               {analysisResult.summary}{"\n"}
               {analysisResult.issues.map((iss, i) => (
                 `[${iss.severity}] ${iss.bone || ""} ${iss.type}: ${iss.suggestion}\n`
@@ -531,15 +341,15 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
           )}
           {activeClip && (
             <>
-              <div style={S.row}>
-                <span style={S.label}>Trim In</span>
+              <div className="spp-row">
+                <span className="spp-label">Trim In</span>
                 <input
                   type="number"
                   style={{ ...S.input, width: 60 }}
                   defaultValue={activeClip.startFrame}
                   onBlur={e => handleTrimClip(activeClip.id, parseInt(e.target.value), activeClip.endFrame)}
                 />
-                <span style={S.label}>Trim Out</span>
+                <span className="spp-label">Trim Out</span>
                 <input
                   type="number"
                   style={{ ...S.input, width: 60 }}
@@ -547,15 +357,15 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
                   onBlur={e => handleTrimClip(activeClip.id, activeClip.startFrame, parseInt(e.target.value))}
                 />
               </div>
-              <div style={S.row}>
-                <span style={S.label}>Blend In</span>
+              <div className="spp-row">
+                <span className="spp-label">Blend In</span>
                 <input
                   type="number"
                   style={{ ...S.input, width: 60 }}
                   defaultValue={activeClip.blendIn}
                   onBlur={e => handleSetBlend(activeClip.id, parseInt(e.target.value), activeClip.blendOut)}
                 />
-                <span style={S.label}>Blend Out</span>
+                <span className="spp-label">Blend Out</span>
                 <input
                   type="number"
                   style={{ ...S.input, width: 60 }}
@@ -570,7 +380,7 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
         {/* ── Playback ── */}
         <Section title="▸ Playback" defaultOpen={true}>
           {/* Timeline */}
-          <div style={S.timeline} ref={timelineRef} onClick={handleTimelineClick}>
+          <div className="spp-timeline" ref={timelineRef} onClick={handleTimelineClick}>
             {/* Clip blocks */}
             {session.clips.map(clip => {
               const left = session.totalFrames > 0
@@ -628,7 +438,7 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
           {/* Scrubber */}
           <input
             type="range"
-            style={S.slider}
+            className="spp-slider"
             min={0}
             max={session.totalFrames || 1}
             value={Math.floor(session.currentFrame)}
@@ -636,10 +446,10 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
           />
 
           {/* Transport */}
-          <div style={S.row}>
-            <button style={S.btnPrimary} onClick={handlePlay}>▶ Play</button>
-            <button style={S.btn} onClick={handlePause}>⏸ Pause</button>
-            <button style={S.btn} onClick={handleStop}>⏹ Stop</button>
+          <div className="spp-row">
+            <button className="spp-btn spp-btn--primary" onClick={handlePlay}>▶ Play</button>
+            <button className="spp-btn" onClick={handlePause}>⏸ Pause</button>
+            <button className="spp-btn" onClick={handleStop}>⏹ Stop</button>
             <button
               style={session.loop ? S.btnPrimary : S.btn}
               onClick={handleLoop}
@@ -649,8 +459,8 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
           </div>
 
           {/* Speed */}
-          <div style={S.row}>
-            <span style={S.label}>Speed</span>
+          <div className="spp-row">
+            <span className="spp-label">Speed</span>
             {[0.25, 0.5, 1, 2].map(sp => (
               <button
                 key={sp}
@@ -665,10 +475,10 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
 
         {/* ── Export ── */}
         <Section title="▸ Export & Pipeline">
-          <button style={S.btn} onClick={handleExportBVH}>
+          <button className="spp-btn" onClick={handleExportBVH}>
             ↓ Export BVH
           </button>
-          <button style={S.btn} onClick={handleExportSession}>
+          <button className="spp-btn" onClick={handleExportSession}>
             ↓ Save Session (.spxperf)
           </button>
           <button style={S.btnOrange} onClick={handleSendToSPX}>
