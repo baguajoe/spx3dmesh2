@@ -218,5 +218,5 @@ export function createAnimationGraph(skeleton, mixer) {
   return new AnimationGraph(skeleton, mixer);
 }
 
-export { AnimStateMachine, BlendTree, ANIM_NODE_TYPES };
+
 export default AnimationGraph;
