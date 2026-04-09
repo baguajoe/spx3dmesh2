@@ -77,14 +77,14 @@ export default function FluidPanel({ sceneRef, setStatus, open, onClose }) {
   useEffect(()=>{ if(open&&sceneRef?.current) build(); },[fluidType,poolW,poolD,depth]);
 
   return (
-    <div style={{...S.root,display:"flex",flexDirection:"column"}}>
-      <div style={{display:"flex",alignItems:"center",marginBottom:10}}>
+    <div className="fluid-root">
+      <div className="fluid-header">
         <div style={S.h2}>💧 FLUID SIMULATOR</div>
-        {onClose&&<button onClick={onClose} style={{marginLeft:"auto",background:"none",border:"1px solid #21262d",borderRadius:3,color:"#8b949e",cursor:"pointer",padding:"3px 10px",fontSize:10}}>✕</button>}
+        {onClose&&<button onClick={onClose} className="fluid-close">✕</button>}
       </div>
       <div style={S.sec}>
         <div style={S.lbl}>Fluid Type</div>
-        <div style={{display:"flex",flexWrap:"wrap",marginBottom:4}}>
+        <div className="fluid-tabs">
           {FLUID_TYPES.map(f=><button key={f} style={S.badge(fluidType,f)} onClick={()=>setFluidType(f)}>{f}</button>)}
         </div>
       </div>

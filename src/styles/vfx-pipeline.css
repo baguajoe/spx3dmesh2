@@ -1,0 +1,49 @@
+/* ── VFX shared classes ───────────────────────────────── */
+.vfx-icon-lg  { font-size: 20px; }
+.vfx-icon-md  { font-size: 18px; }
+.vfx-label    { font-weight: 600; }
+.vfx-label--active { color: var(--orange, #FF6600); }
+.vfx-label--teal   { color: var(--teal,  #00ffc8); }
+.vfx-label-sm { font-size: 9px; }
+.vfx-desc     { font-size: 9px; color: var(--muted, #5a7088); }
+.vfx-hint     { font-size: 9px; color: var(--muted, #5a7088); line-height: 1.7; }
+.vfx-stat-key { color: var(--muted, #5a7088); }
+.vfx-stat-val { }
+.vfx-stat-val--active { color: var(--orange, #FF6600); }
+.vfx-stat-val--teal   { color: var(--teal,  #00ffc8); }
+.vfx-btn-wrap { display: flex; gap: 6px; flex-wrap: wrap; }
+.vfx-preset-label { font-size: 10px; flex: 1; }
+.vfx-preset-meta  { font-size: 8px;  color: var(--muted, #5a7088); }
+.vfx-card     { border-radius: 4px; cursor: pointer; }
+.vfx-particle-count { margin-left: auto; font-size: 9px; color: var(--muted, #5a7088); }
+.vfx-row-between    { display: flex; justify-content: space-between; align-items: center; }
+.vfx-row-between--mb { margin-bottom: 8px; }
+.vfx-color-input    { width: 40px; height: 26px; border: none; background: none; cursor: pointer; }
+.vfx-def-label      { font-weight: 600; }
+
+/* ── FluidPanel ───────────────────────────────────────── */
+.fluid-root   { display: flex; flex-direction: column; }
+.fluid-header { display: flex; align-items: center; margin-bottom: 10px; }
+.fluid-close  { margin-left: auto; background: none; border: 1px solid #21262d; border-radius: 3px; color: #8b949e; cursor: pointer; padding: 3px 10px; font-size: 10px; font-family: JetBrains Mono, monospace; }
+.fluid-tabs   { display: flex; flex-wrap: wrap; margin-bottom: 4px; }
+
+/* ── LightingCameraPanel additions ───────────────────── */
+.lcp-flex1       { flex: 1; }
+.lcp-axis-label  { font-size: 9px; color: var(--dim, #555); margin-bottom: 2px; }
+.lcp-apply-btn--mt { margin-top: 4px; }
+.lcp-color-label { color: var(--dim, #555); font-size: 10px; width: 78px; flex-shrink: 0; font-family: JetBrains Mono, monospace; }
+.lcp-mode-label  { font-weight: 700; }
+
+/* ── ExportToPuppetButton ─────────────────────────────── */
+.epb-info-box {
+  background: #06060f; border-radius: 4px; padding: 8px;
+  margin-bottom: 8px; font-size: 10px; color: #00ffc8;
+  font-family: JetBrains Mono, monospace;
+}
+
+/* ── SPX3DTo2DPanel ───────────────────────────────────── */
+.s2d-label-btn { display: inline-block; cursor: pointer; }
+
+/* ── VideoFaceMocap3DPanel ────────────────────────────── */
+.vfm-status { margin-top: 8px; font-family: JetBrains Mono, monospace; font-size: 10px; color: #00ffc8; }
+.vfm-hint   { font-size: 10px; color: #888; line-height: 1.7; font-family: JetBrains Mono, monospace; }

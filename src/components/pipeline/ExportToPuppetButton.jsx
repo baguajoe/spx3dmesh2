@@ -110,7 +110,7 @@ export default function ExportToPuppetButton({ skeleton, clip, boneFrames, clipN
             <input style={S.input} type="range" min={0} max={ch} step={10} value={offY} onChange={e => setOffY(+e.target.value)} />
 
             {preview && (
-              <div style={{ background:'#06060f', borderRadius:4, padding:8, marginBottom:8, fontSize:10, color:'#00ffc8' }}>
+              <div className="epb-info-box">
                 Last export: {preview.name} | {preview.fps}fps | {preview.duration}s | {preview.bones} bones | {preview.frames} frames
               </div>
             )}

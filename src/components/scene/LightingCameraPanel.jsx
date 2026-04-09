@@ -36,7 +36,7 @@ function LCard({ light, sel, onSel, onDel, onTog }) {
   return (
     <div className={`lcp-card${sel?' lcp-card--active':''}`} onClick={()=>onSel(light)}>
       <div className="lcp-light-dot" style={{background:col, opacity:light.visible===false?0.3:1}}/>
-      <div style={{flex:1}}>
+      <div className="lcp-flex1">
         <div className="lcp-light-name">{light.name||light.type}</div>
         <div className="lcp-light-int">int: {(light.intensity||0).toFixed(2)}</div>
       </div>
@@ -228,7 +228,7 @@ export default function LightingCameraPanel({ onClose, sceneRef, cameraRef, came
             </div>
             <div className="lcp-row">
               <div><div className="lcp-sec-label">Color</div><input type="color" value={lcolor} onChange={e=>setLcolor(e.target.value)} className="lcp-cp"/></div>
-              <div style={{flex:1}}>
+              <div className="lcp-flex1">
                 <div className="lcp-sec-label">Temperature</div>
                 <select className="lcp-select" value={ltemp} onChange={e=>setLtemp(e.target.value)}>
                   {Object.keys(TEMPERATURE_PRESETS).map(k=><option key={k} value={k}>{k} ({TEMPERATURE_PRESETS[k]}K)</option>)}
@@ -245,8 +245,8 @@ export default function LightingCameraPanel({ onClose, sceneRef, cameraRef, came
             <div className="lcp-sec-label">Position</div>
             <div className="lcp-row">
               {[["X",lx,setLx],["Y",ly,setLy],["Z",lz,setLz]].map(([ax,v,s]) => (
-                <div key={ax} style={{flex:1}}>
-                  <div style={{fontSize:9,color:'var(--dim)',marginBottom:2}}>{ax}</div>
+                <div key={ax} className="lcp-flex1">
+                  <div className="lcp-axis-label">{ax}</div>
                   <input type="number" className="lcp-num" value={v} step={0.5} onChange={e=>s(Number(e.target.value))}/>
                 </div>
               ))}
@@ -260,7 +260,7 @@ export default function LightingCameraPanel({ onClose, sceneRef, cameraRef, came
             </div>
             <KS label="Shadow Bias" value={sbias} min={-0.01} max={0.01} step={0.0001} onChange={setSbias}/>
             <label className="lcp-chk"><input type="checkbox" checked={helpers} onChange={e=>setHelpers(e.target.checked)}/> Show Helpers</label>
-            <button className="lcp-apply-btn lcp-apply-btn--teal" style={{marginTop:6}} onClick={addLight}>+ Add {ltype[0].toUpperCase()+ltype.slice(1)} Light</button>
+            <button className="lcp-apply-btn lcp-apply-btn--teal lcp-apply-btn--mt" onClick={addLight}>+ Add {ltype[0].toUpperCase()+ltype.slice(1)} Light</button>
           </div>
 
           <div className="lcp-sec">
@@ -275,7 +275,7 @@ export default function LightingCameraPanel({ onClose, sceneRef, cameraRef, came
               <div className="lcp-edit-box">
                 <div className="lcp-edit-title">Edit Selected</div>
                 <KS label="Intensity" value={selLight.intensity||0} min={0} max={20} onChange={v=>{selLight.intensity=v;refresh();}}/>
-                <div className="lcp-row"><span style={{color:'var(--dim)',fontSize:10,width:78}}>Color</span><input type="color" value={"#"+(selLight.color?.getHexString?.()||"ffffff")} onChange={e=>{selLight.color?.set?.(e.target.value);refresh();}} className="lcp-cp"/></div>
+                <div className="lcp-row"><span className="lcp-color-label">Color</span><input type="color" value={"#"+(selLight.color?.getHexString?.()||"ffffff")} onChange={e=>{selLight.color?.set?.(e.target.value);refresh();}} className="lcp-cp"/></div>
               </div>
             )}
           </div>
@@ -301,8 +301,8 @@ export default function LightingCameraPanel({ onClose, sceneRef, cameraRef, came
           <div className="lcp-sec">
             <div className="lcp-sec-label">World Ambient</div>
             <div className="lcp-row">
-              <span style={{color:'var(--dim)',fontSize:10,width:78}}>Sky</span><input type="color" value={skyCol} onChange={e=>setSkyCol(e.target.value)} className="lcp-cp"/>
-              <span style={{color:'var(--dim)',fontSize:10,width:78}}>Ground</span><input type="color" value={gndCol} onChange={e=>setGndCol(e.target.value)} className="lcp-cp"/>
+              <span className="lcp-color-label">Sky</span><input type="color" value={skyCol} onChange={e=>setSkyCol(e.target.value)} className="lcp-cp"/>
+              <span className="lcp-color-label">Ground</span><input type="color" value={gndCol} onChange={e=>setGndCol(e.target.value)} className="lcp-cp"/>
             </div>
             <KS label="Ambient Int" value={ambInt} min={0} max={3} onChange={setAmbInt}/>
           </div>
@@ -357,7 +357,7 @@ export default function LightingCameraPanel({ onClose, sceneRef, cameraRef, came
                   <button key={b} className={`lcp-sm-btn${bokeh===b?' lcp-tone-btn--active':''}`} onClick={()=>setBokeh(b)}>{b}</button>
                 ))}
               </div>
-              <button className="lcp-apply-btn lcp-apply-btn--teal" style={{marginTop:5}} onClick={()=>{if(cameraRef?.current)setDOF(cameraRef.current,{enabled:dofOn,focus:dofFoc,aperture:dofAp,maxBlur:dofMb});status("DOF applied");}}>Apply DOF</button>
+              <button className="lcp-apply-btn lcp-apply-btn--teal lcp-apply-btn--mt" onClick={()=>{if(cameraRef?.current)setDOF(cameraRef.current,{enabled:dofOn,focus:dofFoc,aperture:dofAp,maxBlur:dofMb});status("DOF applied");}}>Apply DOF</button>
             </>}
           </div>
 
@@ -366,7 +366,7 @@ export default function LightingCameraPanel({ onClose, sceneRef, cameraRef, came
             <div className="lcp-grid2">
               {MOVES.map(m => (
                 <button key={m.id} className={`lcp-move-btn${move===m.id?' lcp-move-btn--active':''}`} onClick={()=>setMove(m.id)}>
-                  <div style={{fontWeight:700}}>{m.l}</div>
+                  <div className="lcp-mode-label">{m.l}</div>
                   <div className="lcp-rig-desc">{m.d}</div>
                 </button>
               ))}
@@ -456,8 +456,8 @@ export default function LightingCameraPanel({ onClose, sceneRef, cameraRef, came
               {[["none","No Shadows"],["basic","Basic"],["pcf","PCF Soft"],["pcss","PCSS Contact"],["vsm","VSM Variance"],["esm","ESM"]].map(([v,l])=><option key={v} value={v}>{l}</option>)}
             </select>
           </div>
-          <button className="lcp-apply-btn lcp-apply-btn--teal" style={{marginTop:4}} onClick={()=>{onApplyFunction?.("render_start");status("Render started");}}>▶ Start Render</button>
-          <button className="lcp-apply-btn lcp-apply-btn--orange" style={{marginTop:4}} onClick={()=>{onApplyFunction?.("render_preview");status("Viewport render");}}>👁 Viewport Render</button>
+          <button className="lcp-apply-btn lcp-apply-btn--teal lcp-apply-btn--mt" onClick={()=>{onApplyFunction?.("render_start");status("Render started");}}>▶ Start Render</button>
+          <button className="lcp-apply-btn lcp-apply-btn--orange lcp-apply-btn--mt" onClick={()=>{onApplyFunction?.("render_preview");status("Viewport render");}}>👁 Viewport Render</button>
         </>}
 
       </div>

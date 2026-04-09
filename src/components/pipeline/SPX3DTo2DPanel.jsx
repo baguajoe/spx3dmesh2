@@ -134,9 +134,9 @@ export default function SPX3DTo2DPanel({ open, onClose, sceneRef, rendererRef, c
 
         {/* GLB import */}
         <div className="s2d-import-row">
-          <label className="s2d-btn s2d-btn--orange" style={{display:'inline-block',cursor:'pointer'}}>
+          <label className="s2d-btn s2d-btn--orange s2d-label-btn">
             ↑ Load GLB
-            <input type="file" accept=".glb,.gltf" style={{display:'none'}}
+            <input type="file" accept=".glb,.gltf" className="spx-hidden"
               onChange={e=>{
                 const file=e.target.files[0]; if(!file) return;
                 window.dispatchEvent(new CustomEvent("spx:importGLB",{detail:{url:URL.createObjectURL(file),name:file.name}}));

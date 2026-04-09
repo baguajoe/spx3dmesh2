@@ -193,7 +193,7 @@ export default function VideoFaceMocap3DPanel({ skeleton }) {
       <div style={S.section}>
         <div style={S.stat}>{mpReady ? '✓ FaceMesh loaded' : '⏳ Loading FaceMesh…'}</div>
         {skeleton && <div style={S.stat}>✓ Skeleton connected ({skeleton.bones?.length} bones)</div>}
-        <video ref={videoRef} style={{display:'none'}} playsInline muted />
+        <video ref={videoRef} className="spx-hidden" playsInline muted />
         <canvas ref={canvasRef} style={S.canvas} />
       </div>
       {!live
@@ -205,9 +205,9 @@ export default function VideoFaceMocap3DPanel({ skeleton }) {
         : <button style={S.btnRed} onClick={stopRecord}>⏹ Stop + Export</button>
       )}
       {recording && <div style={S.stat}>Frames: {frames}</div>}
-      {status && <div style={{...S.stat,marginTop:8}}>{status}</div>}
+      {status && <div className="vfm-status">{status}</div>}
       <div style={S.section}>
-        <div style={{fontSize:10,color:'#888',lineHeight:1.7}}>
+        <div className="vfm-hint">
           • Drives Head, Jaw, Eyes, Brows on connected THREE.Skeleton<br/>
           • Supports Mixamo, CC3, iClone bone naming<br/>
           • Records → exports .spxmotion for SPX Puppet import<br/>

@@ -248,10 +248,10 @@ export default function DestructionPanel({ open, onClose, sceneRef, meshRef, set
                 setPieces(d.pieces);
                 setForce(d.force);
               }}>
-                <span style={{fontSize:20}}>{d.icon}</span>
+                <span className="vfx-icon-lg">{d.icon}</span>
                 <div>
-                  <div style={{fontWeight:600, color:destroyType===d.id?C.orange:C.text}}>{d.label}</div>
-                  <div style={{fontSize:9, color:C.muted}}>{d.desc}</div>
+                  <div className={`vfx-label${destroyType===d.id?' vfx-label--active':''}`}>{d.label}</div>
+                  <div className="vfx-desc">{d.desc}</div>
                 </div>
               </div>
             ))}
@@ -261,12 +261,12 @@ export default function DestructionPanel({ open, onClose, sceneRef, meshRef, set
             <div style={S.sl}>VFX on Destroy</div>
             <div style={S.grid2}>
               {VFX_ON_DESTROY.map(v => (
-                <div key={v.id} style={{
+                <div key={v.id} className="vfx-card" style={{
                   ...S.card(vfxOnDestroy===v.id),
                   justifyContent:"center", flexDirection:"column", textAlign:"center", padding:"6px 4px"
                 }} onClick={() => setVfxOnDestroy(v.id)}>
-                  <span style={{fontSize:18}}>{v.icon}</span>
-                  <span style={{fontSize:9}}>{v.label}</span>
+                  <span className="vfx-icon-md">{v.icon}</span>
+                  <span className="vfx-label-sm">{v.label}</span>
                 </div>
               ))}
             </div>
@@ -280,19 +280,19 @@ export default function DestructionPanel({ open, onClose, sceneRef, meshRef, set
               ["Status", fragsRunning ? "● ANIMATING" : "■ READY"],
             ].map(([k,v]) => (
               <div key={k} style={S.stat}>
-                <span style={{color:C.muted}}>{k}</span>
-                <span style={{color: k==="Status"?(fragsRunning?C.orange:C.muted):C.text}}>{v}</span>
+                <span className="vfx-stat-key">{k}</span>
+                <span className={`vfx-stat-val${k==="Status"&&fragsRunning?' vfx-stat-val--active':''}`}>{v}</span>
               </div>
             ))}
           </div>
 
-          <div style={{display:"flex", gap:6, flexWrap:"wrap"}}>
+          <div className="vfx-btn-wrap">
             <button style={S.btn(C.danger)} onClick={doDestroy} disabled={fragsRunning}>💥 DESTROY</button>
             <button style={S.btn(C.warn)} onClick={fractureMesh}>🔨 FRACTURE</button>
             <button style={S.btn(C.muted)} onClick={clearAll}>🗑 CLEAR</button>
           </div>
 
-          <div style={{marginTop:10, fontSize:9, color:C.muted, lineHeight:1.7}}>
+          <div className="vfx-hint">
             DESTROY — removes mesh, creates physics fragments<br/>
             FRACTURE — uses your Rapier physics system
           </div>
@@ -335,8 +335,8 @@ export default function DestructionPanel({ open, onClose, sceneRef, meshRef, set
                 setTab("destroy");
                 setStatus?.(`Preset loaded: ${p.label}`);
               }}>
-                <span style={{fontSize:10, flex:1}}>{p.label}</span>
-                <span style={{fontSize:8, color:C.muted}}>{p.pieces} pcs · f{p.force}</span>
+                <span className="vfx-preset-label">{p.label}</span>
+                <span className="vfx-preset-meta">{p.pieces} pcs · f{p.force}</span>
               </div>
             ))}
           </div>

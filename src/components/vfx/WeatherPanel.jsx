@@ -267,9 +267,9 @@ export default function WeatherPanel({ open, onClose, sceneRef, setStatus }) {
             <div style={S.sl}>Weather Type</div>
             {WEATHER_TYPES.map(w => (
               <div key={w.id} style={S.card(weatherType===w.id)} onClick={() => setWeatherType(w.id)}>
-                <span style={{fontSize:20}}>{w.icon}</span>
-                <span style={{fontWeight:600, color:weatherType===w.id?C.teal:C.text}}>{w.label}</span>
-                <span style={{marginLeft:"auto", fontSize:9, color:C.muted}}>{w.gpuCount} particles</span>
+                <span className="vfx-icon-lg">{w.icon}</span>
+                <span className={`vfx-label${weatherType===w.id?' vfx-label--teal':''}`}>{w.label}</span>
+                <span className="vfx-particle-count">{w.gpuCount} particles</span>
               </div>
             ))}
           </div>
@@ -285,7 +285,7 @@ export default function WeatherPanel({ open, onClose, sceneRef, setStatus }) {
           {(weatherType === "thunderstorm" || weatherType === "rain") && (
             <div style={S.sec}>
               <div style={S.sl}>Lightning</div>
-              <div style={{...S.row, justifyContent:"space-between"}}>
+              <div className="vfx-row-between">
                 <span style={S.label}>Lightning Flashes</span>
                 <Toggle value={lightning} onChange={setLightning} />
               </div>
@@ -301,13 +301,13 @@ export default function WeatherPanel({ open, onClose, sceneRef, setStatus }) {
               ["Status", running ? "● RUNNING" : "■ STOPPED"],
             ].map(([k,v]) => (
               <div key={k} style={S.stat}>
-                <span style={{color:C.muted}}>{k}</span>
-                <span style={{color: k==="Status"?(running?C.teal:C.muted):C.text}}>{v}</span>
+                <span className="vfx-stat-key">{k}</span>
+                <span className={`vfx-stat-val${k==="Status"&&running?' vfx-stat-val--teal':''}`}>{v}</span>
               </div>
             ))}
           </div>
 
-          <div style={{display:"flex", gap:6, flexWrap:"wrap"}}>
+          <div className="vfx-btn-wrap">
             <button style={S.btn(C.teal)} onClick={startWeather}>▶ START</button>
             <button style={S.btn(C.orange)} onClick={stopWeather} disabled={!running}>⏸ STOP</button>
             <button style={S.btn(C.danger)} onClick={clearAll}>🗑 CLEAR</button>
@@ -317,7 +317,7 @@ export default function WeatherPanel({ open, onClose, sceneRef, setStatus }) {
         {tab === "atmosphere" && (<>
           <div style={S.sec}>
             <div style={S.sl}>Fog / Mist</div>
-            <div style={{...S.row, justifyContent:"space-between", marginBottom:8}}>
+            <div className="vfx-row-between vfx-row-between--mb">
               <span style={S.label}>Enable Fog</span>
               <Toggle value={fogScene} onChange={setFogScene} />
             </div>
@@ -326,7 +326,7 @@ export default function WeatherPanel({ open, onClose, sceneRef, setStatus }) {
               <div style={S.row}>
                 <span style={S.label}>Fog Color</span>
                 <input type="color" value={fogColor} onChange={e => setFogColor(e.target.value)}
-                  style={{width:40, height:26, border:"none", background:"none", cursor:"pointer"}} />
+                  className="vfx-color-input" />
               </div>
             </>)}
           </div>
@@ -355,7 +355,7 @@ export default function WeatherPanel({ open, onClose, sceneRef, setStatus }) {
                 setWindZ(p.wz);
                 setStatus?.(`Atmosphere: ${p.label}`);
               }}>
-                <span style={{fontSize:10}}>{p.label}</span>
+                <span className="vfx-preset-label">{p.label}</span>
               </div>
             ))}
           </div>
@@ -373,16 +373,16 @@ export default function WeatherPanel({ open, onClose, sceneRef, setStatus }) {
                 sys.forceFields.push(ff);
                 setStatus?.(`${def.label} force field added`);
               }}>
-                <span style={{fontSize:18}}>{def.icon}</span>
+                <span className="vfx-icon-md">{def.icon}</span>
                 <div>
-                  <div style={{fontWeight:600}}>{def.label}</div>
-                  <div style={{fontSize:9, color:C.muted}}>Click to add to active system</div>
+                  <div className="vfx-def-label">{def.label}</div>
+                  <div className="vfx-desc">Click to add to active system</div>
                 </div>
               </div>
             ))}
           </div>
           <div style={S.sec}>
-            <div style={{fontSize:9, color:C.muted, lineHeight:1.7}}>
+            <div className="vfx-hint">
               Active force fields: {gpuSysRef.current?.forceFields.length || 0}<br/>
               Force fields affect all active weather particles in real-time.
             </div>
