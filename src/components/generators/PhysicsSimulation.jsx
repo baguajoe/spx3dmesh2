@@ -545,7 +545,7 @@ export default function PhysicsSimulation({ scene }) {
         <div style={{ padding: "0 12px 12px" }}>
           {[["Bodies", stats.bodies, C.white], ["Sleeping", stats.sleeping, C.muted], ["FPS", stats.fps, C.teal]].map(([l, v, c]) => (
             <div key={l} style={s.objRow}>
-              <span style={{ color: C.muted }}>{l}</span>
+              <span className="spnl-dim">{l}</span>
               <span style={{ color: c, fontWeight: 700 }}>{v}</span>
             </div>
           ))}

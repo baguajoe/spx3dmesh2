@@ -226,7 +226,7 @@ export default function TerrainSculpting({ scene }) {
 
       <div className="gen-sidebar">
         <div className="gen-sec-label">Tool — {currentTool?.label}</div>
-        <div style={{padding:"0 12px 6px",fontSize:9,color:"var(--muted)",fontFamily:"var(--font)"}}>{currentTool?.desc}</div>
+        <div className="spnl-dim spnl-pad-desc">{currentTool?.desc}</div>
         <SliderRow label="Brush Radius"  value={brushRadius}   min={0.5} max={8}  step={0.5}  onChange={setBrushRadius}   unit="m"/>
         <SliderRow label="Strength"      value={brushStrength} min={0.1} max={2}  step={0.05} onChange={setBrushStrength}/>
 
@@ -235,7 +235,7 @@ export default function TerrainSculpting({ scene }) {
             <span className="gen-row-label">Paint Color</span>
             <div
               className="gen-paint-swatch"
-              style={{background:paintColor}}
+              className="gen-paint-swatch" style={{background:paintColor}}
               onClick={()=>{const inp=document.createElement("input");inp.type="color";inp.value=paintColor;inp.onchange=e=>setPaintColor(e.target.value);inp.click();}}
             />
             <span className="gen-paint-hex">{paintColor}</span>
@@ -295,10 +295,10 @@ export default function TerrainSculpting({ scene }) {
           <span className="gen-toolbar__label">TERRAIN SCULPTING</span>
           <span className="gen-toolbar__hint">LEFT DRAG: Sculpt | RIGHT DRAG: Orbit | SCROLL: Zoom</span>
           <div className="gen-toolbar__right">
-            <span className="gen-tag" style={{background:`${currentTool?.color||'#00ffc8'}20`,color:currentTool?.color||'#00ffc8',border:`1px solid ${currentTool?.color||'#00ffc8'}40`}}>
+            <span className="gen-tag gen-tag--tool" style={{background:`${currentTool?.color||'#00ffc8'}20`,color:currentTool?.color||'#00ffc8',border:`1px solid ${currentTool?.color||'#00ffc8'}40`}}>
               TOOL: {currentTool?.label.toUpperCase()}
             </span>
-            <span className="gen-tag" style={{background:'rgba(255,102,0,0.12)',color:'#FF6600',border:'1px solid rgba(255,102,0,0.25)'}}>
+            <span className="gen-tag spnl-tag--orange">
               R: {brushRadius}m
             </span>
           </div>

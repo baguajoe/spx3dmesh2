@@ -100,7 +100,7 @@ function Toggle({ label, value, onChange }) {
 function Section({ title, color=C.teal, children }) {
   const [open, setOpen] = useState(true);
   return (
-    <div style={{ marginBottom:12 }}>
+    <div className="spnl-mb-md">
       <div onClick={() => setOpen(v=>!v)} style={{
         display:"flex", alignItems:"center", gap:8, padding:"6px 12px",
         background:C.panel2, borderLeft:`3px solid ${color}`, cursor:"pointer",

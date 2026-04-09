@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { PASS_TYPES } from '../../mesh/RenderPasses.js';
 const C={bg:'#06060f',panel:'#0d1117',border:'#21262d',teal:'#00ffc8',orange:'#FF6600',text:'#e0e0e0',dim:'#8b949e',font:'JetBrains Mono,monospace'};
 function Slider({label,value,min,max,step=0.01,onChange,unit=''}){return(<div className="ha-slider-wrap"><div className="ha-slider-row"><span>{label}</span><span className="ha-slider-val">{step<0.1?Number(value).toFixed(2):Math.round(value)}{unit}</span></div><input type='range' min={min} max={max} step={step} value={value} onChange={e=>onChange(parseFloat(e.target.value))} className="ha-slider"/></div>);}
-function Toggle({label,value,onChange}){return(<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5}}><span className="spnl-dim">{label}</span><div onClick={()=>onChange(!value)} style={{width:32,height:16,borderRadius:8,cursor:'pointer',position:'relative',background:value?C.teal:C.border}}><div style={{position:'absolute',top:2,left:value?16:2,width:12,height:12,borderRadius:'50%',background:value?C.bg:'#555',transition:'left 0.15s'}}/></div></div>);}
+function Toggle({label,value,onChange}){return(<div className="spnl-toggle-row"><span className="spnl-dim">{label}</span><div onClick={()=>onChange(!value)} className={`spnl-toggle${value?' spnl-toggle--on':''}`}><div className={`spnl-toggle-dot${value?' spnl-toggle-dot--on':''}`}/></div></div>);}
 function Section({title,color=C.teal,children,defaultOpen=true}){const [open,setOpen]=useState(defaultOpen);return(<div className="spnl-section-wrap"><div onClick={()=>setOpen(v=>!v)} className="spnl-section-hdr" style={{borderLeftColor:color}}><span className="spnl-section-arrow" style={{color}}>{open?'▾':'▸'}</span><span className="spnl-section-name">{title}</span></div>{open&&<div className="spnl-section-body-pl">{children}</div>}</div>);}
 const RESOLUTIONS=[{label:'Preview 960p',w:960,h:540},{label:'HD 1080p',w:1920,h:1080},{label:'2K',w:2048,h:1152},{label:'4K UHD',w:3840,h:2160},{label:'Square 1080',w:1080,h:1080},{label:'Portrait 9:16',w:1080,h:1920}];
 export default function FilmRenderPipeline({rendererRef,sceneRef,cameraRef,open=true,onClose}){
@@ -61,14 +61,14 @@ export default function FilmRenderPipeline({rendererRef,sceneRef,cameraRef,open=
     setRendering(false); setProgress(0);
   },[passes,renderPass]);
   if(!open)return null;
-  return(<div style={{width:270,background:C.panel,borderRadius:6,border:`1px solid ${C.border}`,fontFamily:C.font,color:C.text,fontSize:11,boxShadow:'0 8px 32px rgba(0,0,0,0.7)',display:'flex',flexDirection:'column',maxHeight:700}}>
+  return(<div className="spnl-panel-container" style={{maxWidth:270}}>
     <div className="spnl-panel-hdr">
-      <div style={{width:6,height:6,borderRadius:'50%',background:'#ffcc00',boxShadow:'0 0 6px #ffcc00'}}/><span style={{fontSize:11,fontWeight:700,letterSpacing:2,color:'#ffcc00'}}>RENDER PIPELINE</span>
+      <div className="spnl-hdr-dot spnl-hdr-dot--yellow"/><span className="spnl-hdr-title spnl-hdr-title--yellow">RENDER PIPELINE</span>
       {onClose&&<span onClick={onClose} className="spnl-close">×</span>}
     </div>
     <div className="spnl-panel-scroll">
       <Section title='RESOLUTION' color='#ffcc00'>
-        <div style={{display:'flex',flexDirection:'column',gap:3,marginBottom:4}}>
+        <div className="spnl-col">
           {RESOLUTIONS.map((r,i)=><div key={i} onClick={()=>setResolution(i)} style={{padding:'4px 8px',borderRadius:4,cursor:'pointer',fontSize:9,fontWeight:700,border:`1px solid ${resolution===i?'#ffcc00':C.border}`,background:resolution===i?'rgba(255,204,0,0.1)':C.bg,color:resolution===i?'#ffcc00':C.dim,display:'flex',justifyContent:'space-between'}}><span>{r.label}</span><span style={{color:C.dim}}>{r.w}×{r.h}</span></div>)}
         </div>
       </Section>

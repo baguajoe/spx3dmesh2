@@ -173,7 +173,7 @@ export default function HybridGeneratorPanel({ onGenerate }) {
     <div style={P}>
       <Section title="🧬 Species">
         <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
-          <div style={{ flex: 1 }}>
+          <div className="spnl-flex1">
             <div style={{ fontSize: 9, color: '#888', marginBottom: 3 }}>Species A</div>
             <Badges items={SPECIES_LIST} active={speciesA} onSelect={setSpeciesA} />
           </div>

@@ -442,3 +442,22 @@
 .nms-canvas { position: absolute; top: 40px; left: 0; right: 0; bottom: 0; }
 .spnl-seq-label        { font-size: 11px; flex: 1; color: #8b949e; font-family: JetBrains Mono, monospace; }
 .spnl-seq-label--active { color: #00ffc8; }
+/* ── Final panel utility additions ───────────────────── */
+.spnl-toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.spnl-toggle { width: 32px; height: 16px; border-radius: 8px; cursor: pointer; position: relative; background: #21262d; }
+.spnl-toggle--on { background: #00ffc8; }
+.spnl-toggle-dot { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #555; transition: left 0.15s; }
+.spnl-toggle-dot--on { left: 16px; background: #06060f; }
+.spnl-hdr-dot--yellow { background: #ffcc00; }
+.spnl-hdr-title--yellow { color: #ffcc00; font-size: 11px; font-weight: 700; letter-spacing: 2px; }
+.spnl-mb-md  { margin-bottom: 12px; }
+.spnl-mt-md  { margin-top: 12px; }
+.spnl-pad    { padding: 6px 8px; }
+.spnl-flex1  { flex: 1; }
+.spnl-full-w { width: 100%; }
+.spnl-btn-mb { margin-bottom: 6px; }
+.spnl-vr-wrap    { position: relative; flex: 1; }
+.spnl-vr-divider { position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: #000; transform: translateX(-50%); pointer-events: none; }
+.spnl-vr-overlay { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; pointer-events: none; }
+.spnl-pad-desc { padding: 0 12px 8px; line-height: 1.6; }
+.spnl-pad-grid { padding: 0 10px 10px; }

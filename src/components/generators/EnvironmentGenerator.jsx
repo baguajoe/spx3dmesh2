@@ -201,21 +201,21 @@ export default function EnvironmentGenerator() {
         <input className="gen-sec-box-slider" type="range" min={0} max={1} step={0.01} value={rockDensity} onChange={e=>setRockDensity(+e.target.value)}/>
 
         <div className="gen-sec-label gen-sec-label--mt">WATER</div>
-        <label className="gen-row-label" style={{display:'flex',alignItems:'center',gap:6,cursor:'pointer',marginBottom:8,fontSize:10,color:'var(--muted)'}}>
-          <input type="checkbox" checked={showWater} onChange={e=>setShowWater(e.target.checked)} style={{accentColor:'var(--teal)'}}/>
+        <label className="gen-row-label" className="spnl-row">
+          <input type="checkbox" checked={showWater} onChange={e=>setShowWater(e.target.checked)} className="spnl-check-input"/>
           Show Water
         </label>
         <label className="gen-sec-box-label">Water Color</label>
         <input type="color" value={waterColor} onChange={e=>setWaterColor(e.target.value)} className="gen-color-full"/>
 
-        <button className="gen-btn gen-btn--primary" style={{width:'100%',marginBottom:6}} onClick={()=>generate()}>⚡ Generate</button>
-        <button className="gen-btn gen-btn--orange" style={{width:'100%'}} onClick={()=>clearScene(sceneRef.current)}>🗑 Clear</button>
+        <button className="gen-btn gen-btn--primary" className="spnl-btn-full spnl-btn-mb" onClick={()=>generate()}>⚡ Generate</button>
+        <button className="gen-btn gen-btn--orange" className="spnl-btn-full" onClick={()=>clearScene(sceneRef.current)}>🗑 Clear</button>
 
         {stats && (
           <div className="gen-water-box">
-            <div style={{fontSize:10,color:'var(--teal)',marginBottom:2}}>🌍 {stats.preset}</div>
-            <div style={{fontSize:10,color:'var(--teal)',marginBottom:2}}>🌲 Trees: {stats.trees}</div>
-            <div style={{fontSize:10,color:'var(--teal)',marginBottom:2}}>🪨 Rocks: {stats.rocks}</div>
+            <div className="spnl-teal">🌍 {stats.preset}</div>
+            <div className="spnl-teal">🌲 Trees: {stats.trees}</div>
+            <div className="spnl-teal">🪨 Rocks: {stats.rocks}</div>
             <div style={{fontSize:10,color:'var(--teal)'}}>📦 Total: {stats.meshes}</div>
           </div>
         )}

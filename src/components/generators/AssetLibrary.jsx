@@ -279,7 +279,7 @@ export default function AssetLibrary({ scene }) {
       <div style={s.main}>
         <div style={s.toolbar}>
           <span className="spnl-dim">ASSET LIBRARY VIEWPORT</span>
-          <span style={{ fontSize: 9, color: C.muted }}>CLICK ASSET → PLACE | DRAG → ORBIT | SCROLL → ZOOM</span>
+          <span className="spnl-dim">CLICK ASSET → PLACE | DRAG → ORBIT | SCROLL → ZOOM</span>
           <div className="spnl-row spnl-ml-auto">
             <span style={s.tag(C.teal)}>OBJECTS: {stats.objects}</span>
           </div>

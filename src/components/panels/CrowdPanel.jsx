@@ -111,9 +111,9 @@ export default function CrowdPanel({sceneRef, open=true, onClose}) {
         padding:'10px 14px',display:'flex',alignItems:'center',gap:10,flexShrink:0}}>
         <div className="spnl-hdr-dot spnl-hdr-dot--green"/>
         <span className="spnl-hdr-title spnl-hdr-title--green">CROWD SIM</span>
-        <div style={{marginLeft:'auto',display:'flex',gap:6,alignItems:'center'}}>
+        <div className="spnl-row spnl-ml-auto">
           {agentCount>0&&<span className={`spnl-agent-count${running?' spnl-agent-count--on':''}`}>{agentCount} agents</span>}
-          {onClose&&<span onClick={onClose} style={{cursor:'pointer',color:C.dim,fontSize:14}}>×</span>}
+          {onClose&&<span onClick={onClose} className="spnl-close">×</span>}
         </div>
       </div>
 

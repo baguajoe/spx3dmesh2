@@ -347,7 +347,7 @@ export default function VRPreviewMode({ scene }) {
         <div style={s.envGrid}>
           {ENVIRONMENTS.map(env => (
             <button key={env.id} style={s.envBtn(environment === env.id)} onClick={() => changeEnvironment(env.id)}>
-              <div style={{ fontSize: 20, marginBottom: 3 }}>{env.icon}</div>
+              <div className="spnl-icon-lg">{env.icon}</div>
               {env.label}
             </button>
           ))}
@@ -367,7 +367,7 @@ export default function VRPreviewMode({ scene }) {
         <div style={s.divider} />
         <div style={s.sectionLabel}>Movement</div>
         <SliderRow label="Walk Speed" value={moveSpeed} min={0.5} max={10} step={0.5} onChange={setMoveSpeed} unit="m/s" />
-        <div style={{ padding: "0 12px 8px", fontSize: 9, color: C.muted, lineHeight: 1.6 }}>
+        <div className="spnl-dim spnl-pad-desc">
           WASD / ARROWS — Move<br />
           MOUSE MOVE — Look<br />
           SPACE — Up | C — Down<br />
@@ -380,9 +380,9 @@ export default function VRPreviewMode({ scene }) {
 
         <div style={s.divider} />
         <div style={s.sectionLabel}>Teleport</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, padding: "0 10px 10px" }}>
+        <div className="spnl-grid-2 spnl-pad-grid">
           {[["Center", 0, 0], ["North", 0, -6], ["South", 0, 6], ["East", 6, 0], ["West", -6, 0], ["Corner", 6, 6]].map(([label, x, z]) => (
-            <button key={label} style={{ ...s.btn(), fontSize: 9, padding: "5px 4px" }} onClick={() => teleport(x, z)}>{label}</button>
+            <button key={label} className="spnl-btn" style={{fontSize:9,padding:'5px 4px'}} onClick={() => teleport(x, z)}>{label}</button>
           ))}
         </div>
 
@@ -397,20 +397,20 @@ export default function VRPreviewMode({ scene }) {
       <div style={s.main}>
         <div style={s.toolbar}>
           <span className="spnl-dim">VR PREVIEW — {ENVIRONMENTS.find(e => e.id === environment)?.label.toUpperCase()}</span>
-          {vrMode && <span style={{ ...s.tag(C.purple), animation: "none" }}>VR SPLIT-SCREEN</span>}
+          {vrMode && <span className="spnl-tag" style={{animationName:'none'}}>VR SPLIT-SCREEN</span>}
           <div className="spnl-row spnl-ml-auto">
             <span style={s.tag(C.teal)}>H: {avatarHeight}m</span>
             <span style={s.tag(C.orange)}>FOV: {fov}°</span>
           </div>
         </div>
 
-        <div style={{ position: "relative", flex: 1 }}>
+        <div className="spnl-vr-wrap">
           <canvas ref={canvasRef} style={s.canvas} />
           {vrMode && (
-            <div style={{ position: "absolute", top: 0, left: "50%", width: 2, height: "100%", background: "#000000", transform: "translateX(-50%)", pointerEvents: "none" }} />
+            <div className="spnl-vr-divider" />
           )}
           {showComfort && (
-            <div style={{ position: "absolute", bottom: 16, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 6, pointerEvents: "none" }}>
+            <div className="spnl-vr-overlay">
               <div style={{ background: "rgba(0,0,0,0.7)", border: `1px solid ${C.border}`, borderRadius: 3, padding: "4px 10px", fontSize: 9, fontFamily: C.font, color: C.muted }}>
                 POS: {stats.pos.join(", ")} | HEIGHT: {avatarHeight}m
               </div>
