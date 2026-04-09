@@ -241,13 +241,7 @@ const MotionCaptureWithRecording = ({ userId, socket, onPoseFrame, fullWidth = f
 
       <div ref={avatarRef} className="spx-hidden" />
 
-      <div className="mcr-row" style={{
-        display: 'flex',
-        gap: '8px',
-        flexWrap: 'wrap',
-        marginTop: '12px',
-        padding: '8px 0',
-      }}>
+      <div className="mcr-row mcr-row--top">
         <button
           className={`df-btn ${recordingVideo ? 'df-btn--danger' : 'df-btn--primary'}`}
           onClick={recordingVideo ? stopVideoRecording : startVideoRecording}
@@ -277,10 +271,7 @@ const MotionCaptureWithRecording = ({ userId, socket, onPoseFrame, fullWidth = f
       </div>
 
       {saveStatus && (
-        <p className="mcr-hint" style={{
-          marginTop: '8px',
-          fontSize: '13px',
-          color: saveStatus.includes('🎉') || saveStatus.includes('complete')
+        <p className="mcr-hint mcr-hint--status" style={{color: saveStatus.includes('🎉') || saveStatus.includes('complete')
             ? '#4ade80'
             : saveStatus.includes('failed') || saveStatus.includes('error')
             ? '#f87171'
