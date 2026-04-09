@@ -59,7 +59,7 @@ export function configurePBRRenderer(renderer) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
 }
 
 export function applyIBLToScene(scene, envMap, { intensity=1.0, background=false } = {}) {
@@ -86,7 +86,7 @@ export function setupCascadedShadows(renderer, light, options = {}) {
   } = options;
 
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type    = THREE.PCFShadowMap;
 
   if (!light.isDirectionalLight && !light.isSpotLight) return;
 

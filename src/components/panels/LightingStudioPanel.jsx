@@ -38,8 +38,8 @@ export default function LightingStudioPanel({ scene, renderer }){
   function applyRendererShadow(sm){
     if(!renderer) return;
     renderer.shadowMap.enabled=true;
-    const types={"Basic":THREE.BasicShadowMap,"PCF":THREE.PCFShadowMap,"PCFSoft":THREE.PCFSoftShadowMap,"VSM":THREE.VSMShadowMap};
-    renderer.shadowMap.type=types[sm]||THREE.PCFSoftShadowMap;
+    const types={"Basic":THREE.BasicShadowMap,"PCF":THREE.PCFShadowMap,"PCFSoft":THREE.PCFShadowMap,"VSM":THREE.VSMShadowMap};
+    renderer.shadowMap.type=types[sm]||THREE.PCFShadowMap;
     renderer.shadowMap.needsUpdate=true;
   }
 

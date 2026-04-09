@@ -100,7 +100,7 @@ export default function EnvironmentGenerator() {
     camera.position.set(0,60,100); camera.lookAt(0,0,0); cameraRef.current=camera;
     const renderer=new THREE.WebGLRenderer({antialias:true});
     renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-    renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+    renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFShadowMap;
     mount.appendChild(renderer.domElement); rendererRef.current=renderer;
 
     let isDragging=false,lastX=0,lastY=0,theta=0.5,phi=0.35,radius=100;

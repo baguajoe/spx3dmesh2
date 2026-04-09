@@ -119,7 +119,7 @@ export default function ProceduralCrowdGenerator({ sceneRef, setStatus }) {
     camera.position.set(0,8,18); camera.lookAt(0,1,0); cameraRef.current=camera;
     const renderer=new THREE.WebGLRenderer({antialias:true});
     renderer.setSize(W,H); renderer.shadowMap.enabled=true;
-    renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type=THREE.PCFShadowMap;
     mount.appendChild(renderer.domElement); rendererRef.current=renderer;
 
     scene.add(new THREE.AmbientLight(0xffeedd,0.5));

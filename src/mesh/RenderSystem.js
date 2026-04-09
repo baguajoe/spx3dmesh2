@@ -230,7 +230,7 @@ export function applyRenderPreset(renderer, presetKey) {
   if (!preset) return;
   renderer.setSize(preset.width, preset.height);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type    = THREE.PCFShadowMap;
   return preset;
 }
 
