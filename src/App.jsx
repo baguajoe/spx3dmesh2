@@ -4097,33 +4097,13 @@ export default function App() {
       </button>
 
       <div className="spx-native-workspace-tabs">
-        <SpxTabGroup label="MODELING" color="#e0e0e0" tabs={[
-          {label:"Extrude",    fn:()=>handleApplyFunction("extrude")},
-          {label:"Loop Cut",   fn:()=>handleApplyFunction("loop_cut")},
-          {label:"Bevel",      fn:()=>handleApplyFunction("bevel")},
-          {label:"Knife",      fn:()=>handleApplyFunction("knife")},
-          {label:"Boolean",    fn:()=>handleApplyFunction("boolean_union")},
-          {label:"Remesh",     fn:()=>handleApplyFunction("voxel_remesh")},
-        ]}/>
-        <SpxTabGroup label="SCULPT" color="#ff8844" tabs={[
-          {label:"Draw",       fn:()=>handleApplyFunction("brush_draw")},
-          {label:"Smooth",     fn:()=>handleApplyFunction("brush_smooth")},
-          {label:"Grab",       fn:()=>handleApplyFunction("brush_grab")},
-          {label:"Inflate",    fn:()=>handleApplyFunction("brush_inflate")},
-          {label:"Flatten",    fn:()=>handleApplyFunction("brush_flatten")},
-          {label:"GPU Mode",   fn:()=>handleApplyFunction("gpu_sculpt")},
-        ]}/>
-        <SpxTabGroup label="ANIMATE" color="#aa88ff" tabs={[
-          {label:"Keyframe",   fn:()=>handleApplyFunction("add_keyframe")},
-          {label:"NLA",        fn:()=>handleApplyFunction("nla_editor")},
-          {label:"MoCap",      fn:()=>openWorkspaceTool("mocap")},
-          {label:"Bake",       fn:()=>handleApplyFunction("mocap_bake")},
-        ]}/>
-        <SpxTabGroup label="SHADING" color="#ffcc44" tabs={[
-          {label:"Materials",  fn:()=>openWorkspaceTool("materials_textures")},
-          {label:"HDRI",       fn:()=>handleApplyFunction("hdri_load")},
-          {label:"UDIM",       fn:()=>handleApplyFunction("udim_editor")},
-        ]}/>
+        {['Modeling','Sculpt','Animation','Shading'].map(ws => (
+          <button key={ws} type="button"
+            className={'spx-native-workspace-tab' + (activeWorkspace===ws?' is-active':'')}
+            onClick={()=>setActiveWorkspace(ws)}>
+            <span className="spx-native-workspace-tab-label" style={{color:activeWorkspace===ws?'#00ffc8':undefined}}>{ws.toUpperCase()}</span>
+          </button>
+        ))}
         <SpxTabGroup label="SURFACE" color="#00ffc8" tabs={[
           {label:"UV",         fn:()=>openWorkspaceTool("uv")},
           {label:"Materials",  fn:()=>openWorkspaceTool("materials_textures")},
