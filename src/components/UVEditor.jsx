@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import "../../styles/uv-editor.css";
+import "../styles/uv-editor.css";
 
 const C = { bg:"#06060f", border:"#21262d", teal:"#00ffc8", orange:"#FF6600" };
 
