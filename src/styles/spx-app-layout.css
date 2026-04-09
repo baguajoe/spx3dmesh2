@@ -446,3 +446,25 @@
 .spx-overlay-title--orange { color: #FF6600 !important; }
 .spx-overlay-title--purple { color: #aa44ff !important; }
 .spx-overlay-title--green  { color: #44bb77 !important; }
+cat /workspaces/spx3dmesh2/quad-labels.css >> /workspaces/spx3dmesh2/src/styles/spx-app-layout.css && git add -A && git commit -m "feat: quad view corner labels + dynamic viewport label CSS"/* ── Quad view labels ─────────────────────────────────────────────── */
+.spx-quad-labels { position: absolute; inset: 0; pointer-events: none; z-index: 10; }
+
+.spx-quad-label {
+  position: absolute;
+  font-family: JetBrains Mono, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #6b7280;
+  text-transform: uppercase;
+  padding: 3px 6px;
+  background: rgba(6,6,15,0.7);
+  border-radius: 3px;
+}
+.spx-quad-label--tl { top: 4px;  left:  4px;  color: #00ffc8; }
+.spx-quad-label--tr { top: 4px;  right: 4px; }
+.spx-quad-label--bl { bottom: calc(50% + 4px); left: 4px; }
+.spx-quad-label--br { bottom: calc(50% + 4px); right: 4px; }
+
+/* Quad divider lines (drawn by canvas, but reinforce with CSS) */
+.spx-viewport-wrap { position: relative; }
