@@ -298,18 +298,11 @@ export default function ProfessionalShell({
             { icon: "annotate",  label: "Annotate",       fn: "annotate",  svg: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 20 Q8 12 12 14 Q16 16 20 4"/></svg> },
             { icon: "measure",   label: "Measure",        fn: "measure",   svg: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="4" y1="20" x2="20" y2="4"/><line x1="4" y1="20" x2="7" y2="17"/><line x1="20" y1="4" x2="17" y2="7"/></svg> },
           ].map((t, i) => {
-            if (t.divider) return <div key={i} style={{width:2,height:1,background:"#3a3a3a",margin:"4px 4px"}} />;
+            if (t.divider) return <div key={i} className="spx-tool-divider" />;
             return (
               <button key={t.icon} title={t.label}
+                className="spx-tool-btn"
                 onClick={() => onMenuAction?.(t.fn)}
-                style={{
-                  width:32, height:32, background:"transparent", border:"none",
-                  borderRadius:4, cursor:"pointer", display:"flex",
-                  alignItems:"center", justifyContent:"center",
-                  color:"#aaa", padding:4
-                }}
-                onMouseEnter={e => e.currentTarget.style.background="#333"}
-                onMouseLeave={e => e.currentTarget.style.background="transparent"}
               >
                 {React.cloneElement(t.svg, { width:20, height:20 })}
               </button>

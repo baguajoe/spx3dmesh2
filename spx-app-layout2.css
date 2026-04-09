@@ -1,0 +1,47 @@
+/* ── Additional App.jsx classes ─────────────────────────────────────── */
+
+.spx-hidden { display: none; }
+
+.spx-side-panel--360-65 {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 360px;
+  height: 100vh;
+  z-index: 65;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #0d1117;
+  border-left: 1px solid #21262d;
+}
+
+.spx-overlay-subtitle {
+  font-size: 9px;
+  color: #5a7088;
+  font-family: JetBrains Mono, monospace;
+}
+
+/* Generator side panel header */
+.spx-gen-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid #21262d;
+  background: #161b22;
+  flex-shrink: 0;
+}
+
+.spx-gen-panel-title {
+  color: #00ffc8;
+  font-weight: 700;
+  font-size: 12px;
+  font-family: JetBrains Mono, monospace;
+}
+
+.spx-gen-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
