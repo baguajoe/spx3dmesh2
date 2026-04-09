@@ -1,16 +1,16 @@
 import React, { useState } from "react";
 
 const MATERIAL_PRESETS = [
-  { id: "chrome",      label: "Chrome",       color: "#c8c8c8" },
-  { id: "rust",        label: "Rust",         color: "#8b4513" },
-  { id: "gold",        label: "Gold",         color: "#ffd700" },
-  { id: "concrete",    label: "Concrete",     color: "#808080" },
-  { id: "wood",        label: "Wood",         color: "#8b6914" },
-  { id: "fabric",      label: "Fabric",       color: "#6b8cba" },
-  { id: "plastic",     label: "Plastic",      color: "#2ecc71" },
-  { id: "skin",        label: "Skin",         color: "#e8c49a" },
-  { id: "glass",       label: "Glass",        color: "#aaddff" },
-  { id: "emissive",    label: "Emissive",     color: "#ff6600" },
+  { id: "chrome",   label: "Chrome",   color: "#c8c8c8" },
+  { id: "rust",     label: "Rust",     color: "#8b4513" },
+  { id: "gold",     label: "Gold",     color: "#ffd700" },
+  { id: "concrete", label: "Concrete", color: "#808080" },
+  { id: "wood",     label: "Wood",     color: "#8b6914" },
+  { id: "fabric",   label: "Fabric",   color: "#6b8cba" },
+  { id: "plastic",  label: "Plastic",  color: "#2ecc71" },
+  { id: "skin",     label: "Skin",     color: "#e8c49a" },
+  { id: "glass",    label: "Glass",    color: "#aaddff" },
+  { id: "emissive", label: "Emissive", color: "#ff6600" },
 ];
 
 const LAYER_BLEND_MODES = ["Normal","Multiply","Screen","Overlay","Add","Subtract","Darken","Lighten"];
@@ -41,40 +41,32 @@ function Slider({ label, value, min, max, step = 0.01, onChange, unit = "" }) {
 }
 
 export function ShadingPanel({ onApplyFunction }) {
-  const [tab, setTab] = useState("texpaint"); // texpaint | materials | udim | bake
-  
-  // Texture paint
-  const [paintColor, setPaintColor] = useState("#ff0000");
-  const [paintRadius, setPaintRadius] = useState(20);
-  const [paintOpacity, setPaintOpacity] = useState(1.0);
+  const [tab, setTab] = useState("texpaint");
+  const [paintColor,    setPaintColor]    = useState("#ff0000");
+  const [paintRadius,   setPaintRadius]   = useState(20);
+  const [paintOpacity,  setPaintOpacity]  = useState(1.0);
   const [paintHardness, setPaintHardness] = useState(0.8);
-  const [paintMode, setPaintMode] = useState("paint"); // paint | fill | erase | smear | clone
+  const [paintMode,     setPaintMode]     = useState("paint");
   const [layers, setLayers] = useState([
     { id: 1, name: "Base Color", visible: true, opacity: 1, blend: "Normal" },
     { id: 2, name: "Roughness",  visible: true, opacity: 1, blend: "Normal" },
     { id: 3, name: "Normal",     visible: true, opacity: 1, blend: "Normal" },
   ]);
-  const [activeLayer, setActiveLayer] = useState(1);
-  const [canvasSize, setCanvasSize] = useState(1024);
-
-  // Materials
-  const [activeMat, setActiveMat] = useState("chrome");
+  const [activeLayer,  setActiveLayer]  = useState(1);
+  const [canvasSize,   setCanvasSize]   = useState(1024);
+  const [activeMat,    setActiveMat]    = useState("chrome");
   const [matRoughness, setMatRoughness] = useState(0.5);
   const [matMetalness, setMatMetalness] = useState(0.0);
-  const [matColor, setMatColor] = useState("#888888");
-  const [matEmissive, setMatEmissive] = useState("#000000");
+  const [matColor,     setMatColor]     = useState("#888888");
+  const [matEmissive,  setMatEmissive]  = useState("#000000");
   const [matEmissiveInt, setMatEmissiveInt] = useState(0);
-  const [matOpacity, setMatOpacity] = useState(1.0);
+  const [matOpacity,   setMatOpacity]   = useState(1.0);
   const [matWireframe, setMatWireframe] = useState(false);
-
-  // UDIM
-  const [udimTiles, setUdimTiles] = useState(4);
-  const [activeTile, setActiveTile] = useState(1001);
-
-  // Bake
-  const [bakeRes, setBakeRes] = useState(1024);
-  const [bakeSamples, setBakeSamples] = useState(16);
-  const [bakeTypes, setBakeTypes] = useState({ ao: true, normal: true, curvature: false, color: false });
+  const [udimTiles,    setUdimTiles]    = useState(4);
+  const [activeTile,   setActiveTile]   = useState(1001);
+  const [bakeRes,      setBakeRes]      = useState(1024);
+  const [bakeSamples,  setBakeSamples]  = useState(16);
+  const [bakeTypes,    setBakeTypes]    = useState({ ao: true, normal: true, curvature: false, color: false });
 
   const addLayer = () => {
     const newId = Date.now();
@@ -83,22 +75,18 @@ export function ShadingPanel({ onApplyFunction }) {
 
   return (
     <div className="spnl-root">
-      <div className="spnl-tabs" style={{ gridTemplateColumns: "1fr 1fr 1fr 1fr" }}>
+      <div className="spnl-tabs spnl-tabs--4">
         {[["texpaint","Texture"],["materials","Material"],["udim","UDIM"],["bake","Bake"]].map(([id,lbl]) => (
           <button key={id} className={`spnl-tab${tab===id?" spnl-tab--active":""}`}
-            onClick={() => setTab(id)}>
-            {lbl}
-          </button>
+            onClick={() => setTab(id)}>{lbl}</button>
         ))}
       </div>
 
       <div className="spnl-body">
 
-        {/* ── TEXTURE PAINT (Substance Painter style) ── */}
         {tab === "texpaint" && (<>
-
           <Section title="Paint Tools">
-            <div className="spnl-brush-grid" style={{ gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr" }}>
+            <div className="spnl-brush-grid spnl-brush-grid--5">
               {[["paint","🖌️","Paint"],["fill","🪣","Fill"],["erase","⬜","Erase"],["smear","💧","Smear"],["clone","📋","Clone"]].map(([id,icon,lbl]) => (
                 <button key={id}
                   className={`spnl-brush-btn${paintMode===id?" spnl-brush-btn--active":""}`}
@@ -117,12 +105,9 @@ export function ShadingPanel({ onApplyFunction }) {
                 onChange={e => setPaintColor(e.target.value)} />
               <span className="spnl-value">{paintColor}</span>
             </div>
-            <Slider label="Radius" value={paintRadius} min={1} max={200} step={1}
-              onChange={setPaintRadius} unit="px" />
-            <Slider label="Opacity" value={paintOpacity} min={0.01} max={1} step={0.01}
-              onChange={setPaintOpacity} />
-            <Slider label="Hardness" value={paintHardness} min={0} max={1} step={0.01}
-              onChange={setPaintHardness} />
+            <Slider label="Radius"   value={paintRadius}   min={1}    max={200} step={1}    onChange={setPaintRadius}   unit="px" />
+            <Slider label="Opacity"  value={paintOpacity}  min={0.01} max={1}   step={0.01} onChange={setPaintOpacity} />
+            <Slider label="Hardness" value={paintHardness} min={0}    max={1}   step={0.01} onChange={setPaintHardness} />
           </Section>
 
           <Section title="Canvas">
@@ -133,10 +118,7 @@ export function ShadingPanel({ onApplyFunction }) {
                 {[512,1024,2048,4096].map(s => <option key={s} value={s}>{s}×{s}</option>)}
               </select>
             </div>
-            <button className="spnl-btn-full spnl-btn-accent"
-              onClick={() => onApplyFunction("tp_canvas")}>
-              ✚ New Canvas
-            </button>
+            <button className="spnl-btn-full spnl-btn-accent" onClick={() => onApplyFunction("tp_canvas")}>✚ New Canvas</button>
             <div className="spnl-btn-row">
               <button className="spnl-btn" onClick={() => onApplyFunction("tp_fill")}>Fill</button>
               <button className="spnl-btn" onClick={() => onApplyFunction("tp_export")}>Export</button>
@@ -154,8 +136,7 @@ export function ShadingPanel({ onApplyFunction }) {
                     {layer.visible ? "●" : "○"}
                   </button>
                   <span className="spnl-layer-name">{layer.name}</span>
-                  <select className="spnl-layer-blend"
-                    value={layer.blend}
+                  <select className="spnl-layer-blend" value={layer.blend}
                     onClick={e => e.stopPropagation()}
                     onChange={e => setLayers(l => l.map(x => x.id===layer.id ? {...x, blend:e.target.value} : x))}>
                     {LAYER_BLEND_MODES.map(m => <option key={m} value={m}>{m}</option>)}
@@ -173,12 +154,9 @@ export function ShadingPanel({ onApplyFunction }) {
               <button className="spnl-btn" onClick={() => onApplyFunction("tp_export")}>Export</button>
             </div>
           </Section>
-
         </>)}
 
-        {/* ── MATERIALS ── */}
         {tab === "materials" && (<>
-
           <Section title="Material Presets">
             <div className="spnl-mat-grid">
               {MATERIAL_PRESETS.map(m => (
@@ -199,19 +177,15 @@ export function ShadingPanel({ onApplyFunction }) {
               <input type="color" className="spnl-color" value={matColor}
                 onChange={e => setMatColor(e.target.value)} />
             </div>
-            <Slider label="Roughness" value={matRoughness} min={0} max={1} step={0.01}
-              onChange={setMatRoughness} />
-            <Slider label="Metalness" value={matMetalness} min={0} max={1} step={0.01}
-              onChange={setMatMetalness} />
-            <Slider label="Opacity" value={matOpacity} min={0} max={1} step={0.01}
-              onChange={setMatOpacity} />
+            <Slider label="Roughness" value={matRoughness} min={0} max={1} step={0.01} onChange={setMatRoughness} />
+            <Slider label="Metalness" value={matMetalness} min={0} max={1} step={0.01} onChange={setMatMetalness} />
+            <Slider label="Opacity"   value={matOpacity}   min={0} max={1} step={0.01} onChange={setMatOpacity} />
             <div className="spnl-row">
               <span className="spnl-label">Emissive</span>
               <input type="color" className="spnl-color" value={matEmissive}
                 onChange={e => setMatEmissive(e.target.value)} />
             </div>
-            <Slider label="Emissive Int." value={matEmissiveInt} min={0} max={5} step={0.1}
-              onChange={setMatEmissiveInt} />
+            <Slider label="Emissive Int." value={matEmissiveInt} min={0} max={5} step={0.1} onChange={setMatEmissiveInt} />
             <div className="spnl-row spnl-row--checks">
               <label className="spnl-check">
                 <input type="checkbox" checked={matWireframe}
@@ -219,10 +193,7 @@ export function ShadingPanel({ onApplyFunction }) {
                 Wireframe
               </label>
             </div>
-            <button className="spnl-btn-full spnl-btn-accent"
-              onClick={() => onApplyFunction("mat_pbr")}>
-              Apply PBR Material
-            </button>
+            <button className="spnl-btn-full spnl-btn-accent" onClick={() => onApplyFunction("mat_pbr")}>Apply PBR Material</button>
           </Section>
 
           <Section title="Special Materials" defaultOpen={false}>
@@ -235,20 +206,15 @@ export function ShadingPanel({ onApplyFunction }) {
               <button className="spnl-btn" onClick={() => onApplyFunction("sh_holo")}>Holo</button>
               <button className="spnl-btn" onClick={() => onApplyFunction("sh_dissolve")}>Dissolve</button>
             </div>
-            <button className="spnl-btn-full" onClick={() => onApplyFunction("sh_outline")}>
-              NPR Outline
-            </button>
+            <button className="spnl-btn-full" onClick={() => onApplyFunction("sh_outline")}>NPR Outline</button>
             <div className="spnl-btn-row">
               <button className="spnl-btn" onClick={() => onApplyFunction("mat_edge_wear")}>Edge Wear</button>
               <button className="spnl-btn" onClick={() => onApplyFunction("mat_cavity")}>Cavity Dirt</button>
             </div>
           </Section>
-
         </>)}
 
-        {/* ── UDIM ── */}
         {tab === "udim" && (<>
-
           <Section title="UDIM Layout">
             <div className="spnl-row">
               <span className="spnl-label">Tiles</span>
@@ -257,10 +223,7 @@ export function ShadingPanel({ onApplyFunction }) {
                 {[1,2,4,8,16].map(n => <option key={n} value={n}>{n} tile{n>1?"s":""}</option>)}
               </select>
             </div>
-            <button className="spnl-btn-full spnl-btn-accent"
-              onClick={() => onApplyFunction("udim_layout")}>
-              Create UDIM Layout
-            </button>
+            <button className="spnl-btn-full spnl-btn-accent" onClick={() => onApplyFunction("udim_layout")}>Create UDIM Layout</button>
           </Section>
 
           <Section title="Tile Grid">
@@ -268,9 +231,7 @@ export function ShadingPanel({ onApplyFunction }) {
               {Array.from({length: udimTiles}, (_, i) => 1001 + i).map(tile => (
                 <button key={tile}
                   className={`spnl-udim-tile${activeTile===tile?" spnl-udim-tile--active":""}`}
-                  onClick={() => setActiveTile(tile)}>
-                  {tile}
-                </button>
+                  onClick={() => setActiveTile(tile)}>{tile}</button>
               ))}
             </div>
             <div className="spnl-row">
@@ -281,9 +242,7 @@ export function ShadingPanel({ onApplyFunction }) {
               <button className="spnl-btn" onClick={() => onApplyFunction("udim_paint")}>Paint Tile</button>
               <button className="spnl-btn" onClick={() => onApplyFunction("udim_atlas")}>Build Atlas</button>
             </div>
-            <button className="spnl-btn-full" onClick={() => onApplyFunction("udim_export")}>
-              Export All Tiles
-            </button>
+            <button className="spnl-btn-full" onClick={() => onApplyFunction("udim_export")}>Export All Tiles</button>
           </Section>
 
           <Section title="UV Unwrap" defaultOpen={false}>
@@ -292,16 +251,11 @@ export function ShadingPanel({ onApplyFunction }) {
               <button className="spnl-btn" onClick={() => onApplyFunction("uv_sphere")}>Sphere</button>
               <button className="spnl-btn" onClick={() => onApplyFunction("uv_planar")}>Planar</button>
             </div>
-            <button className="spnl-btn-full" onClick={() => onApplyFunction("udim_remap")}>
-              Remap UVs to UDIM
-            </button>
+            <button className="spnl-btn-full" onClick={() => onApplyFunction("udim_remap")}>Remap UVs to UDIM</button>
           </Section>
-
         </>)}
 
-        {/* ── BAKE ── */}
         {tab === "bake" && (<>
-
           <Section title="Bake Settings">
             <div className="spnl-row">
               <span className="spnl-label">Resolution</span>
@@ -323,8 +277,7 @@ export function ShadingPanel({ onApplyFunction }) {
             {[["ao","Ambient Occlusion"],["normal","Normal Map"],["curvature","Curvature"],["color","Vertex Color"]].map(([id,lbl]) => (
               <div key={id} className="spnl-row spnl-row--checks">
                 <label className="spnl-check">
-                  <input type="checkbox"
-                    checked={bakeTypes[id]}
+                  <input type="checkbox" checked={bakeTypes[id]}
                     onChange={e => setBakeTypes(b => ({...b, [id]: e.target.checked}))} />
                   {lbl}
                 </label>
@@ -332,10 +285,10 @@ export function ShadingPanel({ onApplyFunction }) {
             ))}
             <button className="spnl-btn-full spnl-btn-accent"
               onClick={() => {
-                if (bakeTypes.ao) onApplyFunction("bake_ao");
-                if (bakeTypes.normal) onApplyFunction("bake_normal");
+                if (bakeTypes.ao)        onApplyFunction("bake_ao");
+                if (bakeTypes.normal)    onApplyFunction("bake_normal");
                 if (bakeTypes.curvature) onApplyFunction("bake_curvature");
-                if (bakeTypes.color) onApplyFunction("bake_all");
+                if (bakeTypes.color)     onApplyFunction("bake_all");
               }}>
               ▶ Bake Selected Maps
             </button>
@@ -344,12 +297,10 @@ export function ShadingPanel({ onApplyFunction }) {
               <button className="spnl-btn" onClick={() => onApplyFunction("bake_normal")}>Normal</button>
               <button className="spnl-btn" onClick={() => onApplyFunction("bake_curvature")}>Curve</button>
             </div>
-            <button className="spnl-btn-full" onClick={() => onApplyFunction("bake_all")}>
-              Bake All Maps
-            </button>
+            <button className="spnl-btn-full" onClick={() => onApplyFunction("bake_all")}>Bake All Maps</button>
           </Section>
-
         </>)}
+
       </div>
     </div>
   );

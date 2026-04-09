@@ -14,7 +14,6 @@ export function AnimationTimeline({
   const trackRef = useRef(null);
   const totalFrames = videoEndFrame - videoStartFrame || 250;
 
-  // Scrub on click/drag
   const scrub = useCallback((e) => {
     const track = trackRef.current;
     if (!track) return;
@@ -31,7 +30,6 @@ export function AnimationTimeline({
     document.addEventListener("mouseup", onUp);
   }, [scrub]);
 
-  // Keyboard shortcuts
   useEffect(() => {
     const h = (e) => {
       if (e.target.tagName === "INPUT") return;
@@ -47,7 +45,6 @@ export function AnimationTimeline({
 
   const pct = totalFrames > 0 ? ((currentFrame - videoStartFrame) / totalFrames) * 100 : 0;
 
-  // Collect all keyframe positions across all objects
   const keyPositions = new Set();
   Object.values(animKeys).forEach(keys => {
     Object.values(keys).forEach(frames => {
@@ -56,89 +53,60 @@ export function AnimationTimeline({
     });
   });
 
-  // Build frame ruler ticks
   const tickInterval = totalFrames <= 50 ? 5 : totalFrames <= 120 ? 10 : totalFrames <= 250 ? 25 : 50;
   const ticks = [];
-  for (let f = videoStartFrame; f <= videoEndFrame; f += tickInterval) {
-    ticks.push(f);
-  }
+  for (let f = videoStartFrame; f <= videoEndFrame; f += tickInterval) ticks.push(f);
 
   return (
     <div className="tl-root">
-      {/* Controls row */}
       <div className="tl-controls">
-        {/* Transport */}
         <div className="tl-transport">
-          <button className="tl-btn" title="Go to start"
-            onClick={() => setCurrentFrame(videoStartFrame)}>⏮</button>
-          <button className="tl-btn" title="Step back"
-            onClick={() => setCurrentFrame(f => Math.max(videoStartFrame, f - 1))}>◂</button>
+          <button className="tl-btn" title="Go to start" onClick={() => setCurrentFrame(videoStartFrame)}>⏮</button>
+          <button className="tl-btn" title="Step back" onClick={() => setCurrentFrame(f => Math.max(videoStartFrame, f - 1))}>◂</button>
           <button className={`tl-btn tl-btn--play${isPlaying ? " tl-btn--playing" : ""}`}
-            title="Play/Pause (Space)"
-            onClick={() => setIsPlaying(v => !v)}>
+            title="Play/Pause (Space)" onClick={() => setIsPlaying(v => !v)}>
             {isPlaying ? "⏸" : "▶"}
           </button>
-          <button className="tl-btn" title="Step forward"
-            onClick={() => setCurrentFrame(f => Math.min(videoEndFrame, f + 1))}>▸</button>
-          <button className="tl-btn" title="Go to end"
-            onClick={() => setCurrentFrame(videoEndFrame)}>⏭</button>
+          <button className="tl-btn" title="Step forward" onClick={() => setCurrentFrame(f => Math.min(videoEndFrame, f + 1))}>▸</button>
+          <button className="tl-btn" title="Go to end" onClick={() => setCurrentFrame(videoEndFrame)}>⏭</button>
         </div>
 
-        {/* Frame display */}
         <div className="tl-frame-display">
           <span className="tl-frame-label">Frame</span>
           <input className="tl-frame-input" type="number"
-            value={currentFrame}
-            onChange={e => setCurrentFrame(Number(e.target.value))}
+            value={currentFrame} onChange={e => setCurrentFrame(Number(e.target.value))}
             min={videoStartFrame} max={videoEndFrame} />
         </div>
 
-        {/* Range */}
         <div className="tl-range">
           <input className="tl-range-input" type="number" title="Start frame"
-            value={videoStartFrame}
-            onChange={e => setVideoStartFrame(Number(e.target.value))} />
+            value={videoStartFrame} onChange={e => setVideoStartFrame(Number(e.target.value))} />
           <span className="tl-range-sep">–</span>
           <input className="tl-range-input" type="number" title="End frame"
-            value={videoEndFrame}
-            onChange={e => setVideoEndFrame(Number(e.target.value))} />
+            value={videoEndFrame} onChange={e => setVideoEndFrame(Number(e.target.value))} />
         </div>
 
-        {/* FPS */}
         <div className="tl-fps">
-          <select className="tl-select" value={videoFps}
-            onChange={e => setVideoFps(Number(e.target.value))}>
+          <select className="tl-select" value={videoFps} onChange={e => setVideoFps(Number(e.target.value))}>
             {[12,24,25,30,60].map(f => <option key={f} value={f}>{f} fps</option>)}
           </select>
         </div>
 
-        {/* Auto key */}
         <button className={`tl-btn tl-btn--autokey${isAutoKey ? " tl-btn--autokey-on" : ""}`}
-          title="Auto Keyframe"
-          onClick={() => setAutoKey(v => !v)}>
-          ⬤ AUTO
-        </button>
+          title="Auto Keyframe" onClick={() => setAutoKey(v => !v)}>⬤ AUTO</button>
 
-        {/* Add keyframe */}
-        <button className="tl-btn tl-btn--addkey" title="Insert keyframe (I)"
-          onClick={onAddKeyframe}>
-          ◆ KEY
-        </button>
+        <button className="tl-btn tl-btn--addkey" title="Insert keyframe (I)" onClick={onAddKeyframe}>◆ KEY</button>
       </div>
 
-      {/* Track area */}
       <div className="tl-track-area" ref={trackRef} onMouseDown={onTrackMouseDown}>
-        {/* Ruler */}
         <div className="tl-ruler">
           {ticks.map(f => (
-            <div key={f} className="tl-tick"
-              style={{ left: `${((f - videoStartFrame) / totalFrames) * 100}%` }}>
+            <div key={f} className="tl-tick" style={{ left: `${((f - videoStartFrame) / totalFrames) * 100}%` }}>
               <span className="tl-tick-label">{f}</span>
             </div>
           ))}
         </div>
 
-        {/* Keyframe dots */}
         <div className="tl-keyframes">
           {[...keyPositions].map(f => (
             <div key={f} className="tl-keyframe-dot"
@@ -147,7 +115,6 @@ export function AnimationTimeline({
           ))}
         </div>
 
-        {/* Playhead */}
         <div className="tl-playhead" style={{ left: `${pct}%` }}>
           <div className="tl-playhead-head" />
           <div className="tl-playhead-line" />
