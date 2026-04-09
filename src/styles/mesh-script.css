@@ -1,0 +1,158 @@
+/* ═══════════════════════════════════════════════════════
+   MeshScriptPanel — mesh-script.css
+   ═══════════════════════════════════════════════════════ */
+
+.ms-overlay {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(0,0,0,0.7);
+  display: flex; align-items: stretch; justify-content: flex-end;
+}
+
+.ms-panel {
+  width: 520px; background: #06060f;
+  border-left: 1px solid #21262d;
+  display: flex; flex-direction: column; overflow: hidden;
+  font-family: JetBrains Mono, monospace;
+}
+
+/* Header */
+.ms-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-bottom: 1px solid #21262d;
+  flex-shrink: 0; background: #0d1117;
+}
+.ms-header-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #00ffc8; flex-shrink: 0;
+}
+.ms-header-title { font-size: 11px; font-weight: 700; color: #00ffc8; letter-spacing: 2px; }
+.ms-header-sub   { font-size: 9px; color: #6b7280; }
+.ms-recording-badge { margin-left: auto; font-size: 9px; color: #ff4444; font-weight: 700; animation: ms-blink 1s infinite; }
+@keyframes ms-blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.ms-close { margin-left: auto; background: none; border: none; color: #6b7280; cursor: pointer; font-size: 14px; }
+.ms-recording-badge + .ms-close { margin-left: 0; }
+
+/* Tabs */
+.ms-tabs { display: flex; border-bottom: 1px solid #21262d; flex-shrink: 0; background: #0a0a14; }
+.ms-tab {
+  padding: 7px 16px; font-size: 10px; font-family: inherit;
+  color: #6b7280; background: none; border: none;
+  border-bottom: 2px solid transparent; cursor: pointer;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.ms-tab--active { color: #00ffc8; border-bottom-color: #00ffc8; background: #0d1117; }
+.ms-tab:hover:not(.ms-tab--active) { color: #e0e0e0; }
+
+/* Body */
+.ms-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+/* Editor layout */
+.ms-editor-layout { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+
+/* Output */
+.ms-output {
+  flex: 1; overflow-y: auto; padding: 8px 12px;
+  background: #030308; min-height: 0;
+  border-bottom: 1px solid #21262d;
+}
+.ms-output-empty { font-size: 9px; color: #333; font-style: italic; padding: 8px 0; }
+
+.ms-line { display: flex; gap: 6px; align-items: flex-start; margin-bottom: 3px; }
+.ms-prompt { font-size: 10px; flex-shrink: 0; width: 12px; margin-top: 1px; }
+.ms-prompt { color: #6b7280; }
+.ms-prompt--result { color: #00ffc8; }
+.ms-prompt--error  { color: #ff4444; }
+.ms-prompt--system { color: #FF6600; }
+.ms-prompt--info   { color: #4fc3f7; }
+
+.ms-line-text {
+  font-size: 10px; font-family: JetBrains Mono, monospace;
+  white-space: pre-wrap; word-break: break-all; margin: 0;
+  line-height: 1.5;
+}
+.ms-line--input  .ms-line-text { color: #e0e0e0; }
+.ms-line--result .ms-line-text { color: #00ffc8; }
+.ms-line--error  .ms-line-text { color: #ff4444; }
+.ms-line--system .ms-line-text { color: #FF6600; }
+.ms-line--info   .ms-line-text { color: #4fc3f7; }
+.ms-line--log    .ms-line-text { color: #8b949e; }
+
+/* Editor */
+.ms-editor-wrap { flex-shrink: 0; padding: 8px; background: #0d1117; border-bottom: 1px solid #21262d; }
+.ms-editor {
+  width: 100%; height: 120px; resize: vertical;
+  background: #030308; border: 1px solid #21262d;
+  color: #e0e0e0; border-radius: 4px; padding: 8px;
+  font-family: JetBrains Mono, monospace; font-size: 11px;
+  line-height: 1.6; outline: none; box-sizing: border-box;
+  caret-color: #00ffc8;
+}
+.ms-editor:focus { border-color: #00ffc833; }
+
+/* Toolbar */
+.ms-toolbar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 10px; border-top: 1px solid #21262d;
+  flex-shrink: 0; flex-wrap: wrap;
+}
+.ms-save-row { display: flex; gap: 4px; margin-left: auto; }
+.ms-save-input {
+  background: #0d1117; border: 1px solid #21262d;
+  color: #e0e0e0; border-radius: 3px; padding: 3px 8px;
+  font-family: JetBrains Mono, monospace; font-size: 10px;
+  width: 130px;
+}
+
+/* Buttons */
+.ms-btn {
+  padding: 4px 10px; border-radius: 4px; cursor: pointer;
+  font-family: JetBrains Mono, monospace; font-size: 10px;
+  background: #111827; border: 1px solid #21262d; color: #8b949e;
+  transition: background 0.1s;
+}
+.ms-btn:hover { background: #1e2535; color: #e0e0e0; }
+.ms-btn--run   { background: rgba(0,255,200,0.1); border-color: #00ffc8; color: #00ffc8; font-weight: 700; }
+.ms-btn--run:hover { background: rgba(0,255,200,0.2); }
+.ms-btn--danger { background: rgba(255,68,68,0.1); border-color: #ff4444; color: #ff4444; }
+.ms-btn--xs    { padding: 2px 6px; font-size: 9px; }
+.ms-shortcut   { font-size: 8px; opacity: 0.6; margin-left: 4px; }
+
+/* Library & Macros */
+.ms-library, .ms-macros {
+  flex: 1; overflow-y: auto; padding: 10px 12px;
+}
+.ms-lib-section-title {
+  font-size: 9px; color: #FF6600; letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 6px;
+}
+.ms-lib-section-title--mt { margin-top: 14px; }
+
+.ms-script-card {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 8px; border-radius: 4px; margin-bottom: 3px;
+  background: #0d1117; border: 1px solid #21262d;
+}
+.ms-script-icon { font-size: 12px; flex-shrink: 0; }
+.ms-script-name { font-size: 10px; color: #e0e0e0; flex: 1; }
+.ms-script-date { font-size: 8px; color: #6b7280; }
+
+.ms-macro-record-row { display: flex; gap: 6px; margin-bottom: 8px; }
+.ms-recording-hint { font-size: 9px; color: #ff4444; margin-bottom: 8px; animation: ms-blink 1s infinite; }
+
+.ms-help-text {
+  font-size: 9px; color: #6b7280; background: #030308;
+  border: 1px solid #21262d; border-radius: 4px;
+  padding: 10px; line-height: 1.8; white-space: pre;
+  overflow-x: auto;
+}
+
+/* Scrollbar */
+.ms-output::-webkit-scrollbar,
+.ms-library::-webkit-scrollbar,
+.ms-macros::-webkit-scrollbar { width: 4px; }
+.ms-output::-webkit-scrollbar-track,
+.ms-library::-webkit-scrollbar-track,
+.ms-macros::-webkit-scrollbar-track { background: transparent; }
+.ms-output::-webkit-scrollbar-thumb,
+.ms-library::-webkit-scrollbar-thumb,
+.ms-macros::-webkit-scrollbar-thumb { background: #21262d; border-radius: 2px; }
