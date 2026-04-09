@@ -3540,20 +3540,20 @@ export default function App() {
     const listeners = [];
     Object.entries(MAP).forEach(([channel, fn]) => {
       const cb = () => handleApplyFunction(fn);
-      window.electronAPI.onMenuEvent(channel, cb);
+      window.electronAPI?.onMenuEvent?.(channel, cb);
       listeners.push([channel, cb]);
     });
     // File opened via native dialog
-    window.electronAPI.onMenuEvent('file:opened', ({ ext, data, name }) => {
+    window.electronAPI?.onMenuEvent?.('file:opened', ({ ext, data, name }) => {
       if (ext === 'glb' || ext === 'gltf') handleApplyFunction('importGLBData', { data, name });
       else if (ext === 'bvh') handleApplyFunction('importBVHData', { data, name });
     });
     // Script run via native dialog
-    window.electronAPI.onMenuEvent('script:run', ({ code, lang }) => {
+    window.electronAPI?.onMenuEvent?.('script:run', ({ code, lang }) => {
       if (lang === 'js') handleApplyFunction('mesh_script_run', { code });
     });
     return () => {
-      listeners.forEach(([channel]) => window.electronAPI.removeMenuListener?.(channel));
+      listeners.forEach(([channel]) => window.electronAPI?.removeMenuListener?.(channel));
     };
   }, [handleApplyFunction]);
 
