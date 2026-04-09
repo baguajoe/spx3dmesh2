@@ -251,3 +251,49 @@ export function createSmoke(scene, camera, options) { const s = new VolumetricSy
 export function createFire(scene, camera, options)  { const s = new VolumetricSystem(scene,camera); s.add('fire','fire',options); return s; }
 
 export default VolumetricSystem;
+
+// ── Legacy exports for FilmVolumetricsPanel compatibility ─────────────────────
+export function createVolumetricSettings(options = {}) {
+  return {
+    type:    options.type    ?? 'fog',
+    density: options.density ?? 0.5,
+    color:   options.color   ?? '#cccccc',
+    width:   options.width   ?? 10,
+    height:  options.height  ?? 5,
+    depth:   options.depth   ?? 10,
+    enabled: options.enabled ?? false,
+  };
+}
+
+export function applyVolumetricFog(scene, camera, settings) {
+  if (!settings.enabled) return null;
+  const sys = new VolumetricSystem(scene, camera);
+  sys.add('vol', settings.type ?? 'fog', settings);
+  return sys;
+}
+
+export function applyHeightFog(scene, camera, options) {
+  const sys = new VolumetricSystem(scene, camera);
+  sys.add('hfog', 'fog', { ...options, height: options.height ?? 2 });
+  return sys;
+}
+
+export function createGodRayEffect(scene, camera, options) {
+  return new VolumetricSystem(scene, camera);
+}
+
+export function applyAtmospherePreset(scene, camera, presetName) {
+  const PRESETS = {
+    clear:    { type:'fog',   density:0.1, color:'#aaccff' },
+    foggy:    { type:'fog',   density:0.8, color:'#cccccc' },
+    smoky:    { type:'smoke', density:0.6, color:'#888888' },
+    fiery:    { type:'fire',  density:1.0, color:'#ff6600' },
+    cloudy:   { type:'cloud', density:0.5, color:'#ffffff' },
+  };
+  const preset = PRESETS[presetName] ?? PRESETS.clear;
+  const sys = new VolumetricSystem(scene, camera);
+  sys.add('atm', preset.type, preset);
+  return sys;
+}
+
+export const ATMOSPHERE_PRESETS = ['clear','foggy','smoky','fiery','cloudy'];
