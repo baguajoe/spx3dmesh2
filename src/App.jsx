@@ -72,7 +72,7 @@ import { exportBVH, downloadBVH, captureSkeletonFrame, buildJointsFromSkeleton }
 import { createCrowdSystem, stepCrowd, setCrowdBehavior, disposeCrowd } from "./mesh/CrowdSystem.js";
 import { createDepthEstimator } from "./mesh/DepthEstimator.js";
 import { isElectron, isDesktop, openFile as electronOpenFile, saveFile as electronSaveFile } from "./mesh/ElectronBridge.js";
-import { applyWave, applyLattice, applyScrew, applyTriangulate, applyWireframe, applyBuild, applyExplode, applyOcean, applySimpleDeform, applyShrinkwrap } from "./mesh/ExtendedModifiers.js";
+import { applyWave, applyLattice, applyScrew, applyTriangulate, applyWireframe, applyBuild, applyOcean, applySimpleDeform, applyShrinkwrap } from "./mesh/ExtendedModifiers.js";
 import { detectFootPlants, fixFootPlanting, solveFootPlanting } from "./mesh/FootPlantSolver.js";
 import { createGPUClothSolver } from "./mesh/GPUClothSolver.js";
 import { createGPUSculptEngine } from "./mesh/GPUSculptEngine.js";
@@ -82,8 +82,8 @@ import { applyLaplacianSmooth, applyHook, applyVolumeDisplace, applyNormalEdit, 
 import { MOTION_CLIPS, MOTION_CATEGORIES, getClipsByCategory, searchClips, getClipBVH } from "./mesh/MotionLibrary.js";
 import { MultiPersonMocap, createMultiPersonMocap } from "./mesh/MultiPersonMocap.js";
 import { MuscleSystem } from "./mesh/MuscleSystem.js";
-import { createRenderFarm, RenderFarmManager } from "./mesh/RenderFarmManager.js";
-import { SPXPathTracer, RENDER_PRESETS } from "./mesh/SPXPathTracer.js";
+import { createRenderFarm as createRenderFarmManager, RenderFarmManager } from "./mesh/RenderFarmManager.js";
+import { SPXPathTracer, RENDER_PRESETS as SPX_RENDER_PRESETS } from "./mesh/SPXPathTracer.js";
 import { createPerformanceSession, importBVHClip, importMediaPipeClip } from "./mesh/SPXPerformance.js";
 import SPXScriptRunner from "./mesh/SPXScriptAPI.js";
 import { catmullClarkSubdivide, SubdivisionModifier } from "./mesh/SubdivisionSurface.js";
@@ -100,7 +100,7 @@ import { createPathTracerSettings, createVolumetricSettings } from "./mesh/PathT
 import { generateFibermesh } from "./mesh/FibermeshSystem.js";
 import { createInstances } from "./mesh/Instancing.js";
 import { fixNormals, createRetopoSettings, removeDoubles, removeDegenerates, fillHoles, fullRepair } from "./mesh/MeshRepair.js";
-import { createPBRMaterial, applyPBRMaps, createSSSMaterial, createTransmissionMaterial, createDisplacementTexture, denoiseCanvas, createRenderQueue, addRenderJob, runRenderQueue, applyRenderPreset, applyToneMappingMode, captureFrame, downloadFrame, getRenderStats, RENDER_PRESETS, TONE_MAP_MODES, SSS_PRESETS, TRANSMISSION_PRESETS } from "./mesh/RenderSystem.js";
+import { createPBRMaterial, applyPBRMaps, createSSSMaterial, createTransmissionMaterial, createDisplacementTexture, denoiseCanvas, createRenderQueue, addRenderJob, runRenderQueue, applyRenderPreset, applyToneMappingMode, captureFrame, downloadFrame, getRenderStats, RENDER_PRESETS as RS_RENDER_PRESETS, TONE_MAP_MODES, SSS_PRESETS, TRANSMISSION_PRESETS } from "./mesh/RenderSystem.js";
 import { initVCAdvanced, addVCLayer, removeVCLayer, setVCLayerBlendMode, paintVCAdvanced, fillVCLayer, flattenVCLayers, smearVC, blurVCLayer, getVCStats } from "./mesh/VertexColorAdvanced.js";
 import { buildRigFromDoppelflex, applyDoppelflexFrame, retargetDoppelflexToSPX, buildThreeSkeletonFromRig, serializeRig, getRigStats, DOPPELFLEX_LANDMARK_MAP } from "./mesh/DoppelflexRig.js";
 import { createSSAOPass, createBloomPass, createDOFPass, createChromaticAberrationPass, createPostPassManager } from "./mesh/PostPassShaders.js";
@@ -108,7 +108,7 @@ import { applyStrandCollision, createDensityMap, generateBraidPreset, generateBu
 import { createParticle, createEmitter, emitParticles, stepEmitter, buildParticleSystem, updateParticleSystem, createDestructionEffect, stepDestructionFrags, getEmitterStats, VFX_PRESETS, EMITTER_TYPES } from "./mesh/VFXSystem.js";
 import { createConstraint, applyLookAt, applyFloor, applyStretchTo, applyCopyLocation, applyCopyRotation, applyCopyScale, applyLimitLocation, applyDampedTrack, applyAllConstraints, CONSTRAINT_TYPES } from "./mesh/ConstraintSystem.js";
 import { voxelRemesh, quadRemesh, symmetrizeMesh, getRemeshStats } from "./mesh/RemeshSystem.js";
-import { createRenderFarm, addRenderFarmJob, cancelRenderJob, runNextRenderJob, getRenderFarmStats, detectWebGPU, getWebGLInfo, applyIBLToScene, setupCascadedShadows, enableShadowsOnScene, createNPROutlinePass } from "./mesh/RenderFarm.js";
+import { createRenderFarm as createRenderFarmLegacy, addRenderFarmJob, cancelRenderJob, runNextRenderJob, getRenderFarmStats, detectWebGPU, getWebGLInfo, applyIBLToScene, setupCascadedShadows, enableShadowsOnScene, createNPROutlinePass } from "./mesh/RenderFarm.js";
 import { createAdvancedShapeKey, addAdvancedShapeKey, removeShapeKey, evaluateShapeKeysAdvanced, mirrorShapeKey, blendShapeKeys, driverShapeKey, buildMorphTargetsFromKeys, getShapeKeyStats } from "./mesh/ShapeKeysAdvanced.js";
 import { exportOBJ, parseOBJ, importFBXFromBackend, exportFBXToBackend, exportAlembic, exportUSD , exportGLBWithDraco } from "./mesh/FBXPipeline.js";
 import { sendMeshToStreamPireX } from "./mesh/StreamPireXBridge.js";
@@ -590,7 +590,6 @@ export default function App() {
   const muscleRef    = React.useRef(null);
   const groomRef     = React.useRef(null);
   const performanceSessionRef = React.useRef(null);
-  const [animGraphOpen, setAnimGraphOpen] = useState(false);
   const [lightingCameraPanelOpen, setLightingCameraPanelOpen] = useState(false);
   // ── Gamepad Animator + Pro Mesh ──
   const [gamepadOpen,   setGamepadOpen]   = useState(false);
