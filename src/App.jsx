@@ -456,8 +456,8 @@ export default function App() {
     if (toolId === "sculpt_workspace")   { closeAllWorkspacePanels(); ensureWorkspaceMesh("sculpt"); return; }
     if (toolId === "materials_textures") { closeAllWorkspacePanels(); setMaterialPanelOpen?.(true); setPaintPanelOpen?.(true); return; }
     if (toolId === "clothing_pattern")   { closeAllWorkspacePanels(); setClothingPanelOpen?.(true); setPatternPanelOpen?.(true); setFabricPanelOpen?.(true); ensureWorkspaceMesh("clothing"); return; }
-    if (toolId === "hair_suite")         { closeAllWorkspacePanels(); setHairPanelOpen?.(true); setHairAdvancedOpen?.(true); setHairFXOpen?.(true); ensureWorkspaceMesh("hair"); return; }
-    if (toolId === "rigging_suite")      { closeAllWorkspacePanels(); setAutoRigOpen?.(true); setAdvancedRigOpen?.(true); ensureWorkspaceMesh("rigging"); return; }
+    if (toolId === "hair_suite")         { closeAllWorkspacePanels(); setHairPanelOpen?.(true); ensureWorkspaceMesh("hair"); return; }
+    if (toolId === "rigging_suite")      { closeAllWorkspacePanels(); setAutoRigOpen?.(true); ensureWorkspaceMesh("rigging"); return; }
 
     closeAllWorkspacePanels();
 
@@ -478,7 +478,7 @@ export default function App() {
     else if (toolId === "lighting") setLightingCameraPanelOpen?.(true);
     else if (toolId === "camera") setLightingCameraPanelOpen?.(true);
     else if (toolId === "lighting_camera") setLightingCameraPanelOpen?.(true);
-    else if (toolId === "grease_pencil") setGreasePencilPanelOpen?.(true);
+    else if (toolId === "spx_sketch") setGreasePencilPanelOpen?.(true);
     else if (toolId === "gamepad")    setGamepadOpen?.(true);
     else if (toolId === "pro_mesh")   setProMeshOpen?.(true);
     else if (toolId === "fluid")        setFluidPanelOpen?.(true);
@@ -747,6 +747,19 @@ export default function App() {
     setVehicleGenOpen(false);
     setCreatureGenOpen(false);
     setPropGenOpen(false);
+    setGroomOpen(false);
+    setMuscleOpen(false);
+    setRenderFarmOpen(false);
+    setDepthEstOpen(false);
+    setAnimGraphOpen(false);
+    setMultiMocapOpen(false);
+    setMeshScriptOpen(false);
+    setCinLightOpen(false);
+    setFilmVolOpen(false);
+    setDisplacementOpen(false);
+    setMocapRetargetOpen(false);
+    setNodeEditorOpen(false);
+    setCompositorOpen(false);
   };
 
   const quadCamerasRef = useRef(null);
@@ -3582,9 +3595,9 @@ export default function App() {
     if (fn === "anim_graph")          { setAnimGraphOpen(true); return; }
     if (fn === "collab_snapshot")   { const snap = createVersionSnapshot(sceneObjects, prompt("Version note:","v"+Date.now())||""); setStatus("Version snapshot saved — "+snap.message); return; }
     if (fn === "collab_comment")    { const pin = createCommentPin(meshRef.current?.position||{x:0,y:0,z:0}, prompt("Comment:",""),"user"); setStatus("Comment pin added"); return; }
-    if (fn === "grease_pencil")     { setGreasePencilPanelOpen(true); return; }
-    if (fn === "gp_layer")          { const l = createLayer("Layer_"+Date.now()); setStatus("Grease Pencil layer created"); return; }
-    if (fn === "gp_stroke")         { const s = createStroke([]); setStatus("Grease Pencil stroke created"); return; }
+    if (fn === "spx_sketch")     { setGreasePencilPanelOpen(true); return; }
+    if (fn === "gp_layer")          { const l = createLayer("Layer_"+Date.now()); setStatus("SPX Sketch layer created"); return; }
+    if (fn === "gp_stroke")         { const s = createStroke([]); setStatus("SPX Sketch stroke created"); return; }
     if (fn === "bake_nla")            { if(typeof window.bakeNLA==="function"){window.bakeNLA(nlaTracks,nlaActions,0,120);setStatus("NLA baked");} return; }
     if (fn === "shapekey_new")        { if(meshRef.current){const sk=createShapeKey("Key_"+shapeKeys.length,meshRef.current);setShapeKeys(p=>[...p,sk]);setStatus("Shape key created");} return; }
     if (fn === "shapekey_apply")      { if(meshRef.current){applyShapeKeys(meshRef.current,shapeKeys);setStatus("Shape keys applied");} return; }
@@ -4173,6 +4186,7 @@ export default function App() {
       />
       <FabricPanel
         open={fabricPanelOpen}
+        onClose={() => setFabricPanelOpen(false)}
         clothStateRef={sceneRef}
         setStatus={setStatus}
         panels={[]}
@@ -4226,7 +4240,7 @@ export default function App() {
           {label:"Materials",  fn:()=>openWorkspaceTool("materials_textures")},
           {label:"Node Mat",   fn:()=>setNodeEditorOpen(v=>!v)},
           {label:"Clothing",   fn:()=>openWorkspaceTool("clothing_pattern")},
-          {label:"Hair",       fn:()=>{ closeAllWorkspacePanels(); setHairPanelOpen(true); setActiveWorkspace('Surface'); }},
+          {label:"Hair",       fn:()=>openWorkspaceTool("hair_suite")},
           {label:"Displace",   fn:()=>setDisplacementOpen(v=>!v)},
         ]}/>
         <SpxTabGroup label="RIG" color="#ff88ff" tabs={[
@@ -4378,7 +4392,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Grease Pencil Panel */}
+      {/* SPX Sketch Panel */}
       {greasePencilPanelOpen && (
         <div className="spx-side-panel spx-side-panel--320">
           <GreasePencilPanel

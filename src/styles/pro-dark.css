@@ -1339,3 +1339,22 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 1px s
 .tl-btn--play { color: #00ffc8 !important; }
 .spx-statusbar span { color: #707888 !important; font-size: 9px !important; }
 .tl-fps-select, select.tl-fps { color: #c0c8d8 !important; background: #12121e !important; border-color: #2a2a3a !important; font-size: 10px !important; }
+
+/* ── Consistent floating workspace panels ──────────────────────────────── */
+.spx-float-film {
+  position: fixed;
+  top: 60px;
+  left: 220px;
+  z-index: 200;
+  width: 300px;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-radius: 6px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+.spx-float-film--left  { left: 220px; }
+.spx-float-film--left2 { left: 530px; }
+.spx-float-film--left3 { left: 840px; }
+.spx-float-film--right { right: 160px; left: auto; }

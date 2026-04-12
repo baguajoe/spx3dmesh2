@@ -29,7 +29,6 @@ const S = {
 
 export default function FabricPanel({ open = false, clothStateRef, setStatus, panels = [], onPanelsChange }) {
   const [selectedFabric, setSelectedFabric] = useState("cotton");
-  if (!open) return null;
   const [fabricProps, setFabricProps] = useState({ ...FABRIC_LIBRARY.cotton });
   const [colorwaySession, setColorwaySession] = useState(() => createColorwaySession("My Garment"));
   const [newCWName, setNewCWName] = useState("");
@@ -40,6 +39,7 @@ export default function FabricPanel({ open = false, clothStateRef, setStatus, pa
   const [targetSizes, setTargetSizes] = useState(["XS", "S", "L", "XL"]);
   const [sketchPreviewURL, setSketchPreviewURL] = useState(null);
   const [activeTab, setActiveTab] = useState("fabric");
+  if (!open) return null;
 
   // ── Fabric ─────────────────────────────────────────────────────────────────
   const handleSelectFabric = useCallback((name) => {
