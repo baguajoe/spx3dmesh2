@@ -455,7 +455,7 @@ export default function App() {
     // ── Grouped tab dispatchers ───────────────────────────────────────────────
     if (toolId === "sculpt_workspace")   { closeAllWorkspacePanels(); ensureWorkspaceMesh("sculpt"); return; }
     if (toolId === "materials_textures") { closeAllWorkspacePanels(); setMaterialPanelOpen?.(true); setPaintPanelOpen?.(true); return; }
-    if (toolId === "clothing_pattern")   { closeAllWorkspacePanels(); setClothingPanelOpen?.(true); setPatternPanelOpen?.(true); setFabricPanelOpen?.(true); ensureWorkspaceMesh("clothing"); return; }
+    if (toolId === "clothing_pattern")   { closeAllWorkspacePanels(); setClothingPanelOpen?.(true); setPatternPanelOpen?.(true); ensureWorkspaceMesh("clothing"); return; }
     if (toolId === "hair_suite")         { closeAllWorkspacePanels(); setHairPanelOpen?.(true); ensureWorkspaceMesh("hair"); return; }
     if (toolId === "rigging_suite")      { closeAllWorkspacePanels(); setAutoRigOpen?.(true); ensureWorkspaceMesh("rigging"); return; }
 
@@ -4184,13 +4184,13 @@ export default function App() {
         sceneRef={sceneRef}
         setStatus={setStatus}
       />
-      <FabricPanel
+      {fabricPanelOpen && <FabricPanel
         open={fabricPanelOpen}
         onClose={() => setFabricPanelOpen(false)}
         clothStateRef={sceneRef}
         setStatus={setStatus}
         panels={[]}
-      />
+      />}
 
       <PatternEditorPanel
         open={patternPanelOpen}
@@ -4238,10 +4238,10 @@ export default function App() {
         <SpxTabGroup label="SURFACE" color="#00ffc8" tabs={[
           {label:"UV",         fn:()=>openWorkspaceTool("uv")},
           {label:"Materials",  fn:()=>openWorkspaceTool("materials_textures")},
-          {label:"Node Mat",   fn:()=>setNodeEditorOpen(v=>!v)},
+          {label:"Node Mat",   fn:()=>{ closeAllWorkspacePanels(); setNodeEditorOpen(true); }},
           {label:"Clothing",   fn:()=>openWorkspaceTool("clothing_pattern")},
           {label:"Hair",       fn:()=>openWorkspaceTool("hair_suite")},
-          {label:"Displace",   fn:()=>setDisplacementOpen(v=>!v)},
+          {label:"Displace",   fn:()=>{ closeAllWorkspacePanels(); setDisplacementOpen(true); }},
         ]}/>
         <SpxTabGroup label="RIG" color="#ff88ff" tabs={[
           {label:"Rigging",    fn:()=>openWorkspaceTool("rigging_suite")},

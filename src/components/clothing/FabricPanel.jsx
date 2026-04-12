@@ -39,7 +39,6 @@ export default function FabricPanel({ open = false, clothStateRef, setStatus, pa
   const [targetSizes, setTargetSizes] = useState(["XS", "S", "L", "XL"]);
   const [sketchPreviewURL, setSketchPreviewURL] = useState(null);
   const [activeTab, setActiveTab] = useState("fabric");
-  if (!open) return null;
 
   // ── Fabric ─────────────────────────────────────────────────────────────────
   const handleSelectFabric = useCallback((name) => {
@@ -111,6 +110,7 @@ export default function FabricPanel({ open = false, clothStateRef, setStatus, pa
   }, [panels, colorwaySession, baseSize]);
 
   const handleExportSketch = useCallback(() => {
+  if (!open) return null;
     downloadFlatSketch(panels, { title: colorwaySession.garmentName, size: baseSize, showSeamAllowance: true, showGrainLine: true, showMeasurements: true });
     setStatus?.("Flat sketch SVG exported");
   }, [panels, colorwaySession, baseSize]);
