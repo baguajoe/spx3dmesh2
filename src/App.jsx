@@ -1621,7 +1621,7 @@ export default function App() {
     window.voxelRemesh = voxelRemesh;
     window.quadRemesh = quadRemesh;
     window.symmetrizeMesh = symmetrizeMesh;
-    window.createRenderFarm = createRenderFarm;
+    window.createRenderFarm = createRenderFarmLegacy;
     window.addRenderFarmJob = addRenderFarmJob;
     window.runNextRenderJob = runNextRenderJob;
     window.detectWebGPU = detectWebGPU;
