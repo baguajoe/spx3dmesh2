@@ -1171,6 +1171,7 @@ export default function App() {
     setTimeout(() => {
       const renderer = rendererRef.current;
       const canvas = canvasRef.current;
+      if (!canvas) return;
       const w = canvas.clientWidth, h = canvas.clientHeight;
       if (w > 0 && h > 0) {
         renderer.setSize(w, h, false);
@@ -1513,7 +1514,7 @@ export default function App() {
     window.catmullClarkSubdivide = catmullClarkSubdivide;
     window.MOTION_CLIPS = MOTION_CLIPS; window.getClipsByCategory = getClipsByCategory;
     window.WEATHER_PRESETS = WEATHER_PRESETS; window.VEHICLE_CURVE_PRESETS = VEHICLE_CURVE_PRESETS;
-    window.LSYSTEM_PRESETS = LSYSTEM_PRESETS; window.RENDER_PRESETS = RENDER_PRESETS;
+    window.LSYSTEM_PRESETS = LSYSTEM_PRESETS; window.RENDER_PRESETS = RS_RENDER_PRESETS;
     window.createGPUSculptEngine = createGPUSculptEngine;
     window.createGPUClothSolver = createGPUClothSolver;
     window.createWebGPUPathTracer = createWebGPUPathTracer;
@@ -1571,7 +1572,7 @@ export default function App() {
     window.applyToneMappingMode = applyToneMappingMode;
     window.captureFrame = captureFrame;
     window.downloadFrame = downloadFrame;
-    window.RENDER_PRESETS = RENDER_PRESETS;
+    window.RENDER_PRESETS = RS_RENDER_PRESETS;
     window.SSS_PRESETS = SSS_PRESETS;
     window.TRANSMISSION_PRESETS = TRANSMISSION_PRESETS;
     window.initVCAdvanced = initVCAdvanced;
