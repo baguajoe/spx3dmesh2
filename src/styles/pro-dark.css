@@ -1329,3 +1329,13 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 1px s
 .tl-btn--play { color: #00ffc8 !important; }
 .spx-statusbar { background: #08080f !important; }
 .spx-statusbar span { color: #707888 !important; }
+
+/* ── Timeline final visibility fix ──────────────────────────── */
+.spx-bottom-bar, .spx-timeline-row { background: #0a0a14 !important; }
+.tl-frame-label { color: #c8d0e0 !important; font-size: 10px !important; }
+.tl-frame-input { color: #e0e8f0 !important; font-size: 10px !important; background: #12121e !important; border-color: #2a2a3a !important; }
+.tl-btn { color: #909aaa !important; font-size: 13px !important; }
+.tl-btn:hover { color: #e0e8f0 !important; }
+.tl-btn--play { color: #00ffc8 !important; }
+.spx-statusbar span { color: #707888 !important; font-size: 9px !important; }
+.tl-fps-select, select.tl-fps { color: #c0c8d8 !important; background: #12121e !important; border-color: #2a2a3a !important; font-size: 10px !important; }

@@ -274,3 +274,15 @@
   background: rgba(255,255,255,0.06) !important;
 }
 .spx-tab-group__trigger { color: #707888 !important; }
+
+/* ── Tab + timeline final visibility fix ─────────────────────── */
+.spx-native-workspace-tab {
+  color: #909aaa !important;
+  font-size: 10px !important;
+  letter-spacing: 0.6px !important;
+}
+.spx-native-workspace-tab:hover { color: #d0d8e8 !important; }
+.spx-native-workspace-tab.is-active,
+.spx-native-workspace-tab[data-active="true"] { color: #ffffff !important; }
+.spx-tab-group__trigger { color: #909aaa !important; font-size: 10px !important; }
+.spx-tab-group__trigger:hover { color: #d0d8e8 !important; }
