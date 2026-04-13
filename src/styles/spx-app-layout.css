@@ -473,7 +473,169 @@
 /* Quad divider lines (drawn by canvas, but reinforce with CSS) */
 .spx-viewport-wrap { position: relative; }
 
-/* Prevent viewport UI bleeding through fullscreen overlays */
-.viewport-toolbar { z-index: 10 !important; }
-.quad-toggle-btn  { z-index: 10 !important; }
+
 .mesh-editor-canvas { z-index: 1; position: relative; }
+
+/* ══ Force all fullscreen panel roots to fill overlay body ══════════════════ */
+
+/* Overlay body: no padding, flex column, fills remaining space */
+.spx-overlay-body {
+  flex: 1 1 auto !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Every direct child of overlay-body fills it completely */
+.spx-overlay-body > div,
+.spx-overlay-body > section,
+.spx-overlay-body > canvas {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* UV Editor specific — override its internal fixed positioning */
+.uv-editor-panel,
+.uv-editor-root,
+[class*="uv-editor"],
+[class*="UVEditor"] {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+/* Node Material Editor specific */
+.node-mat-panel,
+.node-material-root,
+.nme-root,
+[class*="node-material"],
+[class*="NodeMaterial"] {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+/* AnimGraph panel */
+.anim-graph-root,
+[class*="anim-graph"],
+[class*="AnimGraph"] {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* MeshScript panel */
+.mesh-script-root,
+[class*="mesh-script"],
+[class*="MeshScript"] {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Split layout for panels that want left viewport + right content */
+.spx-split-layout {
+  display: flex !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+.spx-split-viewport {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-right: 1px solid #21262d !important;
+  overflow: hidden !important;
+  background: #060a10 !important;
+}
+
+.spx-split-viewport-label {
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  color: #444 !important;
+  letter-spacing: 1.5px !important;
+  padding: 6px 10px !important;
+  background: #0a0d13 !important;
+  border-bottom: 1px solid #21262d !important;
+  flex-shrink: 0 !important;
+  text-transform: uppercase !important;
+}
+
+.spx-split-viewport-canvas {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  display: block !important;
+  background: #060a10 !important;
+  min-height: 0 !important;
+}
+
+.spx-split-panel {
+  width: 500px !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  background: #0d1117 !important;
+}
+
+/* Overlay header */
+.spx-overlay-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 8px 16px !important;
+  background: #0a0d13 !important;
+  border-bottom: 1px solid #21262d !important;
+  flex-shrink: 0 !important;
+  height: 44px !important;
+}
+.spx-overlay-title {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #00ffc8 !important;
+  letter-spacing: 1.5px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+.spx-overlay-close {
+  background: #1a1a2a !important;
+  border: 1px solid #2a2a4a !important;
+  color: #888 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  padding: 5px 14px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  transition: all 0.15s !important;
+  letter-spacing: 0.5px !important;
+}
+.spx-overlay-close:hover {
+  background: #ff444422 !important;
+  border-color: #ff4444 !important;
+  color: #ff4444 !important;
+}
+
+/* Quad/viewport toolbar stays below overlays */
+.viewport-toolbar { z-index: 10 !important; position: absolute !important; }
+.quad-toggle-btn  { z-index: 10 !important; }

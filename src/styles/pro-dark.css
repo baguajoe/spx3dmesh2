@@ -1498,3 +1498,64 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 1px s
   display: flex;
   flex-direction: column;
 }
+
+
+/* ══ SPX Performance Capture Panel ══════════════════════════════════════════ */
+.spx-perf-root {
+  background: #0d1117 !important; color: #ccc !important;
+  font-family: 'JetBrains Mono', monospace !important; font-size: 11px !important;
+  height: 100% !important; display: flex !important; flex-direction: column !important;
+  overflow: hidden !important;
+}
+.spx-perf-tabs {
+  display: flex !important; gap: 2px !important; padding: 8px 12px 0 !important;
+  background: #0a0d13 !important; border-bottom: 1px solid #21262d !important; flex-shrink: 0 !important;
+}
+.spx-perf-tab {
+  background: none !important; border: none !important; border-bottom: 2px solid transparent !important;
+  color: #555 !important; font-family: inherit !important; font-size: 11px !important;
+  font-weight: 700 !important; padding: 6px 14px !important; cursor: pointer !important;
+  letter-spacing: 0.5px !important; transition: all 0.15s !important;
+}
+.spx-perf-tab:hover { color: #888 !important; }
+.spx-perf-tab--active { color: #00ffc8 !important; border-bottom-color: #00ffc8 !important; }
+.spx-perf-body { flex: 1 !important; overflow-y: auto !important; }
+.spx-perf-section { border-bottom: 1px solid #21262d !important; }
+.spx-perf-section-header {
+  display: flex !important; align-items: center !important; justify-content: space-between !important;
+  padding: 10px 14px !important; cursor: pointer !important; background: #0a0d13 !important;
+  transition: background 0.15s !important;
+}
+.spx-perf-section-header:hover { background: #0f1520 !important; }
+.spx-perf-section-title {
+  font-size: 11px !important; font-weight: 700 !important; color: #00ffc8 !important;
+  letter-spacing: 1px !important; text-transform: uppercase !important;
+}
+.spx-perf-section-body { padding: 10px 14px 14px !important; background: #0d1117 !important; }
+.spx-perf-import-btn {
+  display: inline-flex !important; align-items: center !important; gap: 8px !important;
+  background: #003a20 !important; border: 1px solid #00ffc844 !important; color: #00ffc8 !important;
+  font-family: inherit !important; font-size: 11px !important; font-weight: 700 !important;
+  padding: 8px 16px !important; border-radius: 4px !important; cursor: pointer !important;
+  margin-bottom: 8px !important; transition: all 0.15s !important;
+}
+.spx-perf-import-btn:hover { background: #005a30 !important; border-color: #00ffc8 !important; }
+.spx-perf-empty { color: #444 !important; font-size: 10px !important; font-style: italic !important; }
+.spx-perf-timeline {
+  background: #060a10 !important; border: 1px solid #21262d !important;
+  border-radius: 4px !important; height: 60px !important; margin-bottom: 10px !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+}
+.spx-perf-transport {
+  display: flex !important; gap: 6px !important; align-items: center !important;
+  margin-bottom: 8px !important; flex-wrap: wrap !important;
+}
+.spx-perf-btn {
+  padding: 6px 12px !important; border: 1px solid #21262d !important; border-radius: 4px !important;
+  background: #0d1117 !important; color: #888 !important; font-family: inherit !important;
+  font-size: 10px !important; font-weight: 700 !important; cursor: pointer !important;
+  transition: all 0.15s !important;
+}
+.spx-perf-btn--play { background: #003a20 !important; color: #00ffc8 !important; border-color: #00ffc844 !important; }
+.spx-perf-btn--stop { background: #2a0000 !important; color: #ff4444 !important; border-color: #ff444444 !important; }
+.spx-perf-btn--active { background: #00ffc822 !important; border-color: #00ffc8 !important; color: #00ffc8 !important; }

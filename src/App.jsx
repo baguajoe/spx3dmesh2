@@ -4410,7 +4410,7 @@ export default function App() {
             <button onClick={() => setAnimGraphOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
           </div>
           <div className="spx-overlay-body">
-            <AnimGraphPanel open={animGraphOpen} onClose={() => setAnimGraphOpen(false)} sceneRef={sceneRef} />
+            <AnimGraphPanel open={animGraphOpen} onClose={() => setAnimGraphOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} />
           </div>
         </div>
       )}
@@ -4421,7 +4421,7 @@ export default function App() {
             <button onClick={() => setMeshScriptOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
           </div>
           <div className="spx-overlay-body">
-            <MeshScriptPanel open={meshScriptOpen} onClose={() => setMeshScriptOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
+            <MeshScriptPanel open={meshScriptOpen} onClose={() => setMeshScriptOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} setStatus={setStatus} />
           </div>
         </div>
       )}
