@@ -3840,14 +3840,7 @@ export default function App() {
       setActiveWorkspace={setActiveWorkspace}
       onMenuAction={handleApplyFunction}
       leftPanel={
-        activeWorkspace === "Surface" ? (
-          <HairPanel
-            open={true}
-            onClose={() => setHairPanelOpen(false)}
-            sceneRef={sceneRef}
-            setStatus={setStatus}
-          />
-        ) : activeWorkspace === "Sculpt" ? (
+        activeWorkspace === "Sculpt" ? (
           <SculptPanel
             onApplyFunction={handleApplyFunction}
             sculptBrush={sculptBrush} setSculptBrush={setSculptBrush}
