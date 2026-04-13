@@ -1,181 +1,283 @@
-
 /* ═══════════════════════════════════════════════════════
-   SPX 3D→2D Style Panel
+   SPX 3D→2D Style Panel  —  spx-2d-panel.css
    ═══════════════════════════════════════════════════════ */
 
 .s2d-root {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  background: #0d1117;
-  color: #ccc;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  overflow: hidden;
+  display: flex !important;
+  flex-direction: row !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: #0d1117 !important;
+  color: #ccc !important;
+  font-family: 'JetBrains Mono', 'Segoe UI', monospace !important;
+  font-size: 11px !important;
+  overflow: hidden !important;
 }
 
-/* ── Viewports ───────────────────────────────────────── */
-.s2d-viewport,
+/* ── Left: 3D live viewport ─────────────────────────── */
+.s2d-viewport {
+  flex: 1 1 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-right: 1px solid #21262d !important;
+  overflow: hidden !important;
+  min-width: 0 !important;
+}
+
+/* ── Center: 2D output ──────────────────────────────── */
 .s2d-output {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid #21262d;
-  overflow: hidden;
-  position: relative;
+  flex: 1 1 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-right: 1px solid #21262d !important;
+  overflow: hidden !important;
+  min-width: 0 !important;
 }
 
 .s2d-viewport-label {
-  font-size: 9px;
-  font-weight: 700;
-  color: #444;
-  letter-spacing: 1.5px;
-  padding: 6px 10px;
-  background: #0a0d13;
-  border-bottom: 1px solid #21262d;
-  flex-shrink: 0;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  color: #444 !important;
+  letter-spacing: 1.5px !important;
+  padding: 6px 10px !important;
+  background: #0a0d13 !important;
+  border-bottom: 1px solid #21262d !important;
+  flex-shrink: 0 !important;
+  text-transform: uppercase !important;
 }
 
 .s2d-viewport-canvas {
-  flex: 1;
-  width: 100%;
-  height: 100%;
-  display: block;
-  background: #060a10;
-  object-fit: contain;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  display: block !important;
+  background: #060a10 !important;
+  min-height: 0 !important;
 }
 
 .s2d-viewport-hint {
-  font-size: 9px;
-  color: #333;
-  padding: 4px 10px;
-  background: #0a0d13;
-  border-top: 1px solid #21262d;
-  flex-shrink: 0;
+  font-size: 9px !important;
+  color: #333 !important;
+  padding: 4px 10px !important;
+  background: #0a0d13 !important;
+  border-top: 1px solid #21262d !important;
+  flex-shrink: 0 !important;
 }
 
 .s2d-output-actions {
-  display: flex;
-  gap: 6px;
-  padding: 8px 10px;
-  background: #0a0d13;
-  border-top: 1px solid #21262d;
-  flex-shrink: 0;
-  align-items: center;
+  display: flex !important;
+  gap: 6px !important;
+  padding: 8px 10px !important;
+  background: #0a0d13 !important;
+  border-top: 1px solid #21262d !important;
+  flex-shrink: 0 !important;
+  align-items: center !important;
 }
 
 .s2d-status {
-  font-size: 10px;
-  color: #555;
-  padding: 4px 10px;
-  background: #0a0d13;
-  border-top: 1px solid #21262d;
-  flex-shrink: 0;
+  font-size: 10px !important;
+  color: #555 !important;
+  padding: 4px 10px !important;
+  background: #0a0d13 !important;
+  border-top: 1px solid #21262d !important;
+  flex-shrink: 0 !important;
 }
 
-/* ── Controls sidebar ────────────────────────────────── */
+/* ── Right: Controls sidebar ────────────────────────── */
 .s2d-controls {
-  width: 280px;
-  flex-shrink: 0;
-  background: #0a0d13;
-  overflow-y: auto;
-  padding: 10px 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  width: 300px !important;
+  flex-shrink: 0 !important;
+  background: #0a0d13 !important;
+  overflow-y: auto !important;
+  padding: 10px 8px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  border-left: 1px solid #21262d !important;
 }
 
 .s2d-section-title {
-  font-size: 9px;
-  font-weight: 700;
-  color: #444;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  padding: 8px 4px 4px;
-  border-bottom: 1px solid #1a2030;
-  margin-bottom: 4px;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  color: #444 !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase !important;
+  padding: 8px 4px 4px !important;
+  border-bottom: 1px solid #1a2030 !important;
+  margin-bottom: 6px !important;
 }
 
-/* ── Category buttons ────────────────────────────────── */
+/* ── Category buttons ───────────────────────────────── */
 .s2d-cat-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-  margin-bottom: 8px;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 3px !important;
+  margin-bottom: 10px !important;
 }
 .s2d-cat-btn {
-  background: #0d1117;
-  border: 1px solid #21262d;
-  border-radius: 3px;
-  color: #666;
-  font-family: inherit;
-  font-size: 9px;
-  font-weight: 700;
-  padding: 4px 8px;
-  cursor: pointer;
-  letter-spacing: 0.5px;
-  transition: all 0.15s;
+  background: #0d1117 !important;
+  border: 1px solid #21262d !important;
+  border-radius: 3px !important;
+  color: #666 !important;
+  font-family: inherit !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  padding: 4px 8px !important;
+  cursor: pointer !important;
+  letter-spacing: 0.5px !important;
+  transition: all 0.15s !important;
 }
-.s2d-cat-btn:hover { color: #ccc; border-color: #444; }
-.s2d-cat-btn--active { background: #00ffc811; border-color: #00ffc8; color: #00ffc8; }
+.s2d-cat-btn:hover { color: #ccc !important; border-color: #444 !important; }
+.s2d-cat-btn--active {
+  background: #00ffc811 !important;
+  border-color: #00ffc8 !important;
+  color: #00ffc8 !important;
+}
 
-/* ── Style grid ──────────────────────────────────────── */
+/* ── Style list ─────────────────────────────────────── */
 .s2d-style-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-bottom: 8px;
-  max-height: 340px;
-  overflow-y: auto;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  margin-bottom: 10px !important;
+  max-height: 400px !important;
+  overflow-y: auto !important;
 }
 .s2d-style-btn {
-  background: #0d1117;
-  border: 1px solid #21262d;
-  border-radius: 3px;
-  color: #666;
-  font-family: inherit;
-  font-size: 10px;
-  padding: 5px 8px;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.15s;
+  background: #0d1117 !important;
+  border: 1px solid #21262d !important;
+  border-radius: 3px !important;
+  color: #666 !important;
+  font-family: inherit !important;
+  font-size: 10px !important;
+  padding: 6px 10px !important;
+  cursor: pointer !important;
+  text-align: left !important;
+  transition: all 0.15s !important;
+  width: 100% !important;
 }
-.s2d-style-btn:hover { color: #ccc; border-color: #444; }
-.s2d-style-btn--active { background: #111827; font-weight: 700; }
+.s2d-style-btn:hover { color: #ccc !important; border-color: #444 !important; }
+.s2d-style-btn--active {
+  background: #111827 !important;
+  font-weight: 700 !important;
+}
 
-/* ── Params ──────────────────────────────────────────── */
+/* ── Params ─────────────────────────────────────────── */
 .s2d-param-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 5px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin-bottom: 6px !important;
 }
-.s2d-param-label { font-size: 10px; color: #666; width: 80px; flex-shrink: 0; }
-.s2d-slider { flex: 1; accent-color: #ff6600; cursor: pointer; }
-.s2d-param-val { font-size: 10px; color: #ff6600; font-weight: 700; width: 24px; text-align: right; }
+.s2d-param-label {
+  font-size: 10px !important;
+  color: #666 !important;
+  width: 90px !important;
+  flex-shrink: 0 !important;
+}
+.s2d-slider {
+  flex: 1 !important;
+  accent-color: #ff6600 !important;
+  cursor: pointer !important;
+  height: 14px !important;
+}
+.s2d-param-val {
+  font-size: 10px !important;
+  color: #ff6600 !important;
+  font-weight: 700 !important;
+  width: 28px !important;
+  text-align: right !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
 
-/* ── Buttons ─────────────────────────────────────────── */
+/* ── Buttons ────────────────────────────────────────── */
 .s2d-btn {
-  padding: 7px 12px;
-  border: none;
-  border-radius: 4px;
-  font-family: inherit;
-  font-size: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  letter-spacing: 0.5px;
-  transition: filter 0.15s;
+  padding: 8px 14px !important;
+  border: none !important;
+  border-radius: 4px !important;
+  font-family: inherit !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  letter-spacing: 0.5px !important;
+  transition: filter 0.15s !important;
 }
-.s2d-btn:hover { filter: brightness(1.2); }
-.s2d-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.s2d-btn--render { background: #003a20; color: #00ffc8; border: 1px solid #00ffc844; flex: 1; }
-.s2d-btn--export { background: #3a2000; color: #ffaa00; border: 1px solid #ffaa0044; }
+.s2d-btn:hover { filter: brightness(1.25) !important; }
+.s2d-btn:disabled { opacity: 0.5 !important; cursor: not-allowed !important; }
+.s2d-btn--render {
+  background: #003a20 !important;
+  color: #00ffc8 !important;
+  border: 1px solid #00ffc844 !important;
+  flex: 1 !important;
+}
+.s2d-btn--export {
+  background: #3a2000 !important;
+  color: #ffaa00 !important;
+  border: 1px solid #ffaa0044 !important;
+}
 .s2d-select {
-  background: #0d1117;
-  border: 1px solid #21262d;
-  color: #888;
-  font-family: inherit;
-  font-size: 10px;
-  padding: 4px 6px;
-  border-radius: 3px;
+  background: #0d1117 !important;
+  border: 1px solid #21262d !important;
+  color: #888 !important;
+  font-family: inherit !important;
+  font-size: 10px !important;
+  padding: 5px 8px !important;
+  border-radius: 3px !important;
+}
+
+/* ── Electron native buttons ────────────────────────── */
+.s2d-native-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  margin-top: 10px !important;
+  padding-top: 10px !important;
+  border-top: 1px solid #21262d !important;
+}
+.s2d-native-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 9px 14px !important;
+  border: none !important;
+  border-radius: 4px !important;
+  font-family: inherit !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  letter-spacing: 0.5px !important;
+  transition: filter 0.15s !important;
+  width: 100% !important;
+}
+.s2d-native-btn:hover { filter: brightness(1.25) !important; }
+.s2d-native-btn--4k {
+  background: #001a3a !important;
+  color: #4488ff !important;
+  border: 1px solid #4488ff44 !important;
+}
+.s2d-native-btn--video {
+  background: #1a001a !important;
+  color: #ff44ff !important;
+  border: 1px solid #ff44ff44 !important;
+}
+.s2d-native-btn--save {
+  background: #1a1a00 !important;
+  color: #ffff44 !important;
+  border: 1px solid #ffff4444 !important;
+}
+.s2d-native-label {
+  font-size: 8px !important;
+  color: #555 !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+}
+.s2d-electron-badge {
+  display: inline-block !important;
+  background: #4488ff22 !important;
+  border: 1px solid #4488ff44 !important;
+  color: #4488ff !important;
+  font-size: 8px !important;
+  padding: 2px 6px !important;
+  border-radius: 3px !important;
+  margin-left: auto !important;
+  letter-spacing: 0.5px !important;
 }

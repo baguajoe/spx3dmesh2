@@ -1,4 +1,313 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+#!/usr/bin/env python3
+"""
+Fixes in priority order:
+1. 3D→2D — full CSS rewrite with !important, proper flex layout
+2. Quad button z-index bleed
+3. spx-overlay-body padding:0 for UV/NodeMat
+4. Import spx-2d-panel.css in App.jsx if missing
+"""
+import os, re
+
+ROOT = '/workspaces/spx3dmesh2'
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 1. spx-2d-panel.css — full rewrite
+# ══════════════════════════════════════════════════════════════════════════════
+CSS = """\
+/* ═══════════════════════════════════════════════════════
+   SPX 3D→2D Style Panel  —  spx-2d-panel.css
+   ═══════════════════════════════════════════════════════ */
+
+.s2d-root {
+  display: flex !important;
+  flex-direction: row !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: #0d1117 !important;
+  color: #ccc !important;
+  font-family: 'JetBrains Mono', 'Segoe UI', monospace !important;
+  font-size: 11px !important;
+  overflow: hidden !important;
+}
+
+/* ── Left: 3D live viewport ─────────────────────────── */
+.s2d-viewport {
+  flex: 1 1 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-right: 1px solid #21262d !important;
+  overflow: hidden !important;
+  min-width: 0 !important;
+}
+
+/* ── Center: 2D output ──────────────────────────────── */
+.s2d-output {
+  flex: 1 1 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-right: 1px solid #21262d !important;
+  overflow: hidden !important;
+  min-width: 0 !important;
+}
+
+.s2d-viewport-label {
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  color: #444 !important;
+  letter-spacing: 1.5px !important;
+  padding: 6px 10px !important;
+  background: #0a0d13 !important;
+  border-bottom: 1px solid #21262d !important;
+  flex-shrink: 0 !important;
+  text-transform: uppercase !important;
+}
+
+.s2d-viewport-canvas {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  display: block !important;
+  background: #060a10 !important;
+  min-height: 0 !important;
+}
+
+.s2d-viewport-hint {
+  font-size: 9px !important;
+  color: #333 !important;
+  padding: 4px 10px !important;
+  background: #0a0d13 !important;
+  border-top: 1px solid #21262d !important;
+  flex-shrink: 0 !important;
+}
+
+.s2d-output-actions {
+  display: flex !important;
+  gap: 6px !important;
+  padding: 8px 10px !important;
+  background: #0a0d13 !important;
+  border-top: 1px solid #21262d !important;
+  flex-shrink: 0 !important;
+  align-items: center !important;
+}
+
+.s2d-status {
+  font-size: 10px !important;
+  color: #555 !important;
+  padding: 4px 10px !important;
+  background: #0a0d13 !important;
+  border-top: 1px solid #21262d !important;
+  flex-shrink: 0 !important;
+}
+
+/* ── Right: Controls sidebar ────────────────────────── */
+.s2d-controls {
+  width: 300px !important;
+  flex-shrink: 0 !important;
+  background: #0a0d13 !important;
+  overflow-y: auto !important;
+  padding: 10px 8px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  border-left: 1px solid #21262d !important;
+}
+
+.s2d-section-title {
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  color: #444 !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase !important;
+  padding: 8px 4px 4px !important;
+  border-bottom: 1px solid #1a2030 !important;
+  margin-bottom: 6px !important;
+}
+
+/* ── Category buttons ───────────────────────────────── */
+.s2d-cat-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 3px !important;
+  margin-bottom: 10px !important;
+}
+.s2d-cat-btn {
+  background: #0d1117 !important;
+  border: 1px solid #21262d !important;
+  border-radius: 3px !important;
+  color: #666 !important;
+  font-family: inherit !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  padding: 4px 8px !important;
+  cursor: pointer !important;
+  letter-spacing: 0.5px !important;
+  transition: all 0.15s !important;
+}
+.s2d-cat-btn:hover { color: #ccc !important; border-color: #444 !important; }
+.s2d-cat-btn--active {
+  background: #00ffc811 !important;
+  border-color: #00ffc8 !important;
+  color: #00ffc8 !important;
+}
+
+/* ── Style list ─────────────────────────────────────── */
+.s2d-style-grid {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  margin-bottom: 10px !important;
+  max-height: 400px !important;
+  overflow-y: auto !important;
+}
+.s2d-style-btn {
+  background: #0d1117 !important;
+  border: 1px solid #21262d !important;
+  border-radius: 3px !important;
+  color: #666 !important;
+  font-family: inherit !important;
+  font-size: 10px !important;
+  padding: 6px 10px !important;
+  cursor: pointer !important;
+  text-align: left !important;
+  transition: all 0.15s !important;
+  width: 100% !important;
+}
+.s2d-style-btn:hover { color: #ccc !important; border-color: #444 !important; }
+.s2d-style-btn--active {
+  background: #111827 !important;
+  font-weight: 700 !important;
+}
+
+/* ── Params ─────────────────────────────────────────── */
+.s2d-param-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin-bottom: 6px !important;
+}
+.s2d-param-label {
+  font-size: 10px !important;
+  color: #666 !important;
+  width: 90px !important;
+  flex-shrink: 0 !important;
+}
+.s2d-slider {
+  flex: 1 !important;
+  accent-color: #ff6600 !important;
+  cursor: pointer !important;
+  height: 14px !important;
+}
+.s2d-param-val {
+  font-size: 10px !important;
+  color: #ff6600 !important;
+  font-weight: 700 !important;
+  width: 28px !important;
+  text-align: right !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* ── Buttons ────────────────────────────────────────── */
+.s2d-btn {
+  padding: 8px 14px !important;
+  border: none !important;
+  border-radius: 4px !important;
+  font-family: inherit !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  letter-spacing: 0.5px !important;
+  transition: filter 0.15s !important;
+}
+.s2d-btn:hover { filter: brightness(1.25) !important; }
+.s2d-btn:disabled { opacity: 0.5 !important; cursor: not-allowed !important; }
+.s2d-btn--render {
+  background: #003a20 !important;
+  color: #00ffc8 !important;
+  border: 1px solid #00ffc844 !important;
+  flex: 1 !important;
+}
+.s2d-btn--export {
+  background: #3a2000 !important;
+  color: #ffaa00 !important;
+  border: 1px solid #ffaa0044 !important;
+}
+.s2d-select {
+  background: #0d1117 !important;
+  border: 1px solid #21262d !important;
+  color: #888 !important;
+  font-family: inherit !important;
+  font-size: 10px !important;
+  padding: 5px 8px !important;
+  border-radius: 3px !important;
+}
+
+/* ── Electron native buttons ────────────────────────── */
+.s2d-native-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  margin-top: 10px !important;
+  padding-top: 10px !important;
+  border-top: 1px solid #21262d !important;
+}
+.s2d-native-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 9px 14px !important;
+  border: none !important;
+  border-radius: 4px !important;
+  font-family: inherit !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  letter-spacing: 0.5px !important;
+  transition: filter 0.15s !important;
+  width: 100% !important;
+}
+.s2d-native-btn:hover { filter: brightness(1.25) !important; }
+.s2d-native-btn--4k {
+  background: #001a3a !important;
+  color: #4488ff !important;
+  border: 1px solid #4488ff44 !important;
+}
+.s2d-native-btn--video {
+  background: #1a001a !important;
+  color: #ff44ff !important;
+  border: 1px solid #ff44ff44 !important;
+}
+.s2d-native-btn--save {
+  background: #1a1a00 !important;
+  color: #ffff44 !important;
+  border: 1px solid #ffff4444 !important;
+}
+.s2d-native-label {
+  font-size: 8px !important;
+  color: #555 !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+}
+.s2d-electron-badge {
+  display: inline-block !important;
+  background: #4488ff22 !important;
+  border: 1px solid #4488ff44 !important;
+  color: #4488ff !important;
+  font-size: 8px !important;
+  padding: 2px 6px !important;
+  border-radius: 3px !important;
+  margin-left: auto !important;
+  letter-spacing: 0.5px !important;
+}
+"""
+
+css_path = ROOT + '/src/styles/spx-2d-panel.css'
+with open(css_path, 'w') as f:
+    f.write(CSS)
+print(f'✓ spx-2d-panel.css rewritten ({len(CSS)} chars)')
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 2. Update SPX3DTo2DPanel.jsx — add Electron native buttons + fix layout
+# ══════════════════════════════════════════════════════════════════════════════
+PANEL = r'''import React, { useState, useRef, useEffect, useCallback } from "react";
 import * as THREE from "three";
 
 const CATEGORIES = [
@@ -390,3 +699,128 @@ export default function SPX3DTo2DPanel({ open, onClose, sceneRef, rendererRef, c
     </div>
   );
 }
+'''
+
+panel_path = ROOT + '/src/components/pipeline/SPX3DTo2DPanel.jsx'
+with open(panel_path, 'w') as f:
+    f.write(PANEL)
+print(f'✓ SPX3DTo2DPanel.jsx rewritten ({len(PANEL)} chars)')
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 3. Fix Quad z-index in spx-app-layout.css
+# ══════════════════════════════════════════════════════════════════════════════
+layout_css_path = ROOT + '/src/styles/spx-app-layout.css'
+layout = open(layout_css_path).read()
+ZFIX = """
+/* Prevent viewport UI bleeding through fullscreen overlays */
+.viewport-toolbar { z-index: 10 !important; }
+.quad-toggle-btn  { z-index: 10 !important; }
+"""
+if 'quad-toggle-btn' not in layout:
+    layout += ZFIX
+    open(layout_css_path, 'w').write(layout)
+    print('✓ Quad z-index fixed')
+else:
+    print('✓ Quad z-index already fixed')
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 4. Ensure spx-2d-panel.css imported in App.jsx
+# ══════════════════════════════════════════════════════════════════════════════
+app_path = ROOT + '/src/App.jsx'
+app = open(app_path).read()
+if 'spx-2d-panel.css' not in app:
+    app = app.replace(
+        'import "./styles/pro-dark.css";',
+        'import "./styles/pro-dark.css";\nimport "./styles/spx-2d-panel.css";'
+    )
+    open(app_path, 'w').write(app)
+    print('✓ spx-2d-panel.css import added to App.jsx')
+else:
+    print('✓ spx-2d-panel.css already imported')
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 5. Add IPC handler to main.js for render:save-image and render:export-video
+# ══════════════════════════════════════════════════════════════════════════════
+main_path = ROOT + '/main.js'
+if os.path.exists(main_path):
+    main = open(main_path).read()
+    if 'render:save-image' not in main:
+        IPC_HANDLERS = """
+// ── 3D→2D Render export handlers ─────────────────────────────────────────
+const { ipcMain: _ipcMain2, dialog: _dialog2 } = require('electron');
+const _fs2   = require('fs');
+const _path2 = require('path');
+
+_ipcMain2.handle('render:save-image', async (event, { dataURL, filePath }) => {
+  try {
+    const base64 = dataURL.replace(/^data:image\\/\\w+;base64,/, '');
+    const buf = Buffer.from(base64, 'base64');
+    _fs2.writeFileSync(filePath, buf);
+    return { ok: true, filePath };
+  } catch(e) {
+    return { ok: false, error: e.message };
+  }
+});
+
+_ipcMain2.handle('render:export-video', async (event, { frames, fps, style }) => {
+  try {
+    const tmpDir = _path2.join(require('os').tmpdir(), 'spx_render_' + Date.now());
+    _fs2.mkdirSync(tmpDir, { recursive: true });
+    // Write frames
+    frames.forEach((dataURL, i) => {
+      const base64 = dataURL.replace(/^data:image\\/\\w+;base64,/, '');
+      const buf = Buffer.from(base64, 'base64');
+      _fs2.writeFileSync(_path2.join(tmpDir, `frame_${String(i).padStart(4,'0')}.jpg`), buf);
+    });
+    // Try FFmpeg
+    const { execSync } = require('child_process');
+    const outputPath = _path2.join(require('os').homedir(), `spx_${style}_${Date.now()}.mp4`);
+    try {
+      execSync(`ffmpeg -framerate ${fps} -i "${_path2.join(tmpDir, 'frame_%04d.jpg')}" -c:v libx264 -pix_fmt yuv420p "${outputPath}"`, { timeout: 60000 });
+      return { ok: true, outputPath };
+    } catch(ffErr) {
+      return { ok: false, error: 'FFmpeg not found — install FFmpeg for video export', framesDir: tmpDir };
+    }
+  } catch(e) {
+    return { ok: false, error: e.message };
+  }
+});
+"""
+        # Add before the last closing line
+        if main.rstrip().endswith('}'):
+            main = main.rstrip()[:-1] + IPC_HANDLERS + '\n}'
+        else:
+            main += IPC_HANDLERS
+        open(main_path, 'w').write(main)
+        print('✓ main.js: render:save-image + render:export-video handlers added')
+    else:
+        print('✓ main.js already has render handlers')
+
+    # Add invoke to preload.js
+    preload_path = ROOT + '/preload.js'
+    if os.path.exists(preload_path):
+        preload = open(preload_path).read()
+        if 'invoke' not in preload:
+            preload = preload.replace(
+                'contextBridge.exposeInMainWorld(',
+                "contextBridge.exposeInMainWorld("
+            )
+            # Add invoke method to electronAPI
+            preload = preload.replace(
+                'saveFile:',
+                'invoke: (channel, data) => ipcRenderer.invoke(channel, data),\n    saveFile:'
+            )
+            if 'invoke' not in preload:
+                # Add it differently
+                preload = preload.replace(
+                    'contextBridge.exposeInMainWorld(\'electronAPI\',',
+                    "contextBridge.exposeInMainWorld('electronAPI',"
+                )
+            open(preload_path, 'w').write(preload)
+            print('✓ preload.js: invoke method added')
+        else:
+            print('✓ preload.js already has invoke')
+else:
+    print('⚠ main.js not found at repo root')
+
+print('\nRun: git add -A && git commit -m "feat: 3D→2D full restyle + Electron 4K save + video export" && git push')

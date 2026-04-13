@@ -237,3 +237,43 @@ app.on('window-all-closed', () => {
 app.on('quit', () => {
   if (pythonProcess) pythonProcess.kill();
 });
+
+// ── 3D→2D Render export handlers ─────────────────────────────────────────
+const { ipcMain: _ipcMain2, dialog: _dialog2 } = require('electron');
+const _fs2   = require('fs');
+const _path2 = require('path');
+
+_ipcMain2.handle('render:save-image', async (event, { dataURL, filePath }) => {
+  try {
+    const base64 = dataURL.replace(/^data:image\/\w+;base64,/, '');
+    const buf = Buffer.from(base64, 'base64');
+    _fs2.writeFileSync(filePath, buf);
+    return { ok: true, filePath };
+  } catch(e) {
+    return { ok: false, error: e.message };
+  }
+});
+
+_ipcMain2.handle('render:export-video', async (event, { frames, fps, style }) => {
+  try {
+    const tmpDir = _path2.join(require('os').tmpdir(), 'spx_render_' + Date.now());
+    _fs2.mkdirSync(tmpDir, { recursive: true });
+    // Write frames
+    frames.forEach((dataURL, i) => {
+      const base64 = dataURL.replace(/^data:image\/\w+;base64,/, '');
+      const buf = Buffer.from(base64, 'base64');
+      _fs2.writeFileSync(_path2.join(tmpDir, `frame_${String(i).padStart(4,'0')}.jpg`), buf);
+    });
+    // Try FFmpeg
+    const { execSync } = require('child_process');
+    const outputPath = _path2.join(require('os').homedir(), `spx_${style}_${Date.now()}.mp4`);
+    try {
+      execSync(`ffmpeg -framerate ${fps} -i "${_path2.join(tmpDir, 'frame_%04d.jpg')}" -c:v libx264 -pix_fmt yuv420p "${outputPath}"`, { timeout: 60000 });
+      return { ok: true, outputPath };
+    } catch(ffErr) {
+      return { ok: false, error: 'FFmpeg not found — install FFmpeg for video export', framesDir: tmpDir };
+    }
+  } catch(e) {
+    return { ok: false, error: e.message };
+  }
+});
