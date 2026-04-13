@@ -4158,6 +4158,12 @@ export default function App() {
       {clothSimOpen && <div className="float-panel-right-lg"><ClothSimPanel open={clothSimOpen} onClose={() => setClothSimOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></div>}
       {mocapRetargetOpen && <div className="float-panel-right-lg"><MocapRetargetPanel open={mocapRetargetOpen} onClose={() => setMocapRetargetOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></div>}
       {filmPostOpen && <div className="float-panel-right-xl"><FilmPostPanel open={filmPostOpen} onClose={() => setFilmPostOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} setStatus={setStatus} /></div>}
+            {hairAdvancedOpen && <FloatPanel title="HAIR ADVANCED" onClose={() => setHairAdvancedOpen(false)} width={420}><HairAdvancedPanel open={hairAdvancedOpen} onClose={() => setHairAdvancedOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></FloatPanel>}
+      {hairFXOpen && <FloatPanel title="HAIR FX" onClose={() => setHairFXOpen(false)} width={420}><HairFXPanel open={hairFXOpen} onClose={() => setHairFXOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></FloatPanel>}
+      {displacementOpen && <FloatPanel title="DISPLACEMENT" onClose={() => setDisplacementOpen(false)} width={400}><DisplacementPanel open={displacementOpen} onClose={() => setDisplacementOpen(false)} meshRef={meshRef} setStatus={setStatus} /></FloatPanel>}
+      {clothSimOpen && <FloatPanel title="CLOTH SIM" onClose={() => setClothSimOpen(false)} width={400}><ClothSimPanel open={clothSimOpen} onClose={() => setClothSimOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></FloatPanel>}
+      {mocapRetargetOpen && <FloatPanel title="MOCAP RETARGET" onClose={() => setMocapRetargetOpen(false)} width={440}><MocapRetargetPanel open={mocapRetargetOpen} onClose={() => setMocapRetargetOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></FloatPanel>}
+      {filmPostOpen && <FloatPanel title="POST FX" onClose={() => setFilmPostOpen(false)} width={440}><FilmPostPanel open={filmPostOpen} onClose={() => setFilmPostOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} setStatus={setStatus} /></FloatPanel>}
       {showPerformancePanel && (<div className="spx-perf-overlay"><div className="spx-perf-overlay-header"><span>PERFORMANCE</span><button onClick={()=>setShowPerformancePanel(false)} className="spx-overlay-close">✕</button></div><SPXPerformancePanel sceneObjects={sceneObjects} activeObjId={activeObjId} /></div>)}
       <UVEditorPanel
         open={uvPanelOpen}
@@ -4168,14 +4174,14 @@ export default function App() {
 
       {paintPanelOpen && <FloatPanel title="TEXTURE PAINT" onClose={() => setPaintPanelOpen(false)} width={420}><TexturePaintPanel open={paintPanelOpen} onClose={() => setPaintPanelOpen(false)} meshRef={meshRef} /></FloatPanel>}
 
-      {clothingPanelOpen && <FloatPanel title="CLOTHING" onClose={() => setClothingPanelOpen(false)} width={400}>{clothingPanelOpen && <FloatPanel title="CLOTHING" onClose={() => setClothingPanelOpen(false)} width={400}><ClothingPanel open={clothingPanelOpen} onClose={() => setClothingPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></FloatPanel>}</FloatPanel>}
-      {fabricPanelOpen && <FabricPanel
+      {clothingPanelOpen && <FloatPanel title="CLOTHING" onClose={() => setClothingPanelOpen(false)} width={400}><ClothingPanel open={clothingPanelOpen} onClose={() => setClothingPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></FloatPanel>}
+      {fabricPanelOpen && <FloatPanel title="FABRIC" onClose={() => setFabricPanelOpen(false)} width={420}><FabricPanel
         open={fabricPanelOpen}
         onClose={() => setFabricPanelOpen(false)}
         clothStateRef={sceneRef}
         setStatus={setStatus}
         panels={[]}
-      />}
+      />}</FloatPanel>}
 
       {patternPanelOpen && <FloatPanel title="PATTERN EDITOR" onClose={() => setPatternPanelOpen(false)} width={400}><PatternEditorPanel open={patternPanelOpen} onClose={() => setPatternPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></FloatPanel>}
 
