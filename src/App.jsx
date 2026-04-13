@@ -4459,33 +4459,21 @@ export default function App() {
 
       {/* ══ WORLD / GENERATOR PANELS (full-screen overlays with own viewport) ══ */}
       {envGenOpen && (
-        <div className="spx-fullscreen-overlay">
-          <div className="spx-overlay-header">
-            <span className="spx-overlay-title">🌲 ENVIRONMENT GENERATOR</span>
-            <button onClick={() => setEnvGenOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
-          </div>
-          <div className="spx-overlay-body"><EnvironmentGenerator open={envGenOpen} onClose={()=>setEnvGenOpen(false)} /></div>
-        </div>
+        <FloatPanel title="ENVIRONMENT" onClose={()=>setEnvGenOpen(false)} width={340}>
+          <EnvironmentGenerator open={envGenOpen} onClose={()=>setEnvGenOpen(false)} />
+        </FloatPanel>
       )}
       {cityGenOpen && (
-        <div className="spx-fullscreen-overlay">
-          <div className="spx-overlay-header">
-            <span className="spx-overlay-title">🏙️ CITY GENERATOR</span>
-            <button onClick={() => setCityGenOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
-          </div>
-          <div className="spx-overlay-body"><CityGenerator open={cityGenOpen} onClose={()=>setCityGenOpen(false)} /></div>
-        </div>
+        <FloatPanel title="CITY GENERATOR" onClose={()=>setCityGenOpen(false)} width={340}>
+          <CityGenerator open={cityGenOpen} onClose={()=>setCityGenOpen(false)} />
+        </FloatPanel>
       )}
       {buildingOpen && <FloatPanel title="BUILDING SIMULATOR" onClose={() => setBuildingOpen(false)} width={480}><BuildingSimulator open={buildingOpen} onClose={()=>setBuildingOpen(false)} /></FloatPanel>}
       {crowdGenOpen && <FloatPanel title="CROWD GENERATOR" onClose={() => setCrowdGenOpen(false)} width={480}><ProceduralCrowdGenerator open={crowdGenOpen} onClose={()=>setCrowdGenOpen(false)} /></FloatPanel>}
       {terrainOpen && (
-        <div className="spx-fullscreen-overlay">
-          <div className="spx-overlay-header">
-            <span className="spx-overlay-title">🏔️ TERRAIN SCULPTING</span>
-            <button onClick={() => setTerrainOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
-          </div>
-          <div className="spx-overlay-body"><TerrainSculpting open={terrainOpen} onClose={()=>setTerrainOpen(false)} /></div>
-        </div>
+        <FloatPanel title="TERRAIN SCULPT" onClose={()=>setTerrainOpen(false)} width={340}>
+          <TerrainSculpting open={terrainOpen} onClose={()=>setTerrainOpen(false)} />
+        </FloatPanel>
       )}
       {/* ProMesh renders via FloatPanel above */}
       {physicsOpen && <FloatPanel title="PHYSICS SIMULATION" onClose={() => setPhysicsOpen(false)} width={520}>
