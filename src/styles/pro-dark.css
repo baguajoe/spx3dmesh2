@@ -1559,3 +1559,30 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 1px s
 .spx-perf-btn--play { background: #003a20 !important; color: #00ffc8 !important; border-color: #00ffc844 !important; }
 .spx-perf-btn--stop { background: #2a0000 !important; color: #ff4444 !important; border-color: #ff444444 !important; }
 .spx-perf-btn--active { background: #00ffc822 !important; border-color: #00ffc8 !important; color: #00ffc8 !important; }
+
+
+/* ── Node Material Editor fullscreen ── */
+.nme-overlay {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #0d1117 !important;
+  overflow: hidden !important;
+  top: auto !important; left: auto !important;
+  right: auto !important; bottom: auto !important;
+  transform: none !important;
+  max-width: none !important;
+  max-height: none !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.nme-svg {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}

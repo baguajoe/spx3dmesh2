@@ -173,7 +173,6 @@ export default function UVEditorPanel({ open = false, onClose }) {
   if (!open) return null;
 
   return (
-    <FloatPanel title="UV EDITOR" onClose={onClose} width={520}>
       <div className="uv-panel" style={{paddingTop:0}}>
         <div className="uv-panel-header" style={{display:"none"}}>
           <div>
@@ -268,6 +267,5 @@ export default function UVEditorPanel({ open = false, onClose }) {
           snapEnabled={snapEnabled}
         />
       </div>
-    </FloatPanel>
   );
 }

@@ -90,3 +90,80 @@
   color: var(--orange);
   font-size: 9px;
 }
+
+
+/* ── UV Editor fullscreen fixes ── */
+.uv-panel {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #0d1117 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.uv-stats {
+  background: #0a0d13 !important;
+  border-bottom: 1px solid #21262d !important;
+  padding: 4px 10px !important;
+  font-size: 10px !important;
+  color: #666 !important;
+  flex-shrink: 0 !important;
+}
+
+.uv-toolbar {
+  background: #0a0d13 !important;
+  border-bottom: 1px solid #21262d !important;
+  padding: 4px 8px !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 4px !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+}
+
+.uv-btn {
+  background: #0d1117 !important;
+  border: 1px solid #21262d !important;
+  border-radius: 3px !important;
+  color: #888 !important;
+  font-size: 10px !important;
+  padding: 3px 8px !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+  transition: all 0.15s !important;
+}
+.uv-btn:hover { border-color: #00ffc8 !important; color: #00ffc8 !important; }
+
+.uv-input {
+  background: #060a10 !important;
+  border: 1px solid #21262d !important;
+  border-radius: 3px !important;
+  color: #ccc !important;
+  font-size: 10px !important;
+  padding: 3px 6px !important;
+  width: 40px !important;
+  font-family: inherit !important;
+}
+
+.uv-canvas-wrap {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+canvas.uv-canvas, .uv-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+.uv-toolbar select {
+  background: #060a10 !important;
+  border: 1px solid #21262d !important;
+  color: #888 !important;
+  font-size: 10px !important;
+  padding: 3px 6px !important;
+  border-radius: 3px !important;
+}

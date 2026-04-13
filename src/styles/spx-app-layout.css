@@ -659,3 +659,13 @@
   flex-direction: column !important;
   flex: 1 !important;
 }
+
+/* Mesh Script viewport — brighter to show grid */
+.spx-split-layout .spx-split-viewport,
+.live-viewport-mirror {
+  background: #0d1117 !important;
+}
+.live-viewport-mirror canvas {
+  opacity: 1 !important;
+  filter: brightness(1.4) contrast(1.1) !important;
+}
