@@ -4,7 +4,7 @@
   --mw-teal: #00ffc8; --mw-orange: #FF6600; --mw-text: #e0e0e0;
   --mw-muted: #6b7280; --mw-danger: #ef4444;
 }
-.mw-float { position:fixed;inset:0;top:82px;z-index:9000;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);display:flex;align-items:stretch;justify-content:stretch;padding:20px; }
+.mw-float { position:fixed;inset:0;top:0;z-index:9000;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);display:flex;align-items:stretch;justify-content:stretch;padding:20px; }
 .mw-panel { background:var(--mw-bg);border:1px solid var(--mw-border);border-radius:16px;width:100%;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,255,200,0.07); }
 .mw-header { display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--mw-border);background:var(--mw-panel);flex-shrink:0; }
 .mw-header-left { display:flex;align-items:center;gap:10px;margin-right:auto; }

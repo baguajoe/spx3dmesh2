@@ -14,10 +14,12 @@ import MaterialTexturePanel from './components/panels/MaterialTexturePanel';
 import { ViewportHeader } from "./components/ViewportHeader";
 import { PropertyInspector } from "./components/PropertyInspector";
 import { Outliner } from "./components/Outliner";
-import React, { useRef, useEffect, useState, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import Draggable from 'react-draggable'; // (SPX: Draggable Window System)
 
 import SPXPerformancePanel from "./components/SPXPerformancePanel.jsx";import * as THREE from "three";
 import FloatPanel from "./components/ui/FloatPanel.jsx";
+import TabPanelManager from "./components/TabPanelManager.jsx";
 import { initFilmComposer, createProceduralHDRI, upgradeMaterialsToPhysical } from "./mesh/FilmRenderer.js";
 import FilmPostPanel from "./components/panels/FilmPostPanel.jsx";
 import FilmAssetLibrary from "./components/panels/FilmAssetLibrary.jsx";
@@ -288,7 +290,7 @@ function SpxTabGroup({ label, color, tabs }) {
     <div ref={ref} className="spx-tab-group">
       <button className='spx-native-workspace-tab'
         onClick={(e) => { e.stopPropagation(); setOpen(o => o ? false : true); }}
-        className="spx-native-workspace-tab" style={{borderBottom:open?'2px solid '+color:'2px solid transparent'}}>
+        style={{borderBottom:open?'2px solid '+color:'2px solid transparent'}}>
         <span className='spx-native-workspace-tab-label' style={{color:open?color:undefined}}>{label}</span>
         <span className="spx-tab-arrow" style={{color:open?color:undefined}}>{open?'▲':'▼'}</span>
       </button>
@@ -307,8 +309,21 @@ function SpxTabGroup({ label, color, tabs }) {
     </div>
   );
 }
-
 export default function App() {
+  const closeAllWindows = () => {
+    const setters = [
+      setHairPanelOpen, setHairAdvancedOpen, setHairFXOpen, setCollaboratePanelOpen,
+      setAutoRigOpen, setAdvancedRigOpen, setLightingCameraPanelOpen, setFluidPanelOpen,
+      setDestructionPanelOpen, setGreasePencilPanelOpen, setPatternPanelOpen, 
+      setClothingPanelOpen, setMuscleOpen, setGroomOpen, setCompositorOpen,
+      setMeshScriptOpen, setAnimGraphOpen, setGamepadOpen, setProMeshOpen,
+      setAssetLibOpen, setWeatherPanelOpen, setUvPanelOpen, setMaterialPanelOpen, setPaintPanelOpen
+    ];
+    setters.forEach(s => s?.(false));
+  };
+
+
+
   // --- AUTO-SAVE LOGIC ---
   useEffect(() => {
     const timer = setInterval(() => {
@@ -491,7 +506,6 @@ export default function App() {
     else if (toolId === "physics_sim")  setPhysicsOpen?.(true);
     else if (toolId === "asset_lib")    setAssetLibOpen?.(true);
     else if (toolId === "node_mod")     setNodeModOpen?.(true);
-    else if (toolId === "vr_preview")   setVrPreviewOpen?.(true);
     else if (toolId === "crowd_gen")    setCrowdGenOpen?.(true);
     else if (toolId === "terrain")      setTerrainOpen?.(true);
     else if (toolId === "hair_adv") setHairAdvancedOpen?.(true);
@@ -606,7 +620,6 @@ export default function App() {
   const [physicsOpen,    setPhysicsOpen]    = useState(false);
   const [assetLibOpen,   setAssetLibOpen]   = useState(false);
   const [nodeModOpen,    setNodeModOpen]    = useState(false);
-  const [vrPreviewOpen,  setVrPreviewOpen]  = useState(false);
   const [crowdGenOpen,   setCrowdGenOpen]   = useState(false);
   const [terrainOpen,    setTerrainOpen]    = useState(false);
 
@@ -740,7 +753,6 @@ export default function App() {
     setPhysicsOpen(false);
     setAssetLibOpen(false);
     setNodeModOpen(false);
-    setVrPreviewOpen(false);
     setCrowdGenOpen(false);
     setTerrainOpen(false);
     setFaceGenOpen(false);
@@ -758,9 +770,28 @@ export default function App() {
     setCinLightOpen(false);
     setFilmVolOpen(false);
     setDisplacementOpen(false);
-    setMocapRetargetOpen(false);
     setNodeEditorOpen(false);
     setCompositorOpen(false);
+    setStyle3DTo2DOpen(false);
+    setFilmCameraOpen(false);
+    setFilmPostOpen(false);
+    setFilmPTOpen(false);
+    setRenderFarmOpen(false);
+    setClothSimOpen(false);
+    setFluidPanelOpen(false);
+    setWeatherPanelOpen(false);
+    setDestructionPanelOpen(false);
+    setPhysicsOpen(false);
+    setEnvGenOpen(false);
+    setCityGenOpen(false);
+    setBuildingOpen(false);
+    setAssetLibOpen(false);
+    setNodeModOpen(false);
+    setCrowdGenOpen(false);
+    setTerrainOpen(false);
+    setProMeshOpen(false);
+    setCustomSkinPanelOpen(false);
+    setShowPerformancePanel(false);
   };
 
   const quadCamerasRef = useRef(null);
@@ -3625,7 +3656,6 @@ export default function App() {
     if (fn === "open_physics_sim")  { setPhysicsOpen(true); return; }
     if (fn === "open_asset_lib")    { setAssetLibOpen(true); return; }
     if (fn === "open_node_mod")     { setNodeModOpen(true); return; }
-    if (fn === "open_vr_preview")   { setVrPreviewOpen(true); return; }
     if (fn === "open_crowd_gen")    { setCrowdGenOpen(true); return; }
     if (fn === "open_terrain")      { setTerrainOpen(true); return; }
     if (fn === "fluid_pyro")          { if(typeof window.createPyroEmitter==="function"){window.createPyroEmitter(meshRef.current?.position||{x:0,y:0,z:0});setStatus("Pyro emitter created");} return; }
@@ -3836,6 +3866,7 @@ export default function App() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
+    <>
     <ProfessionalShell
       activeWorkspace={activeWorkspace}
       setActiveWorkspace={setActiveWorkspace}
@@ -4154,25 +4185,6 @@ export default function App() {
               />
             )}
           </div>
-            {clothSimOpen && <div className="float-panel-right-lg"><ClothSimPanel open={clothSimOpen} onClose={() => setClothSimOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></div>}
-      {mocapRetargetOpen && <div className="float-panel-right-lg"><MocapRetargetPanel open={mocapRetargetOpen} onClose={() => setMocapRetargetOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></div>}
-      {filmPostOpen && <div className="float-panel-right-xl"><FilmPostPanel open={filmPostOpen} onClose={() => setFilmPostOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} setStatus={setStatus} /></div>}
-                        {displacementOpen && <FloatPanel title="DISPLACEMENT" onClose={() => setDisplacementOpen(false)} width={400}><DisplacementPanel open={displacementOpen} onClose={() => setDisplacementOpen(false)} meshRef={meshRef} setStatus={setStatus} /></FloatPanel>}
-                        {showPerformancePanel && (<div className="spx-perf-overlay"><div className="spx-perf-overlay-header"><span>PERFORMANCE</span><button onClick={()=>setShowPerformancePanel(false)} className="spx-overlay-close">✕</button></div><SPXPerformancePanel sceneObjects={sceneObjects} activeObjId={activeObjId} /></div>)}
-      <UVEditorPanel
-        open={uvPanelOpen}
-        onClose={() => setUvPanelOpen(false)}
-      />
-
-      
-      
-            {fabricPanelOpen && <FloatPanel title="FABRIC" onClose={() => setFabricPanelOpen(false)} width={420}><FabricPanel
-        open={fabricPanelOpen}
-        onClose={() => setFabricPanelOpen(false)}
-        clothStateRef={sceneRef}
-        setStatus={setStatus}
-        panels={[]}
-      /></FloatPanel>}
 
       
       
@@ -4207,7 +4219,7 @@ export default function App() {
         <SpxTabGroup label="RIG" color="#ff88ff" tabs={[
           {label:"Rigging",    fn:()=>{ closeAllWorkspacePanels(); setAutoRigOpen(true); }},
           {label:"MoCap",      fn:()=>openWorkspaceTool("mocap")},
-          {label:"Retarget",   fn:()=>{ closeAllWorkspacePanels(); setMocapRetargetOpen(true); }},
+          {label:"Retarget",   fn:()=>{ closeAllWorkspacePanels(); setMocapWorkspaceOpen(true); }},
           {label:"Gamepad",    fn:()=>openWorkspaceTool("gamepad")},
         ]}/>
         <SpxTabGroup label="RENDER" color="#ffdd44" tabs={[
@@ -4239,12 +4251,37 @@ export default function App() {
           {label:"3D→2D",      fn:()=>openWorkspaceTool("3d_to_2d")},
           {label:"Anim Graph", fn:()=>{ closeAllWorkspacePanels(); setAnimGraphOpen(true); }},
           {label:"Mesh Script",fn:()=>{ closeAllWorkspacePanels(); setMeshScriptOpen(true); }},
-          {label:"Multi MoCap",fn:()=>{ closeAllWorkspacePanels(); setMultiMocapOpen(true); }},
+          {label:"Multi MoCap",fn:()=>{ closeAllWorkspacePanels(); setMocapWorkspaceOpen(true); }},
         ]}/>
         <button type="button" className="spx-native-workspace-tab spx-native-workspace-tab--right" onClick={()=>setShowPerformancePanel(v=>!v)}>
           <span className="spx-native-workspace-tab-label">Performance</span>
         </button>
+
       </div>
+        </div>
+      }
+      bottomPanel={
+        <AnimationTimeline
+          currentFrame={currentFrame}
+          setCurrentFrame={setCurrentFrame}
+          isPlaying={isPlaying}
+          setIsPlaying={setIsPlaying}
+          isAutoKey={isAutoKey}
+          setAutoKey={setAutoKey}
+          videoStartFrame={videoStartFrame}
+          videoEndFrame={videoEndFrame}
+          setVideoStartFrame={setVideoStartFrame}
+          setVideoEndFrame={setVideoEndFrame}
+          videoFps={videoFps}
+          setVideoFps={setVideoFps}
+          sceneObjects={sceneObjects}
+          animKeys={animKeys}
+          onAddKeyframe={() => handleApplyFunction("add_keyframe")}
+        />
+      }
+    />
+    <>
+
 
 
 
@@ -4255,17 +4292,28 @@ export default function App() {
         onApply={(params) => { setCustomSkin(params); if(meshRef.current && typeof buildCustomSkin==='function'){ buildCustomSkin(meshRef.current, params); setStatus('Custom skin applied'); } }}
         onDownload={(params) => { setCustomSkin(params); if(typeof generateFullSkinTextures==='function'){ const t=generateFullSkinTextures({size:params.textureSize,poreScale:params.poreScale,wrinkleStrength:params.wrinkleStrength,age:params.age,region:params.region}); ['color','roughness','normal','ao'].forEach(k=>{const a=document.createElement('a');a.href=t[k].toDataURL('image/png');a.download='spx_custom_'+k+'.png';a.click();}); setStatus('Custom textures downloaded'); }}}
       />
-      <NodeCompositorPanel
-        open={compositorOpen}
-        onClose={() => setCompositorOpen(false)}
-      />
-      <SPX3DTo2DPanel
-        open={style3DTo2DOpen}
-        onClose={() => setStyle3DTo2DOpen(false)}
-        sceneRef={sceneRef}
-        rendererRef={rendererRef}
-        cameraRef={cameraRef}
-      />
+      {compositorOpen && (
+        <div className="spx-fullscreen-overlay">
+          <div className="spx-overlay-header">
+            <span className="spx-overlay-title">🎬 NODE COMPOSITOR</span>
+            <button onClick={() => setCompositorOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
+          </div>
+          <div className="spx-overlay-body">
+            <NodeCompositorPanel open={compositorOpen} onClose={() => setCompositorOpen(false)} />
+          </div>
+        </div>
+      )}
+      {style3DTo2DOpen && (
+        <div className="spx-fullscreen-overlay">
+          <div className="spx-overlay-header">
+            <span className="spx-overlay-title">🎨 3D → 2D STYLE</span>
+            <button onClick={() => setStyle3DTo2DOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
+          </div>
+          <div className="spx-overlay-body">
+            <SPX3DTo2DPanel open={style3DTo2DOpen} onClose={() => setStyle3DTo2DOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} cameraRef={cameraRef} />
+          </div>
+        </div>
+      )}
       <AutoRigPanel
         open={autoRigOpen}
         onClose={() => setAutoRigOpen(false)}
@@ -4327,12 +4375,12 @@ export default function App() {
       )}
 
       {/* Lighting & Camera Panel */}
-      {filmCameraOpen && (<div className="spx-float-film spx-float-film--left"><FilmCameraPanel cameraRef={cameraRef} rendererRef={rendererRef} sceneRef={sceneRef} open={filmCameraOpen} onClose={()=>setFilmCameraOpen(false)}/></div>)}
-      {filmVolOpen && (<div className="spx-float-film spx-float-film--left2"><FilmVolumetricsPanel sceneRef={sceneRef} open={filmVolOpen} onClose={()=>setFilmVolOpen(false)}/></div>)}
-      {filmPTOpen && (<div className="spx-float-film spx-float-film--left3"><FilmPathTracerPanel rendererRef={rendererRef} sceneRef={sceneRef} cameraRef={cameraRef} open={filmPTOpen} onClose={()=>setFilmPTOpen(false)}/></div>)}
-      {cinLightOpen && (<div className="spx-float-film spx-float-film--right"><CinematicLightingPanel sceneRef={sceneRef} open={cinLightOpen} onClose={()=>setCinLightOpen(false)}/></div>)}
+      {filmCameraOpen && <FloatPanel title="FILM CAMERA" onClose={()=>setFilmCameraOpen(false)} width={420}><FilmCameraPanel cameraRef={cameraRef} rendererRef={rendererRef} sceneRef={sceneRef} open={filmCameraOpen} onClose={()=>setFilmCameraOpen(false)}/></FloatPanel>}
+      {filmVolOpen && <FloatPanel title="VOLUMETRICS" onClose={()=>setFilmVolOpen(false)} width={420}><FilmVolumetricsPanel sceneRef={sceneRef} open={filmVolOpen} onClose={()=>setFilmVolOpen(false)}/></FloatPanel>}
+      {filmPTOpen && <FloatPanel title="PATH TRACER" onClose={()=>setFilmPTOpen(false)} width={420}><FilmPathTracerPanel rendererRef={rendererRef} sceneRef={sceneRef} cameraRef={cameraRef} open={filmPTOpen} onClose={()=>setFilmPTOpen(false)}/></FloatPanel>}
+      {cinLightOpen && <FloatPanel title="CINEMATIC LIGHTING" onClose={()=>setCinLightOpen(false)} width={420}><CinematicLightingPanel sceneRef={sceneRef} open={cinLightOpen} onClose={()=>setCinLightOpen(false)}/></FloatPanel>}
       {lightingCameraPanelOpen && (
-        <div className="spx-side-panel spx-side-panel--380">
+        <FloatPanel title="LIGHTING & CAMERA" onClose={() => setLightingCameraPanelOpen(false)} width={380}>
           <LightingCameraPanel
             sceneRef={sceneRef}
             cameraRef={cameraRef}
@@ -4340,48 +4388,65 @@ export default function App() {
             onApplyFunction={handleApplyFunction}
             onClose={() => setLightingCameraPanelOpen(false)}
           />
-        </div>
+        </FloatPanel>
       )}
 
       {/* Collaborate Panel */}
-      {collaboratePanelOpen && (
-        <div className="spx-side-panel spx-side-panel--360">
-          <AnimGraphPanel open={animGraphOpen} onClose={() => setAnimGraphOpen(false)} sceneRef={sceneRef} />
-        <MeshScriptPanel open={meshScriptOpen} onClose={() => setMeshScriptOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
-        <CollaboratePanel
-            sceneObjects={sceneObjects}
-            onClose={() => setCollaboratePanelOpen(false)}
-          />
+      {collaboratePanelOpen && <FloatPanel title="COLLABORATE" onClose={() => setCollaboratePanelOpen(false)} width={360}>
+        <CollaboratePanel sceneObjects={sceneObjects} onClose={() => setCollaboratePanelOpen(false)} />
+      </FloatPanel>}
+      {animGraphOpen && (
+        <div className="spx-fullscreen-overlay">
+          <div className="spx-overlay-header">
+            <span className="spx-overlay-title">🔗 ANIMATION GRAPH</span>
+            <button onClick={() => setAnimGraphOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
+          </div>
+          <div className="spx-overlay-body">
+            <AnimGraphPanel open={animGraphOpen} onClose={() => setAnimGraphOpen(false)} sceneRef={sceneRef} />
+          </div>
         </div>
       )}
+      {meshScriptOpen && <FloatPanel title="MESH SCRIPT" onClose={() => setMeshScriptOpen(false)} width={600}>
+        <MeshScriptPanel open={meshScriptOpen} onClose={() => setMeshScriptOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
+      </FloatPanel>}
 
       {/* SPX Sketch Panel */}
-      {greasePencilPanelOpen && (
-        <div className="spx-side-panel spx-side-panel--320">
-          <GreasePencilPanel
-            onApplyFunction={handleApplyFunction}
-            onClose={() => setGreasePencilPanelOpen(false)}
-          />
-        </div>
-      )}
+      {greasePencilPanelOpen && <FloatPanel title="SPX SKETCH" onClose={() => setGreasePencilPanelOpen(false)} width={320}>
+        <GreasePencilPanel onApplyFunction={handleApplyFunction} onClose={() => setGreasePencilPanelOpen(false)} />
+      </FloatPanel>}
 
       
       {/* ══ VFX PANELS ══ */}
-      {fluidPanelOpen && (
-        <div className="spx-side-panel spx-side-panel--340">
-          <FluidPanel open={fluidPanelOpen} onClose={() => setFluidPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
+      {fluidPanelOpen && <FloatPanel title="FLUID SIMULATION" onClose={() => setFluidPanelOpen(false)} width={400}>
+        <FluidPanel open={fluidPanelOpen} onClose={() => setFluidPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
+      </FloatPanel>}
+      {weatherPanelOpen && <FloatPanel title="ATMOSPHERICS" onClose={() => setWeatherPanelOpen(false)} width={400}>
+        <WeatherPanel open={weatherPanelOpen} onClose={() => setWeatherPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
+      </FloatPanel>}
+      {clothSimOpen && <FloatPanel title="CLOTH SIM" onClose={() => setClothSimOpen(false)} width={420}>
+        <ClothSimPanel open={clothSimOpen} onClose={() => setClothSimOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
+      </FloatPanel>}
+
+      {filmPostOpen && <FloatPanel title="FILM POST FX" onClose={() => setFilmPostOpen(false)} width={480}>
+        <FilmPostPanel open={filmPostOpen} onClose={() => setFilmPostOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} setStatus={setStatus} />
+      </FloatPanel>}
+      {displacementOpen && <FloatPanel title="DISPLACEMENT" onClose={() => setDisplacementOpen(false)} width={400}>
+        <DisplacementPanel open={displacementOpen} onClose={() => setDisplacementOpen(false)} meshRef={meshRef} setStatus={setStatus} />
+      </FloatPanel>}
+      {showPerformancePanel && (
+        <div className="spx-fullscreen-overlay">
+          <div className="spx-overlay-header">
+            <span className="spx-overlay-title">⚡ SPX PERFORMANCE CAPTURE</span>
+            <button onClick={() => setShowPerformancePanel(false)} className="spx-overlay-close">✕ CLOSE</button>
+          </div>
+          <div className="spx-overlay-body">
+            <SPXPerformancePanel sceneObjects={sceneObjects} activeObjId={activeObjId} />
+          </div>
         </div>
       )}
-      {weatherPanelOpen && (
-        <div className="spx-side-panel spx-side-panel--340">
-          <WeatherPanel open={weatherPanelOpen} onClose={() => setWeatherPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
-        </div>
-      )}
-      {destructionPanelOpen && (
-        <div className="spx-side-panel spx-side-panel--360-full">
-          <DestructionPanel open={destructionPanelOpen} onClose={() => setDestructionPanelOpen(false)} sceneRef={sceneRef} meshRef={meshRef} setStatus={setStatus} onApplyFunction={handleApplyFunction} />
-        </div>
-      )}
+      {destructionPanelOpen && <FloatPanel title="DESTRUCTION LAB" onClose={() => setDestructionPanelOpen(false)} width={420}>
+        <DestructionPanel open={destructionPanelOpen} onClose={() => setDestructionPanelOpen(false)} sceneRef={sceneRef} meshRef={meshRef} setStatus={setStatus} onApplyFunction={handleApplyFunction} />
+      </FloatPanel>}
 
       {/* ══ WORLD / GENERATOR PANELS (full-screen overlays with own viewport) ══ */}
       {envGenOpen && (
@@ -4402,120 +4467,33 @@ export default function App() {
           <div className="spx-overlay-body"><CityGenerator /></div>
         </div>
       )}
-      {buildingOpen && (
-        <div className="spx-fullscreen-overlay">
-          <div className="spx-overlay-header">
-            <span className="spx-overlay-title">🏗️ BUILDING SIMULATOR</span>
-            <button onClick={() => setBuildingOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
-          </div>
-          <div className="spx-overlay-body"><BuildingSimulator /></div>
-        </div>
-      )}
-      {physicsOpen && (
-        <div className="spx-fullscreen-overlay">
-          <div className="spx-overlay-header">
-            <span className="spx-overlay-title spx-overlay-title--orange">⚙️ PHYSICS SIMULATION</span>
-            <button onClick={() => setPhysicsOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
-          </div>
-          <div className="spx-overlay-body"><PhysicsSimulation /></div>
-        </div>
-      )}
-      {assetLibOpen && (
-        <div className="spx-fullscreen-overlay">
-          <div className="spx-overlay-header">
-            <span className="spx-overlay-title">📦 ASSET LIBRARY</span>
-            <button onClick={() => setAssetLibOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
-          </div>
-          <div className="spx-overlay-body"><AssetLibraryPanel /></div>
-        </div>
-      )}
-      {nodeModOpen && (
-        <div className="spx-fullscreen-overlay">
-          <div className="spx-overlay-header">
-            <span className="spx-overlay-title">🔗 NODE MODIFIER SYSTEM</span>
-            <button onClick={() => setNodeModOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
-          </div>
-          <div className="spx-overlay-body"><NodeModifierSystem /></div>
-        </div>
-      )}
-      {vrPreviewOpen && (
-        <div className="spx-fullscreen-overlay">
-          <div className="spx-overlay-header">
-            <span className="spx-overlay-title spx-overlay-title--purple">🥽 VR PREVIEW</span>
-            <button onClick={() => setVrPreviewOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
-          </div>
-          <div className="spx-overlay-body"><VRPreviewMode /></div>
-        </div>
-      )}
-      {crowdGenOpen && (
-        <div className="spx-fullscreen-overlay">
-          <div className="spx-overlay-header">
-            <span className="spx-overlay-title">👥 CROWD GENERATOR</span>
-            <button onClick={() => setCrowdGenOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
-          </div>
-          <div className="spx-overlay-body"><ProceduralCrowdGenerator /></div>
-        </div>
-      )}
+      {buildingOpen && <FloatPanel title="BUILDING SIMULATOR" onClose={() => setBuildingOpen(false)} width={480}><BuildingSimulator /></FloatPanel>}
+      {crowdGenOpen && <FloatPanel title="CROWD GENERATOR" onClose={() => setCrowdGenOpen(false)} width={480}><ProceduralCrowdGenerator /></FloatPanel>}
       {terrainOpen && (
         <div className="spx-fullscreen-overlay">
           <div className="spx-overlay-header">
-            <span className="spx-overlay-title spx-overlay-title--green">🏔️ TERRAIN SCULPTING</span>
+            <span className="spx-overlay-title">🏔️ TERRAIN SCULPTING</span>
             <button onClick={() => setTerrainOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
           </div>
           <div className="spx-overlay-body"><TerrainSculpting /></div>
         </div>
       )}
-
-      
-
-      {/* ── Motion Library BVH + GamepadAnimator event bridge ── */}
-      {/* spx:applyBVH is dispatched by MotionLibraryPanel when no bvhImporter prop is passed */}
-      {/* spx:openGamepadAnimator is dispatched by MotionLibraryPanel Record New button */}
-
-      {/* ── Gamepad Animator ── */}
-      {gamepadOpen && (
-        <div className="spx-side-panel spx-side-panel--360-65">
-          <GamepadAnimator
-            open={gamepadOpen}
-            onClose={() => setGamepadOpen(false)}
-            sceneRef={sceneRef}
-            meshRef={meshRef}
-            setStatus={setStatus}
-            onApplyFunction={handleApplyFunction}
-            currentFrame={currentFrame}
-            setCurrentFrame={setCurrentFrame}
-            isPlaying={isPlaying}
-            setIsPlaying={setIsPlaying}
-          />
-        </div>
-      )}
-
-      {/* ── Pro Mesh Panel (full-screen) ── */}
       {proMeshOpen && (
         <div className="spx-fullscreen-overlay">
           <div className="spx-overlay-header">
             <span className="spx-overlay-title">✂ PRO MESH EDITOR</span>
-            <span className="spx-overlay-subtitle">Best-in-class mesh tools</span>
             <button onClick={() => setProMeshOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
           </div>
           <div className="spx-overlay-body">
-            <ProMeshPanel
-              open={proMeshOpen}
-              onClose={() => setProMeshOpen(false)}
-              meshRef={meshRef}
-              sceneRef={sceneRef}
-              setStatus={setStatus}
-              onApplyFunction={handleApplyFunction}
-            />
+            <ProMeshPanel open={proMeshOpen} onClose={() => setProMeshOpen(false)} meshRef={meshRef} sceneRef={sceneRef} setStatus={setStatus} onApplyFunction={handleApplyFunction} />
           </div>
         </div>
       )}
-
-      <MocapWorkspace
-        open={mocapWorkspaceOpen}
-        onClose={() => setMocapWorkspaceOpen(false)}
-        onExportGlb={() => window.dispatchEvent(new CustomEvent("spx:mocap-export-glb"))}
-      />
+      {physicsOpen && <FloatPanel title="PHYSICS SIMULATION" onClose={() => setPhysicsOpen(false)} width={520}>
+        <PhysicsSimulation />
+      </FloatPanel>}
+      {assetLibOpen && <FloatPanel title="ASSET LIBRARY" onClose={() => setAssetLibOpen(false)} width={480}><AssetLibraryPanel /></FloatPanel>}
+      {nodeModOpen && <FloatPanel title="NODE MODIFIER SYSTEM" onClose={() => setNodeModOpen(false)} width={480}><NodeModifierSystem /></FloatPanel>}
 
       {(faceGenOpen || foliageGenOpen || vehicleGenOpen || creatureGenOpen || propGenOpen) && (
         <div className="spx-side-panel spx-side-panel--320">
@@ -4535,6 +4513,11 @@ export default function App() {
         </div>
       )}
 
+      <MocapWorkspace
+        open={mocapWorkspaceOpen}
+        onClose={() => setMocapWorkspaceOpen(false)}
+        onExportGlb={() => window.dispatchEvent(new CustomEvent("spx:mocap-export-glb"))}
+      />
       <RenderWorkspacePanel
         open={renderWorkspaceOpen}
         onClose={() => setRenderWorkspaceOpen(false)}
@@ -4542,30 +4525,66 @@ export default function App() {
         canvasRef={canvasRef}
         setStatus={setStatus}
       />
-
+      {gamepadOpen && (
+        <div className="spx-fullscreen-overlay">
+          <div className="spx-overlay-header">
+            <span className="spx-overlay-title">🎮 GAMEPAD ANIMATOR</span>
+            <button onClick={() => setGamepadOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
+          </div>
+          <div className="spx-overlay-body">
+            <GamepadAnimator open={gamepadOpen} onClose={() => setGamepadOpen(false)} sceneRef={sceneRef} meshRef={meshRef} setStatus={setStatus} onApplyFunction={handleApplyFunction} currentFrame={currentFrame} setCurrentFrame={setCurrentFrame} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
+          </div>
         </div>
-      }
-      bottomPanel={
-        <AnimationTimeline
-          currentFrame={currentFrame}
-          setCurrentFrame={setCurrentFrame}
-          isPlaying={isPlaying}
-          setIsPlaying={setIsPlaying}
-          isAutoKey={isAutoKey}
-          setAutoKey={setAutoKey}
-          videoStartFrame={videoStartFrame}
-          videoEndFrame={videoEndFrame}
-          setVideoStartFrame={setVideoStartFrame}
-          setVideoEndFrame={setVideoEndFrame}
-          videoFps={videoFps}
-          setVideoFps={setVideoFps}
-          sceneObjects={sceneObjects}
-          animKeys={animKeys}
-          onAddKeyframe={() => handleApplyFunction("add_keyframe")}
-        />
-      }
-    />
+      )}
 
 
+      {uvPanelOpen && (
+        <div className="spx-fullscreen-overlay">
+          <div className="spx-overlay-header">
+            <span className="spx-overlay-title">✂ UV EDITOR</span>
+            <button onClick={() => setUvPanelOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
+          </div>
+          <div className="spx-overlay-body">
+            <UVEditorPanel open={uvPanelOpen} onClose={() => setUvPanelOpen(false)} />
+          </div>
+        </div>
+      )}
+      {materialPanelOpen && <FloatPanel title="MATERIALS" onClose={() => setMaterialPanelOpen(false)} width={480}>
+        <MaterialPanel open={materialPanelOpen} onClose={() => setMaterialPanelOpen(false)} meshRef={meshRef} sceneRef={sceneRef} setStatus={setStatus} />
+      </FloatPanel>}
+      {paintPanelOpen && <FloatPanel title="TEXTURE PAINT" onClose={() => setPaintPanelOpen(false)} width={480}>
+        <TexturePaintPanel open={paintPanelOpen} onClose={() => setPaintPanelOpen(false)} meshRef={meshRef} sceneRef={sceneRef} setStatus={setStatus} />
+      </FloatPanel>}
+      {nodeEditorOpen && (
+        <div className="spx-fullscreen-overlay">
+          <div className="spx-overlay-header">
+            <span className="spx-overlay-title">🎨 NODE MATERIAL EDITOR</span>
+            <button onClick={() => setNodeEditorOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
+          </div>
+          <div className="spx-overlay-body">
+            <NodeMaterialEditor open={nodeEditorOpen} onClose={() => setNodeEditorOpen(false)} meshRef={meshRef} sceneRef={sceneRef} setStatus={setStatus} />
+          </div>
+        </div>
+      )}
+      {clothingPanelOpen && <FloatPanel title="CLOTHING" onClose={() => setClothingPanelOpen(false)} width={480}>
+        <ClothingPanel open={clothingPanelOpen} onClose={() => setClothingPanelOpen(false)} meshRef={meshRef} sceneRef={sceneRef} setStatus={setStatus} />
+      </FloatPanel>}
+      {fabricPanelOpen && <FloatPanel title="FABRIC" onClose={() => setFabricPanelOpen(false)} width={480}>
+        <FabricPanel open={fabricPanelOpen} onClose={() => setFabricPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} panels={[]} />
+      </FloatPanel>}
+      {patternPanelOpen && <FloatPanel title="PATTERN EDITOR" onClose={() => setPatternPanelOpen(false)} width={600}>
+        <PatternEditorPanel open={patternPanelOpen} onClose={() => setPatternPanelOpen(false)} meshRef={meshRef} sceneRef={sceneRef} setStatus={setStatus} />
+      </FloatPanel>}
+      {hairPanelOpen && <FloatPanel title="HAIR" onClose={() => setHairPanelOpen(false)} width={480}>
+        <HairPanel open={hairPanelOpen} onClose={() => setHairPanelOpen(false)} meshRef={meshRef} sceneRef={sceneRef} setStatus={setStatus} />
+      </FloatPanel>}
+      {hairAdvancedOpen && <FloatPanel title="HAIR ADVANCED" onClose={() => setHairAdvancedOpen(false)} width={480}>
+        <HairAdvancedPanel open={hairAdvancedOpen} onClose={() => setHairAdvancedOpen(false)} meshRef={meshRef} sceneRef={sceneRef} setStatus={setStatus} />
+      </FloatPanel>}
+      {hairFXOpen && <FloatPanel title="HAIR FX" onClose={() => setHairFXOpen(false)} width={480}>
+        <HairFXPanel open={hairFXOpen} onClose={() => setHairFXOpen(false)} meshRef={meshRef} sceneRef={sceneRef} setStatus={setStatus} />
+      </FloatPanel>}
+    </>
+    </>
   );
 }

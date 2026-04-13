@@ -17,7 +17,7 @@ import MocapRetargetPanel from "./panels/MocapRetargetPanel.jsx";
 import GamepadAnimator from "./animation/GamepadAnimator.jsx";
 
 // RENDER
-import CinematicLightingPanel from "./scene/CinematicLightingPanel.jsx";
+import CinematicLightingPanel from "./panels/CinematicLightingPanel.jsx";
 import LightingCameraPanel from "./scene/LightingCameraPanel.jsx";
 import FilmCameraPanel from "./panels/FilmCameraPanel.jsx";
 import FilmVolumetricsPanel from "./panels/FilmVolumetricsPanel.jsx";
@@ -39,7 +39,7 @@ import ProceduralCrowdGenerator from "./generators/ProceduralCrowdGenerator.jsx"
 
 // GEN
 import ProMeshPanel from "./mesh/ProMeshPanel.jsx";
-import SPX3DTo2DPanel from "./panels/SPX3DTo2DPanel.jsx";
+import SPX3DTo2DPanel from "./pipeline/SPX3DTo2DPanel.jsx";
 
 export default function TabPanelManager({
   // refs

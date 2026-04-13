@@ -20,6 +20,7 @@
     "@react-three/fiber": "^9.5.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-draggable": "^4.5.0",
     "three": "^0.183.2",
     "three-gpu-pathtracer": "^0.0.24",
     "three-mesh-bvh": "^0.9.9",
@@ -43,7 +44,7 @@
   "build": {
     "appId": "com.eyeforgstudios.spx-mesh-editor",
     "productName": "SPX Mesh Editor",
-    "copyright": "Copyright \u00a9 Eye Forge Studios LLC",
+    "copyright": "Copyright © Eye Forge Studios LLC",
     "asar": true,
     "directories": {
       "output": "dist-electron"

@@ -273,15 +273,17 @@
 /* ── Side panels (fixed right) ──────────────────────────────────────── */
 .spx-side-panel {
   position: fixed;
-  top: 0;
-  right: 0;
-  height: 100vh;
-  z-index: 60;
+  top: 60px;
+  right: 320px;
+  height: calc(100vh - 60px);
+  z-index: 600;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   background: #0d1117;
-  border-left: 1px solid #21262d;
+  border: 1px solid #21262d;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.7);
 }
 
 .spx-side-panel--380      { width: 380px; }
@@ -293,14 +295,16 @@
 /* ── Fullscreen overlay ─────────────────────────────────────────────── */
 .spx-fullscreen-overlay {
   position: fixed;
+  inset: 0;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 80;
-  background: #06060f;
+  z-index: 2000;
+  background: #0d1117;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .spx-overlay-header {
