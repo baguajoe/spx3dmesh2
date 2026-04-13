@@ -4248,10 +4248,10 @@ export default function App() {
           {label:"Terrain",     fn:()=>{ closeAllWorkspacePanels(); setTerrainOpen(true); }},
           {label:"City Gen",    fn:()=>{ closeAllWorkspacePanels(); setCityGenOpen(true); }},
           {label:"Crowd",       fn:()=>{ closeAllWorkspacePanels(); setCrowdGenOpen(true); }},
-          {label:"L-System",    fn:()=>{ handleApplyFunction("lsystem_oak"); }},
         ]}/>
         <SpxTabGroup label="GEN" color="#FF6600" tabs={[
           {label:"Pro Mesh",    fn:()=>{ closeAllWorkspacePanels(); setProMeshOpen(true); }},
+          {label:"Skin Gen",     fn:()=>{ closeAllWorkspacePanels(); setCustomSkinPanelOpen(true); }},
           {label:"3D→2D Style", fn:()=>{ closeAllWorkspacePanels(); setStyle3DTo2DOpen(true); }},
           {label:"Anim Graph", fn:()=>{ closeAllWorkspacePanels(); setAnimGraphOpen(true); }},
           {label:"Mesh Script",fn:()=>{ closeAllWorkspacePanels(); setMeshScriptOpen(true); }},
