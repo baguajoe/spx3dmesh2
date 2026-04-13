@@ -286,3 +286,34 @@
 .spx-native-workspace-tab[data-active="true"] { color: #ffffff !important; }
 .spx-tab-group__trigger { color: #909aaa !important; font-size: 10px !important; }
 .spx-tab-group__trigger:hover { color: #d0d8e8 !important; }
+
+/* ── SpxTabGroup dropdown fix ────────────────────────────────── */
+.spx-tab-group { position: relative; }
+.spx-tab-group__menu {
+  position: absolute !important;
+  top: 100% !important;
+  bottom: auto !important;
+  left: 0 !important;
+  z-index: 9999 !important;
+  background: #0d1117 !important;
+  border: 1px solid #21262d !important;
+  border-top: none !important;
+  border-radius: 0 0 6px 6px !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.7) !important;
+  min-width: 140px !important;
+  padding: 4px 0 !important;
+}
+.spx-tab-group__item {
+  padding: 7px 14px !important;
+  font-size: 10px !important;
+  font-family: JetBrains Mono, monospace !important;
+  color: #909aaa !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  letter-spacing: 0.3px !important;
+}
+.spx-tab-group__item:hover {
+  background: rgba(255,255,255,0.06) !important;
+  color: #e0e8f0 !important;
+}
+.spx-tab-group__arrow { margin-left: 4px; font-size: 8px; }
