@@ -538,6 +538,9 @@
             </div>
           )}
 
+          <RenderWorkspacePanel open={renderWorkspaceOpen} onClose={() => setRenderWorkspaceOpen(false)} sceneRef={sceneRef} canvasRef={canvasRef} setStatus={setStatus} />
+        </div>
+      }
           <TabPanelManager
             sceneRef={sceneRef} meshRef={meshRef} cameraRef={cameraRef}
             rendererRef={rendererRef} setStatus={setStatus}
@@ -573,9 +576,6 @@
             proMeshOpen={proMeshOpen} setProMeshOpen={setProMeshOpen}
             style3DTo2DOpen={style3DTo2DOpen} setStyle3DTo2DOpen={setStyle3DTo2DOpen}
           />
-          <RenderWorkspacePanel open={renderWorkspaceOpen} onClose={() => setRenderWorkspaceOpen(false)} sceneRef={sceneRef} canvasRef={canvasRef} setStatus={setStatus} />
-        </div>
-      }
       bottomPanel={
         <AnimationTimeline
           currentFrame={currentFrame}
