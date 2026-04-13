@@ -4181,7 +4181,7 @@ export default function App() {
         clothStateRef={sceneRef}
         setStatus={setStatus}
         panels={[]}
-      />}</FloatPanel>}
+      /></FloatPanel>}
 
       {patternPanelOpen && <FloatPanel title="PATTERN EDITOR" onClose={() => setPatternPanelOpen(false)} width={400}><PatternEditorPanel open={patternPanelOpen} onClose={() => setPatternPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></FloatPanel>}
 
