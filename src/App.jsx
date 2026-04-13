@@ -4572,8 +4572,7 @@ export default function App() {
             <button onClick={() => setUvPanelOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
           </div>
           <div className="spx-overlay-body" style={{padding:0,overflow:'hidden'}}>
-            <UVEditorPanel open={uvPanelOpen} onClose={() => setUvPanelOpen(false)}
-              style={{width:'100%',height:'100%',border:'none',borderRadius:0}} />
+            <UVEditorPanel open={uvPanelOpen} onClose={() => setUvPanelOpen(false)} rendererRef={rendererRef} />
           </div>
         </div>
       )}

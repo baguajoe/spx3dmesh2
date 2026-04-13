@@ -11,7 +11,34 @@ const BUILTIN_SCRIPTS = [
 
 const EXAMPLE_SCRIPTS = Object.entries(SCRIPT_EXAMPLES).map(([name, code]) => ({ name, code }));
 
-export default function MeshScriptPanel({ open, onClose, sceneRef, setStatus }) {
+export default function MeshScriptPanel({ open, onClose, sceneRef, rendererRef, setStatus }) {
+
+  // ── Live 3D viewport mirror ──────────────────────────────────────────────
+  const _vpRef    = useRef(null);
+  const _vpMirror = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const tick = () => {
+      const src = rendererRef?.current?.domElement;
+      const dst = _vpRef.current;
+      if (src && dst && dst.offsetWidth > 0) {
+        dst.width  = dst.offsetWidth;
+        dst.height = dst.offsetHeight;
+        dst.getContext('2d').drawImage(src, 0, 0, dst.width, dst.height);
+      }
+      _vpMirror.current = requestAnimationFrame(tick);
+    };
+    _vpMirror.current = requestAnimationFrame(tick);
+    return () => { if (_vpMirror.current) cancelAnimationFrame(_vpMirror.current); };
+  }, [open, rendererRef]);
+
+  const _vpCanvas = (
+    <div style={{display:'flex',flexDirection:'column',flex:'0 0 45%',minWidth:0,borderRight:'1px solid #21262d',overflow:'hidden',background:'#060a10'}}>
+      <div style={{fontSize:9,fontWeight:700,color:'#444',letterSpacing:'1.5px',padding:'5px 10px',background:'#0a0d13',borderBottom:'1px solid #21262d',flexShrink:0}}>3D SCENE — LIVE</div>
+      <canvas ref={_vpRef} style={{flex:1,width:'100%',display:'block',minHeight:0}} />
+    </div>
+  );
+
   const [code, setCode]         = useState(SCRIPT_EXAMPLES.hello);
   const [output, setOutput]     = useState([]);
   const [history, setHistory]   = useState([]);

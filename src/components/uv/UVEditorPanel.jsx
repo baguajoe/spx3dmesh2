@@ -41,7 +41,7 @@ const demoIslands = [
   createIsland([4, 5, 6, 7], demoUVs),
 ];
 
-export default function UVEditorPanel({ open = false, onClose }) {
+export default function UVEditorPanel({open = false, onClose, rendererRef}) {
   const [islands, setIslands] = useState(demoIslands);
   const [rotateDeg, setRotateDeg] = useState(15);
   const [scaleAmt, setScaleAmt] = useState(1.1);
