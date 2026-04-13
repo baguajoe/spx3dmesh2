@@ -41,7 +41,7 @@
   border: none;
   border-bottom: 2px solid transparent;
   background: transparent;
-  color: #8b949e;
+  color: #b0b8c8;
   border-radius: 0 !important;
   padding: 0 10px !important;
   height: 34px !important;
@@ -139,7 +139,7 @@
   font-size: 9.5px !important;
   font-weight: 700 !important;
   letter-spacing: 0.8px !important;
-  color: #505060 !important;
+  color: #b0b8c8 !important;
   border-bottom: 2px solid transparent !important;
   border-radius: 0 !important;
   transition: color 0.12s, border-color 0.12s, background 0.12s !important;
@@ -159,7 +159,7 @@
 
 /* First 4 simple tabs (Modeling, Sculpt, Animation, Shading) */
 .spx-native-workspace-tab:not(.spx-tab-group__trigger) {
-  color: #606878 !important;
+  color: #b0b8c8 !important;
   font-size: 9px !important;
   letter-spacing: 1px !important;
 }
@@ -177,6 +177,9 @@
 /* Dropdown panels */
 .spx-native-workspace-tabs > div > div,
 .spx-tab-group__dropdown {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
   background: #0d1117 !important;
   border: 1px solid #1e2535 !important;
   border-top: none !important;
@@ -184,6 +187,7 @@
   box-shadow: 0 8px 24px rgba(0,0,0,0.6) !important;
   padding: 4px 0 !important;
   min-width: 140px !important;
+  z-index: 9999 !important;
 }
 
 /* Dropdown items */
@@ -193,7 +197,7 @@
   padding: 6px 14px !important;
   font-size: 10px !important;
   font-family: JetBrains Mono, monospace !important;
-  color: #8b949e !important;
+  color: #b0b8c8 !important;
   cursor: pointer !important;
   white-space: nowrap !important;
   letter-spacing: 0.3px !important;
@@ -231,7 +235,7 @@
   border-radius: 5px !important;
   background: transparent !important;
   border: 1px solid transparent !important;
-  color: #4a5060 !important;
+  color: #b0b8c8 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -266,25 +270,25 @@
 
 /* ── Final UI polish ─────────────────────────────────────────── */
 .spx-native-workspace-tab {
-  color: #707888 !important;
+  color: #b0b8c8 !important;
 }
 .spx-native-workspace-tab:not(.spx-tab-group__trigger).is-active {
   color: #ffffff !important;
   border-bottom-color: #ffffff !important;
   background: rgba(255,255,255,0.06) !important;
 }
-.spx-tab-group__trigger { color: #707888 !important; }
+.spx-tab-group__trigger { color: #b0b8c8 !important; }
 
 /* ── Tab + timeline final visibility fix ─────────────────────── */
 .spx-native-workspace-tab {
-  color: #909aaa !important;
+  color: #b0b8c8 !important;
   font-size: 10px !important;
   letter-spacing: 0.6px !important;
 }
 .spx-native-workspace-tab:hover { color: #d0d8e8 !important; }
 .spx-native-workspace-tab.is-active,
 .spx-native-workspace-tab[data-active="true"] { color: #ffffff !important; }
-.spx-tab-group__trigger { color: #909aaa !important; font-size: 10px !important; }
+.spx-tab-group__trigger { color: #b0b8c8 !important; font-size: 10px !important; }
 .spx-tab-group__trigger:hover { color: #d0d8e8 !important; }
 
 /* ── SpxTabGroup dropdown fix ────────────────────────────────── */
@@ -307,7 +311,7 @@
   padding: 7px 14px !important;
   font-size: 10px !important;
   font-family: JetBrains Mono, monospace !important;
-  color: #909aaa !important;
+  color: #b0b8c8 !important;
   cursor: pointer !important;
   white-space: nowrap !important;
   letter-spacing: 0.3px !important;

@@ -86,7 +86,7 @@ export function SculptPanel({ onApplyFunction, sculptBrush, setSculptBrush,
     <div className="spnl-root">
       {/* Tab bar */}
       <div className="spnl-tabs">
-        {[["sculpt","Sculpt"],["vcolor","V.Color"],["grease","Grease Pencil"]].map(([id,lbl]) => (
+        {[["sculpt","Sculpt"],["vcolor","V.Color"],["grease","SPX Sketch"]].map(([id,lbl]) => (
           <button key={id} className={`spnl-tab${tab===id?" spnl-tab--active":""}`}
             onClick={() => { setTab(id); if(id==="sculpt") onApplyFunction("brush_"+sculptBrush); if(id==="vcolor") onApplyFunction("vc_init"); if(id==="grease") onApplyFunction("gp_layer"); }}>
             {lbl}

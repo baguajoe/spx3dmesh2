@@ -13,12 +13,10 @@
   // ── Sync editMode with workspace ──────────────────────────────────────────
   useEffect(() => {
     if (activeWorkspace === "Sculpt") {
-      setEditMode("sculpt");
-      editModeRef.current = "sculpt";
+      if (editModeRef.current !== "sculpt") { setEditMode("sculpt"); editModeRef.current = "sculpt"; }
       sceneObjectsRef.current = sceneObjects;
     } else if (activeWorkspace === "Modeling") {
-      setEditMode("object");
-      editModeRef.current = "object";
+      if (editModeRef.current !== "object") { setEditMode("object"); editModeRef.current = "object"; }
     }
   }, [activeWorkspace]);
 

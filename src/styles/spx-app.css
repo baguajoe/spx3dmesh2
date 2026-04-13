@@ -82,9 +82,9 @@ html, body, #root {
 
 /* ── Orientation gizmo ────────────────────────────────────────── */
 .vp-orientation-gizmo {
-  position: absolute; top: 8px; right: 8px;
+  position: absolute; bottom: 48px; right: 8px;
   width: 64px; height: 64px;
-  pointer-events: none; z-index: 50;
+  pointer-events: none; z-index: 9999;
 }
 
 /* ── Viewport label ───────────────────────────────────────────── */

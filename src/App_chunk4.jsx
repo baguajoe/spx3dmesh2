@@ -1,5 +1,6 @@
   // ── Init Three.js ──────────────────────────────────────────────────────────
-  useEffect(() => {
+
+useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || rendererRef.current) return;
 

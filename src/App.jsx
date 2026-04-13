@@ -4193,26 +4193,11 @@ export default function App() {
       />
 
       {displacementOpen && <DisplacementPanel open={displacementOpen} onClose={() => setDisplacementOpen(false)} meshRef={meshRef} setStatus={setStatus} />}
-      <HairPanel
-        open={hairPanelOpen}
-        onClose={() => setHairPanelOpen(false)}
-        sceneRef={sceneRef}
-        setStatus={setStatus}
-      />
 
-      <HairAdvancedPanel
-        open={hairAdvancedOpen}
-        onClose={() => setHairAdvancedOpen(false)}
-        sceneRef={sceneRef}
-        setStatus={setStatus}
-      />
 
-      <HairFXPanel
-        open={hairFXOpen}
-        onClose={() => setHairFXOpen(false)}
-        sceneRef={sceneRef}
-        setStatus={setStatus}
-      />
+
+
+
       {/* Model picker trigger button */}
       <button
         onClick={() => { setModelPickerContext("general"); setShowModelPicker(v => !v); }}
@@ -4370,7 +4355,7 @@ export default function App() {
             sceneRef={sceneRef}
             cameraRef={cameraRef}
             cameras={cameras}
-            onApplyFunction={applyFunction}
+            onApplyFunction={handleApplyFunction}
             onClose={() => setLightingCameraPanelOpen(false)}
           />
         </div>
@@ -4392,7 +4377,7 @@ export default function App() {
       {greasePencilPanelOpen && (
         <div className="spx-side-panel spx-side-panel--320">
           <GreasePencilPanel
-            onApplyFunction={applyFunction}
+            onApplyFunction={handleApplyFunction}
             onClose={() => setGreasePencilPanelOpen(false)}
           />
         </div>

@@ -197,7 +197,7 @@
       onMenuAction={handleApplyFunction}
       leftPanel={
         activeWorkspace === "Surface" ? (
-          <HairPanel open={true} onClose={() => setHairPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
+          hairPanelOpen ? <HairPanel open={true} onClose={() => setHairPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /> : null
         ) : activeWorkspace === "Sculpt" ? (
           <SculptPanel
             onApplyFunction={handleApplyFunction}
@@ -254,21 +254,6 @@
           <div className={`vp-stats${fps < 30 ? " vp-stats--low" : " vp-stats--ok"}`}>
             FPS: {fps} | Δ: {polyCount.toLocaleString()}
           </div>
-
-          <div className="vp-orientation-gizmo">
-            <svg viewBox="0 0 64 64" width="64" height="64">
-              <line x1="32" y1="32" x2="54" y2="44" stroke="#e44" strokeWidth="2"/>
-              <line x1="32" y1="32" x2="32" y2="8"  stroke="#4e4" strokeWidth="2"/>
-              <line x1="32" y1="32" x2="12" y2="44" stroke="#44e" strokeWidth="2"/>
-              <circle cx="54" cy="44" r="5" fill="#e44"/>
-              <circle cx="32" cy="8"  r="5" fill="#4e4"/>
-              <circle cx="12" cy="44" r="5" fill="#44e"/>
-              <text x="57" y="47" fontSize="8" fill="#e44" fontFamily="monospace">X</text>
-              <text x="29" y="6"  fontSize="8" fill="#4e4" fontFamily="monospace">Y</text>
-              <text x="4"  y="47" fontSize="8" fill="#44e" fontFamily="monospace">Z</text>
-            </svg>
-          </div>
-
           <div className="vp-label">User Perspective</div>
 
           {boxSelect && (
@@ -310,7 +295,6 @@
           <ClothingPanel open={clothingPanelOpen} onClose={() => setClothingPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
           <FabricPanel open={fabricPanelOpen} clothStateRef={sceneRef} setStatus={setStatus} panels={[]} />
           <PatternEditorPanel open={patternPanelOpen} onClose={() => setPatternPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
-          <HairPanel open={hairPanelOpen} onClose={() => setHairPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
           <HairAdvancedPanel open={hairAdvancedOpen} onClose={() => setHairAdvancedOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
           <HairFXPanel open={hairFXOpen} onClose={() => setHairFXOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
 

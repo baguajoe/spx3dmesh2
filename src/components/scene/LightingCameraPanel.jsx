@@ -231,7 +231,7 @@ export default function LightingCameraPanel({ onClose, sceneRef, cameraRef, came
               <div className="lcp-flex1">
                 <div className="lcp-sec-label">Temperature</div>
                 <select className="lcp-select" value={ltemp} onChange={e=>setLtemp(e.target.value)}>
-                  {Object.keys(TEMPERATURE_PRESETS).map(k=><option key={k} value={k}>{k} ({TEMPERATURE_PRESETS[k]}K)</option>)}
+                  {Object.keys(TEMPERATURE_PRESETS).map(k=><option key={k} value={k}>{k} ({TEMPERATURE_PRESETS[k]?.kelvin ?? TEMPERATURE_PRESETS[k]}K)</option>)}
                 </select>
               </div>
             </div>
