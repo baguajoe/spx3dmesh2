@@ -161,6 +161,7 @@ import { AnimationTimeline } from "./components/AnimationTimeline.jsx";
 
 import "./App.css";
 import "./styles/pro-dark.css";
+import "./styles/spx-2d-panel.css";
 import "./styles/world-generators.css";
 import UVEditorPanel from "./components/uv/UVEditorPanel.jsx";
 import "./styles/uv-editor.css";
