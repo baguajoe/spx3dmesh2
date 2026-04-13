@@ -667,5 +667,11 @@
 }
 .live-viewport-mirror canvas {
   opacity: 1 !important;
-  filter: brightness(1.4) contrast(1.1) !important;
+  filter: brightness(2.0) contrast(1.2) saturate(1.1) !important;
+}
+
+/* LiveViewportMirror — brighter canvas rendering */
+.live-viewport-mirror canvas,
+[data-viewport-mirror] canvas {
+  filter: brightness(2.0) contrast(1.2) !important;
 }

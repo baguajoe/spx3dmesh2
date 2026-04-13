@@ -335,7 +335,7 @@ function LiveViewportMirror({ rendererRef, open, label }) {
   return (
     <div style={{flex:'0 0 45%',minWidth:0,display:'flex',flexDirection:'column',borderRight:'1px solid #21262d',background:'#060a10'}}>
       <div style={{fontSize:9,fontWeight:700,color:'#444',letterSpacing:'1.5px',padding:'5px 10px',background:'#0a0d13',borderBottom:'1px solid #21262d',flexShrink:0,textTransform:'uppercase'}}>{label}</div>
-      <canvas ref={canvasRef} style={{flex:1,width:'100%',display:'block',minHeight:0}} />
+      <canvas ref={canvasRef} data-viewport-mirror="true" style={{flex:1,width:'100%',display:'block',minHeight:0,filter:'brightness(1.8) contrast(1.1)'}} />
     </div>
   );
 }

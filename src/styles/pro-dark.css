@@ -1586,3 +1586,54 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 1px s
   width: 100% !important;
   height: 100% !important;
 }
+
+
+/* ── Node Material Editor — SVG canvas fills container ── */
+.nme-overlay {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #0d1117 !important;
+  overflow: hidden !important;
+  top: auto !important; left: auto !important;
+  right: auto !important; bottom: auto !important;
+  max-width: none !important;
+  max-height: none !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Header row — keep compact */
+.nme-header {
+  flex-shrink: 0 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  padding: 6px 10px !important;
+  gap: 4px !important;
+  background: #0a0d13 !important;
+  border-bottom: 1px solid #21262d !important;
+}
+
+/* SVG canvas — fill remaining space */
+.nme-svg {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  overflow: visible !important;
+}
+
+/* Node graph area wrapper */
+.nme-graph,
+.nme-canvas,
+.nme-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
