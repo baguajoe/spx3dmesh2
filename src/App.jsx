@@ -299,7 +299,7 @@ function SpxTabGroup({ label, color, tabs }) {
         <div className="spx-tab-dropdown" style={{borderTop:'2px solid '+color}}>
           {tabs.map(t => (
             <div key={t.label}
-              onClick={() => { t.fn(); setOpen(false); }}
+              onClick={() => { typeof t.fn === 'function' ? t.fn() : handleApplyFunction(t.fn); setOpen(false); }}
               className="spx-tab-item"
               onMouseEnter={e=>{e.currentTarget.style.color=color;}}
               onMouseLeave={e=>{e.currentTarget.style.color='';}}
@@ -4244,21 +4244,21 @@ export default function App() {
           {label:"Particles",  fn:()=>{ closeAllWorkspacePanels(); setPhysicsOpen(true); }},
         ]}/>
         <SpxTabGroup label="WORLD" color="#44aaff" tabs={[
-          {label:"Environment", fn:"openEnvironment"},
-          {label:"Terrain",     fn:"openTerrain"},
-          {label:"City Gen",    fn:"openCityGen"}},
-          {label:"Crowd",       fn:"openCrowd"}},
-          {label:"L-System",   fn:()=>{ handleApplyFunction("lsystem_oak"); }},
+          {label:"Environment", fn:()=>{ closeAllWorkspacePanels(); setEnvGenOpen(true); }},
+          {label:"Terrain",     fn:()=>{ closeAllWorkspacePanels(); setTerrainOpen(true); }},
+          {label:"City Gen",    fn:()=>{ closeAllWorkspacePanels(); setCityGenOpen(true); }},
+          {label:"Crowd",       fn:()=>{ closeAllWorkspacePanels(); setCrowdGenOpen(true); }},
+          {label:"L-System",    fn:()=>{ handleApplyFunction("lsystem_oak"); }},
         ]}/>
         <SpxTabGroup label="GEN" color="#FF6600" tabs={[
-          {label:"Pro Mesh",    fn:"openProMesh"},
-          {label:"3D→2D Style", fn:"open3DTo2D"},
+          {label:"Pro Mesh",    fn:()=>{ closeAllWorkspacePanels(); setProMeshOpen(true); }},
+          {label:"3D→2D Style", fn:()=>{ closeAllWorkspacePanels(); setStyle3DTo2DOpen(true); }},
           {label:"Anim Graph", fn:()=>{ closeAllWorkspacePanels(); setAnimGraphOpen(true); }},
           {label:"Mesh Script",fn:()=>{ closeAllWorkspacePanels(); setMeshScriptOpen(true); }},
           {label:"Multi MoCap",fn:()=>{ closeAllWorkspacePanels(); setMocapWorkspaceOpen(true); }},
         ]}/>
         <button type="button" className="spx-native-workspace-tab spx-native-workspace-tab--right" onClick={()=>setShowPerformancePanel(v=>!v)}>
-          <span className="spx-native-workspace-tab-label">Performance</span>
+          <span className="spx-native-workspace-tab-label" style={{color:showPerformancePanel?"#00ffc8":undefined}}>PERF</span>
         </button>
 
       </div>
@@ -4438,7 +4438,9 @@ export default function App() {
         <DisplacementPanel open={displacementOpen} onClose={() => setDisplacementOpen(false)} meshRef={meshRef} setStatus={setStatus} />
       </FloatPanel>}
       {proMeshOpen && (
-  <ProMeshPanelNew open={proMeshOpen} onClose={()=>setProMeshOpen(false)} />
+  <FloatPanel title="PRO MESH" onClose={()=>setProMeshOpen(false)} width={360}>
+    <ProMeshPanelNew open={proMeshOpen} onClose={()=>setProMeshOpen(false)} />
+  </FloatPanel>
 )}
 {showPerformancePanel && (
         <div className="spx-fullscreen-overlay">
@@ -4462,7 +4464,7 @@ export default function App() {
             <span className="spx-overlay-title">🌲 ENVIRONMENT GENERATOR</span>
             <button onClick={() => setEnvGenOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
           </div>
-          <div className="spx-overlay-body"><EnvironmentGenerator /></div>
+          <div className="spx-overlay-body"><EnvironmentGenerator open={envGenOpen} onClose={()=>setEnvGenOpen(false)} /></div>
         </div>
       )}
       {cityGenOpen && (
@@ -4471,36 +4473,26 @@ export default function App() {
             <span className="spx-overlay-title">🏙️ CITY GENERATOR</span>
             <button onClick={() => setCityGenOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
           </div>
-          <div className="spx-overlay-body"><CityGenerator /></div>
+          <div className="spx-overlay-body"><CityGenerator open={cityGenOpen} onClose={()=>setCityGenOpen(false)} /></div>
         </div>
       )}
-      {buildingOpen && <FloatPanel title="BUILDING SIMULATOR" onClose={() => setBuildingOpen(false)} width={480}><BuildingSimulator /></FloatPanel>}
-      {crowdGenOpen && <FloatPanel title="CROWD GENERATOR" onClose={() => setCrowdGenOpen(false)} width={480}><ProceduralCrowdGenerator /></FloatPanel>}
+      {buildingOpen && <FloatPanel title="BUILDING SIMULATOR" onClose={() => setBuildingOpen(false)} width={480}><BuildingSimulator open={buildingOpen} onClose={()=>setBuildingOpen(false)} /></FloatPanel>}
+      {crowdGenOpen && <FloatPanel title="CROWD GENERATOR" onClose={() => setCrowdGenOpen(false)} width={480}><ProceduralCrowdGenerator open={crowdGenOpen} onClose={()=>setCrowdGenOpen(false)} /></FloatPanel>}
       {terrainOpen && (
         <div className="spx-fullscreen-overlay">
           <div className="spx-overlay-header">
             <span className="spx-overlay-title">🏔️ TERRAIN SCULPTING</span>
             <button onClick={() => setTerrainOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
           </div>
-          <div className="spx-overlay-body"><TerrainSculpting /></div>
+          <div className="spx-overlay-body"><TerrainSculpting open={terrainOpen} onClose={()=>setTerrainOpen(false)} /></div>
         </div>
       )}
-      {proMeshOpen && (
-        <div className="spx-fullscreen-overlay">
-          <div className="spx-overlay-header">
-            <span className="spx-overlay-title">✂ PRO MESH EDITOR</span>
-            <button onClick={() => setProMeshOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
-          </div>
-          <div className="spx-overlay-body">
-            <ProMeshPanel open={proMeshOpen} onClose={() => setProMeshOpen(false)} meshRef={meshRef} sceneRef={sceneRef} setStatus={setStatus} onApplyFunction={handleApplyFunction} />
-          </div>
-        </div>
-      )}
+      {/* ProMesh renders via FloatPanel above */}
       {physicsOpen && <FloatPanel title="PHYSICS SIMULATION" onClose={() => setPhysicsOpen(false)} width={520}>
-        <PhysicsSimulation />
+        <PhysicsSimulation open={physicsOpen} onClose={()=>setPhysicsOpen(false)} />
       </FloatPanel>}
-      {assetLibOpen && <FloatPanel title="ASSET LIBRARY" onClose={() => setAssetLibOpen(false)} width={480}><AssetLibraryPanel /></FloatPanel>}
-      {nodeModOpen && <FloatPanel title="NODE MODIFIER SYSTEM" onClose={() => setNodeModOpen(false)} width={480}><NodeModifierSystem /></FloatPanel>}
+      {assetLibOpen && <FloatPanel title="ASSET LIBRARY" onClose={() => setAssetLibOpen(false)} width={480}><AssetLibraryPanel open={assetLibOpen} onClose={()=>setAssetLibOpen(false)} /></FloatPanel>}
+      {nodeModOpen && <FloatPanel title="NODE MODIFIER SYSTEM" onClose={() => setNodeModOpen(false)} width={480}><NodeModifierSystem open={nodeModOpen} onClose={()=>setNodeModOpen(false)} /></FloatPanel>}
 
       {(faceGenOpen || foliageGenOpen || vehicleGenOpen || creatureGenOpen || propGenOpen) && (
         <div className="spx-side-panel spx-side-panel--320">
