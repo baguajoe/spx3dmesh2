@@ -23,7 +23,7 @@ const Slider = ({ label, value, min, max, step=0.01, onChange }) => (
   </div>
 );
 
-export default function ProceduralCrowdGenerator({ open, onClose, sceneRef, setStatus }) {
+export default function ProceduralCrowdGenerator({ open, onClose, sceneRef, setStatus, rendererRef}) {
   const [formation, setFormation]     = useState('random');
   const [count, setCount]             = useState(50);
   const [spread, setSpread]           = useState(10);
@@ -43,6 +43,25 @@ export default function ProceduralCrowdGenerator({ open, onClose, sceneRef, setS
   const [lod, setLod]                 = useState(true);
   const [generating, setGenerating]   = useState(false);
   const canvasRef = useRef(null);
+
+  // Mirror main renderer into preview canvas
+  const mirrorRef = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const tick = () => {
+      const src = rendererRef?.current?.domElement;
+      const dst = canvasRef.current;
+      if (src && dst && dst.offsetWidth > 0) {
+        dst.width  = dst.offsetWidth;
+        dst.height = dst.offsetHeight;
+        dst.getContext('2d').drawImage(src, 0, 0, dst.width, dst.height);
+      }
+      mirrorRef.current = requestAnimationFrame(tick);
+    };
+    mirrorRef.current = requestAnimationFrame(tick);
+    return () => { if (mirrorRef.current) cancelAnimationFrame(mirrorRef.current); };
+  }, [open, rendererRef]);
+
 
   if (!open) return null;
 

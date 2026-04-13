@@ -20,7 +20,7 @@ const Slider = ({ label, value, min, max, step=0.01, onChange }) => (
   </div>
 );
 
-export default function EnvironmentGenerator({ open, onClose, sceneRef, setStatus }) {
+export default function EnvironmentGenerator({ open, onClose, sceneRef, setStatus, rendererRef}) {
   const [biome, setBiome]           = useState('forest');
   const [timeOfDay, setTimeOfDay]   = useState(0.6);
   const [fogDensity, setFogDensity] = useState(0.015);
@@ -46,6 +46,25 @@ export default function EnvironmentGenerator({ open, onClose, sceneRef, setStatu
   const [groundColor, setGroundColor] = useState('#2d4a1e');
   const [generating, setGenerating] = useState(false);
   const canvasRef = useRef(null);
+
+  // Mirror main renderer into preview canvas
+  const mirrorRef = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const tick = () => {
+      const src = rendererRef?.current?.domElement;
+      const dst = canvasRef.current;
+      if (src && dst && dst.offsetWidth > 0) {
+        dst.width  = dst.offsetWidth;
+        dst.height = dst.offsetHeight;
+        dst.getContext('2d').drawImage(src, 0, 0, dst.width, dst.height);
+      }
+      mirrorRef.current = requestAnimationFrame(tick);
+    };
+    mirrorRef.current = requestAnimationFrame(tick);
+    return () => { if (mirrorRef.current) cancelAnimationFrame(mirrorRef.current); };
+  }, [open, rendererRef]);
+
 
   const handleGenerate = () => {
     setGenerating(true);

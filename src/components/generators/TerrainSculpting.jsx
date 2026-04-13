@@ -31,7 +31,7 @@ const Slider = ({ label, value, min, max, step=0.01, onChange }) => (
   </div>
 );
 
-export default function TerrainSculpting({ open, onClose, sceneRef, setStatus }) {
+export default function TerrainSculpting({ open, onClose, sceneRef, setStatus, rendererRef}) {
   const [activeBrush, setActiveBrush]   = useState('raise');
   const [brushRadius, setBrushRadius]   = useState(0.5);
   const [brushStrength, setBrushStrength] = useState(0.5);
@@ -56,6 +56,25 @@ export default function TerrainSculpting({ open, onClose, sceneRef, setStatus })
   const [snowColor, setSnowColor]       = useState('#eeeeff');
   const [generating, setGenerating]     = useState(false);
   const canvasRef = useRef(null);
+
+  // Mirror main renderer into preview canvas
+  const mirrorRef = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const tick = () => {
+      const src = rendererRef?.current?.domElement;
+      const dst = canvasRef.current;
+      if (src && dst && dst.offsetWidth > 0) {
+        dst.width  = dst.offsetWidth;
+        dst.height = dst.offsetHeight;
+        dst.getContext('2d').drawImage(src, 0, 0, dst.width, dst.height);
+      }
+      mirrorRef.current = requestAnimationFrame(tick);
+    };
+    mirrorRef.current = requestAnimationFrame(tick);
+    return () => { if (mirrorRef.current) cancelAnimationFrame(mirrorRef.current); };
+  }, [open, rendererRef]);
+
 
   if (!open) return null;
 

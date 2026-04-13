@@ -4477,7 +4477,7 @@ export default function App() {
             <button onClick={()=>setEnvGenOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
           </div>
           <div className="spx-overlay-body">
-            <EnvironmentGenerator open={envGenOpen} onClose={()=>setEnvGenOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
+            <EnvironmentGenerator open={envGenOpen} onClose={()=>setEnvGenOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} setStatus={setStatus} />
           </div>
         </div>
       )}
@@ -4488,7 +4488,7 @@ export default function App() {
             <button onClick={()=>setCityGenOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
           </div>
           <div className="spx-overlay-body">
-            <CityGenerator open={cityGenOpen} onClose={()=>setCityGenOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
+            <CityGenerator open={cityGenOpen} onClose={()=>setCityGenOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} setStatus={setStatus} />
           </div>
         </div>
       )}
@@ -4500,7 +4500,7 @@ export default function App() {
             <button onClick={()=>setCrowdGenOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
           </div>
           <div className="spx-overlay-body">
-            <ProceduralCrowdGenerator open={crowdGenOpen} onClose={()=>setCrowdGenOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
+            <ProceduralCrowdGenerator open={crowdGenOpen} onClose={()=>setCrowdGenOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} setStatus={setStatus} />
           </div>
         </div>
       )}
@@ -4511,7 +4511,7 @@ export default function App() {
             <button onClick={()=>setTerrainOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
           </div>
           <div className="spx-overlay-body">
-            <TerrainSculpting open={terrainOpen} onClose={()=>setTerrainOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
+            <TerrainSculpting open={terrainOpen} onClose={()=>setTerrainOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} setStatus={setStatus} />
           </div>
         </div>
       )}
