@@ -4192,6 +4192,7 @@ export default function App() {
         setStatus={setStatus}
       />
 
+      {displacementOpen && <DisplacementPanel open={displacementOpen} onClose={() => setDisplacementOpen(false)} meshRef={meshRef} setStatus={setStatus} />}
       <HairPanel
         open={hairPanelOpen}
         onClose={() => setHairPanelOpen(false)}
