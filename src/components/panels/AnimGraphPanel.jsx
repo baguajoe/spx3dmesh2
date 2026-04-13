@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { AnimationGraph, BlendTree, AnimStateMachine, ANIM_NODE_TYPES } from '../../mesh/AnimGraphEditor.js';
 import '../../styles/panel-components.css';
 import '../../styles/mesh-script.css';
@@ -8,13 +8,7 @@ const C = { bg:'#06060f', panel:'#0d1117', border:'#21262d', teal:'#00ffc8', ora
 function Section({ title, color=C.teal, children, defaultOpen=true }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="spx-split-layout">
-      <div className="spx-split-viewport">
-        <div className="spx-split-viewport-label">3D SCENE — LIVE</div>
-        <canvas ref={_liveRef} className="spx-split-viewport-canvas" />
-      </div>
-      <div className="spx-split-panel">
-      <div className="spnl-section-wrap">
+    <div className="spnl-section-wrap">
       <div className="spnl-section-hdr" style={{borderLeftColor:color}} onClick={()=>setOpen(v=>!v)}>
         <span className="spnl-section-arrow" style={{color}}>{open?'▾':'▸'}</span>
         <span className="spnl-section-name">{title}</span>
@@ -26,7 +20,7 @@ function Section({ title, color=C.teal, children, defaultOpen=true }) {
 
 const NODE_COLORS = { clip:'#0066cc', blend2:'#006644', blend3:'#006644', additive:'#884400', stateMachine:'#440088', output:'#00ffc8', twobone_ik:'#cc0044', layeredBlend:'#664488' };
 
-export default function AnimGraphPanel({ open, onClose, sceneRef, rendererRef }) {
+export default function AnimGraphPanel({ open, onClose, sceneRef }) {
   const [nodes, setNodes] = useState([
     { id:'clip1',  type:'clip',   x:60,  y:80,  params:{ clipName:'Idle' }},
     { id:'clip2',  type:'clip',   x:60,  y:180, params:{ clipName:'Walk' }},
@@ -85,23 +79,6 @@ export default function AnimGraphPanel({ open, onClose, sceneRef, rendererRef })
     if (selectedNode === id) setSelectedNode(null);
   }, [selectedNode]);
 
-
-  const _liveRef = useRef(null);
-  const _mirrorAF = useRef(null);
-  useEffect(() => {
-    if (!open) return;
-    const tick = () => {
-      const src = rendererRef?.current?.domElement;
-      const dst = _liveRef.current;
-      if (src && dst && dst.offsetWidth > 0) {
-        dst.width = dst.offsetWidth; dst.height = dst.offsetHeight;
-        dst.getContext('2d').drawImage(src, 0, 0, dst.width, dst.height);
-      }
-      _mirrorAF.current = requestAnimationFrame(tick);
-    };
-    _mirrorAF.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(_mirrorAF.current);
-  }, [open, rendererRef]);
   if (!open) return null;
   const selNode = nodes.find(n => n.id === selectedNode);
 
@@ -263,7 +240,5 @@ export default function AnimGraphPanel({ open, onClose, sceneRef, rendererRef })
         </div>
       </div>
     </div>
-  </div>
-  </div>
   );
 }

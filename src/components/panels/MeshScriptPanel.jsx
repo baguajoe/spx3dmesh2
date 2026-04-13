@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import SPXScriptRunner, { SCRIPT_EXAMPLES } from '../../mesh/SPXScriptAPI.js';
 import '../../styles/mesh-script.css';
 
@@ -11,7 +11,7 @@ const BUILTIN_SCRIPTS = [
 
 const EXAMPLE_SCRIPTS = Object.entries(SCRIPT_EXAMPLES).map(([name, code]) => ({ name, code }));
 
-export default function MeshScriptPanel({ open, onClose, sceneRef, setStatus, rendererRef }) {
+export default function MeshScriptPanel({ open, onClose, sceneRef, setStatus }) {
   const [code, setCode]         = useState(SCRIPT_EXAMPLES.hello);
   const [output, setOutput]     = useState([]);
   const [history, setHistory]   = useState([]);
@@ -124,32 +124,9 @@ export default function MeshScriptPanel({ open, onClose, sceneRef, setStatus, re
     }
   };
 
-
-  const _liveRef2 = useRef(null);
-  const _mirrorAF2 = useRef(null);
-  useEffect(() => {
-    if (!open) return;
-    const tick = () => {
-      const src = rendererRef?.current?.domElement;
-      const dst = _liveRef2.current;
-      if (src && dst && dst.offsetWidth > 0) {
-        dst.width = dst.offsetWidth; dst.height = dst.offsetHeight;
-        dst.getContext('2d').drawImage(src, 0, 0, dst.width, dst.height);
-      }
-      _mirrorAF2.current = requestAnimationFrame(tick);
-    };
-    _mirrorAF2.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(_mirrorAF2.current);
-  }, [open, rendererRef]);
   if (!open) return null;
   return (
-    <div className="spx-split-layout">
-      <div className="spx-split-viewport">
-        <div className="spx-split-viewport-label">3D SCENE — SCRIPT OUTPUT</div>
-        <canvas ref={_liveRef2} className="spx-split-viewport-canvas" />
-      </div>
-      <div className="spx-split-panel">
-      <div className="ms-overlay" onClick={onClose}>
+    <div className="ms-overlay" onClick={onClose}>
       <div className="ms-panel" onClick={e => e.stopPropagation()}>
 
         {/* Header */}
@@ -297,7 +274,5 @@ help()            — full command list`}</pre>
         </div>
       </div>
     </div>
-  </div>
-  </div>
   );
 }
