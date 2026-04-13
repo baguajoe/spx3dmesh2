@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import '../../styles/spx-float-panel.css';
 
 
 const Section = ({ title, children }) => (
