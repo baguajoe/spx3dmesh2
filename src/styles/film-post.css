@@ -107,15 +107,13 @@
 
 /* ── Fixed overlays ─────────────────────────────────────────────────── */
 .fpost-vignette-overlay {
-  position: fixed;
-  inset: 0;
+  position:relative;
   pointer-events: none;
   z-index: 998;
 }
 
 .fpost-grain-overlay {
-  position: fixed;
-  inset: 0;
+  position:relative;
   pointer-events: none;
   z-index: 997;
   mix-blend-mode: overlay;

@@ -23,6 +23,27 @@
   // Force object mode on mount
   useEffect(() => { editModeRef.current = "object"; }, []);
 
+  // ── MoCap tab event ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    const handler = () => setMocapWorkspaceOpen(true);
+    window.addEventListener("spx:openMocap", handler);
+    return () => window.removeEventListener("spx:openMocap", handler);
+  }, []);
+
+  // ── MoCap tab event ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    const handler = () => setMocapWorkspaceOpen(true);
+    window.addEventListener("spx:openMocap", handler);
+    return () => window.removeEventListener("spx:openMocap", handler);
+  }, []);
+
+  // ── MoCap tab event ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    const handler = () => setMocapWorkspaceOpen(true);
+    window.addEventListener("spx:openMocap", handler);
+    return () => window.removeEventListener("spx:openMocap", handler);
+  }, []);
+
   // ── Workspace mode event ──────────────────────────────────────────────────
   useEffect(() => {
     const onWorkspaceMode = (e) => {

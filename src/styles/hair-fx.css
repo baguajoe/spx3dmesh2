@@ -1,5 +1,5 @@
 .hair-fx-panel-float{
-  position:fixed;
+  position:relative;
   top:144px;
   right:18px;
   z-index:12600;

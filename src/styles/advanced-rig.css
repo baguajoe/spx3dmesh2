@@ -1,6 +1,6 @@
 
 .advanced-rig-panel-float{
-  position:fixed;
+  position:relative;
   top:164px;
   right:18px;
   z-index:12800;

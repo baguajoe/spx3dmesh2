@@ -17,6 +17,7 @@ import { Outliner } from "./components/Outliner";
 import React, { useRef, useEffect, useState, useCallback } from "react";
 
 import SPXPerformancePanel from "./components/SPXPerformancePanel.jsx";import * as THREE from "three";
+import FloatPanel from "./components/ui/FloatPanel.jsx";
 import { initFilmComposer, createProceduralHDRI, upgradeMaterialsToPhysical } from "./mesh/FilmRenderer.js";
 import FilmPostPanel from "./components/panels/FilmPostPanel.jsx";
 import FilmAssetLibrary from "./components/panels/FilmAssetLibrary.jsx";
@@ -4153,7 +4154,7 @@ export default function App() {
               />
             )}
           </div>
-      {nodeEditorOpen && <div className="float-panel-right-xl"><NodeMaterialEditor open={nodeEditorOpen} onClose={() => setNodeEditorOpen(false)} meshRef={meshRef} sceneRef={sceneRef} setStatus={setStatus} /></div>}
+      {nodeEditorOpen && <FloatPanel title="NODE MATERIAL" onClose={() => setNodeEditorOpen(false)} width={700}><NodeMaterialEditor open={nodeEditorOpen} onClose={() => setNodeEditorOpen(false)} meshRef={meshRef} sceneRef={sceneRef} setStatus={setStatus} /></FloatPanel>}
       {clothSimOpen && <div className="float-panel-right-lg"><ClothSimPanel open={clothSimOpen} onClose={() => setClothSimOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></div>}
       {mocapRetargetOpen && <div className="float-panel-right-lg"><MocapRetargetPanel open={mocapRetargetOpen} onClose={() => setMocapRetargetOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></div>}
       {filmPostOpen && <div className="float-panel-right-xl"><FilmPostPanel open={filmPostOpen} onClose={() => setFilmPostOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} setStatus={setStatus} /></div>}
@@ -4163,24 +4164,11 @@ export default function App() {
         onClose={() => setUvPanelOpen(false)}
       />
 
-      <MaterialPanel
-        open={materialPanelOpen}
-        onClose={() => setMaterialPanelOpen(false)}
-        meshRef={meshRef}
-      />
+      {materialPanelOpen && <FloatPanel title="MATERIAL" onClose={() => setMaterialPanelOpen(false)} width={400}><MaterialPanel open={materialPanelOpen} onClose={() => setMaterialPanelOpen(false)} meshRef={meshRef} /></FloatPanel>}
 
-      <TexturePaintPanel
-        open={paintPanelOpen}
-        onClose={() => setPaintPanelOpen(false)}
-        meshRef={meshRef}
-      />
+      {paintPanelOpen && <FloatPanel title="TEXTURE PAINT" onClose={() => setPaintPanelOpen(false)} width={420}><TexturePaintPanel open={paintPanelOpen} onClose={() => setPaintPanelOpen(false)} meshRef={meshRef} /></FloatPanel>}
 
-      <ClothingPanel
-        open={clothingPanelOpen}
-        onClose={() => setClothingPanelOpen(false)}
-        sceneRef={sceneRef}
-        setStatus={setStatus}
-      />
+      {clothingPanelOpen && <FloatPanel title="CLOTHING" onClose={() => setClothingPanelOpen(false)} width={400}>{clothingPanelOpen && <FloatPanel title="CLOTHING" onClose={() => setClothingPanelOpen(false)} width={400}><ClothingPanel open={clothingPanelOpen} onClose={() => setClothingPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></FloatPanel>}</FloatPanel>}
       {fabricPanelOpen && <FabricPanel
         open={fabricPanelOpen}
         onClose={() => setFabricPanelOpen(false)}
@@ -4189,12 +4177,7 @@ export default function App() {
         panels={[]}
       />}
 
-      <PatternEditorPanel
-        open={patternPanelOpen}
-        onClose={() => setPatternPanelOpen(false)}
-        sceneRef={sceneRef}
-        setStatus={setStatus}
-      />
+      {patternPanelOpen && <FloatPanel title="PATTERN EDITOR" onClose={() => setPatternPanelOpen(false)} width={400}><PatternEditorPanel open={patternPanelOpen} onClose={() => setPatternPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></FloatPanel>}
 
       {displacementOpen && <DisplacementPanel open={displacementOpen} onClose={() => setDisplacementOpen(false)} meshRef={meshRef} setStatus={setStatus} />}
 

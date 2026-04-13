@@ -1,3 +1,4 @@
+import FloatPanel from "../ui/FloatPanel.jsx";
 import React, { useEffect, useMemo, useState } from "react";
 import UVCanvas from "./UVCanvas.jsx";
 import {
@@ -172,9 +173,9 @@ export default function UVEditorPanel({ open = false, onClose }) {
   if (!open) return null;
 
   return (
-    <div className="uv-panel-float">
-      <div className="uv-panel">
-        <div className="uv-panel-header">
+    <FloatPanel title="UV EDITOR" onClose={onClose} width={520}>
+      <div className="uv-panel" style={{paddingTop:0}}>
+        <div className="uv-panel-header" style={{display:"none"}}>
           <div>
             <strong>UV Editor</strong>
             <span className="uv-panel-sub"> {selectedCount} selected</span>
@@ -267,6 +268,6 @@ export default function UVEditorPanel({ open = false, onClose }) {
           snapEnabled={snapEnabled}
         />
       </div>
-    </div>
+    </FloatPanel>
   );
 }

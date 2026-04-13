@@ -344,17 +344,17 @@
             ]} />
             <button
               type="button"
-              className="spx-native-workspace-tab workspace-tabs-perf-btn"
-              onClick={() => setShowPerformancePanel((v) => !v)}
-            >
-              <span className="spx-native-workspace-tab-label">Performance</span>
-            </button>
-            <button
-              type="button"
               className="spx-native-workspace-tab workspace-tabs-mocap-btn"
               onClick={() => setMocapWorkspaceOpen((v) => !v)}
             >
               <span className="spx-native-workspace-tab-label">MoCap</span>
+            </button>
+            <button
+              type="button"
+              className="spx-native-workspace-tab workspace-tabs-perf-btn"
+              onClick={() => setShowPerformancePanel((v) => !v)}
+            >
+              <span className="spx-native-workspace-tab-label">Performance</span>
             </button>
           </div>
 
@@ -366,8 +366,8 @@
           />
           <NodeCompositorPanel open={compositorOpen} onClose={() => setCompositorOpen(false)} />
           <SPX3DTo2DPanel open={style3DTo2DOpen} onClose={() => setStyle3DTo2DOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} cameraRef={cameraRef} />
-          <AutoRigPanel open={autoRigOpen} onClose={() => setAutoRigOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
-          <AdvancedRigPanel open={advancedRigOpen} onClose={() => setAdvancedRigOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
+          {autoRigOpen && <FloatPanel title="AUTO RIG" onClose={() => setAutoRigOpen(false)} width={400}><AutoRigPanel open={autoRigOpen} onClose={() => setAutoRigOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></FloatPanel>}
+          {advancedRigOpen && <FloatPanel title="ADVANCED RIG" onClose={() => setAdvancedRigOpen(false)} width={420}><AdvancedRigPanel open={advancedRigOpen} onClose={() => setAdvancedRigOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></FloatPanel>}
 
           {showModelPicker && (
             <div className="model-picker-popup">

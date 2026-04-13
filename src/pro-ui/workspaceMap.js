@@ -14,6 +14,7 @@ export const WORKSPACES_MAP = {
   FX:           "FX",
   WORLD:        "World",
   GEN:          "Gen",
+  MOCAP:        "MoCap",
   PERFORMANCE:  "Performance",
 };
 

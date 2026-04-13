@@ -1,5 +1,5 @@
 .hair-panel-float{
-  position:fixed;
+  position:relative;
   top:90px;
   left:50%;
   transform:translateX(-50%);

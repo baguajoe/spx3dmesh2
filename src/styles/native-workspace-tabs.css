@@ -55,7 +55,7 @@
   flex: 0 0 auto !important;
   white-space: nowrap;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px !important;
+  font-size: 9px !important;
   font-weight: 600;
   letter-spacing: 0.3px;
   transition: color 0.15s, border-color 0.15s, background 0.15s;
@@ -80,7 +80,7 @@
 }
 
 .spx-native-workspace-tab-label {
-  font-size: 10px !important;
+  font-size: 9px !important;
   font-weight: 600;
   line-height: 1;
 }
@@ -195,7 +195,7 @@
 .spx-native-workspace-tab-hint {
   display: flex !important;
   padding: 6px 14px !important;
-  font-size: 10px !important;
+  font-size: 9px !important;
   font-family: JetBrains Mono, monospace !important;
   color: #b0b8c8 !important;
   cursor: pointer !important;
@@ -282,13 +282,13 @@
 /* ── Tab + timeline final visibility fix ─────────────────────── */
 .spx-native-workspace-tab {
   color: #b0b8c8 !important;
-  font-size: 10px !important;
+  font-size: 9px !important;
   letter-spacing: 0.6px !important;
 }
 .spx-native-workspace-tab:hover { color: #d0d8e8 !important; }
 .spx-native-workspace-tab.is-active,
 .spx-native-workspace-tab[data-active="true"] { color: #ffffff !important; }
-.spx-tab-group__trigger { color: #b0b8c8 !important; font-size: 10px !important; }
+.spx-tab-group__trigger { color: #b0b8c8 !important; font-size: 9px !important; }
 .spx-tab-group__trigger:hover { color: #d0d8e8 !important; }
 
 /* ── SpxTabGroup dropdown fix ────────────────────────────────── */
@@ -309,7 +309,7 @@
 }
 .spx-tab-group__item {
   padding: 7px 14px !important;
-  font-size: 10px !important;
+  font-size: 9px !important;
   font-family: JetBrains Mono, monospace !important;
   color: #b0b8c8 !important;
   cursor: pointer !important;
@@ -321,3 +321,7 @@
   color: #e0e8f0 !important;
 }
 .spx-tab-group__arrow { margin-left: 4px; font-size: 8px; }
+
+.workspace-tabs-mocap-btn {
+  color: #ff88ff !important;
+}

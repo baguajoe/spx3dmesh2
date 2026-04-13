@@ -1,5 +1,5 @@
 .hair-adv-panel-float{
-  position:fixed;
+  position:relative;
   top:134px;
   right:18px;
   z-index:12500;

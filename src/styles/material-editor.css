@@ -1,5 +1,5 @@
 .material-panel-float{
-  position:fixed;
+  position:relative;
   top:90px;
   right:18px;
   z-index:12100;

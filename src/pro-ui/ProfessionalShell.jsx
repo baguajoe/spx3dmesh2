@@ -268,16 +268,11 @@ export default function ProfessionalShell({
       </div>
 
       {/* Workspace tabs */}
-      <div className="spx-workspaces" ref={el => {
-        if (el) {
-          const active = el.querySelector('.spx-workspace.active');
-          if (active) active.scrollIntoView({ block: 'nearest', inline: 'center' });
-        }
-      }}>
+      <div className="spx-workspaces">
         {WORKSPACES.map((ws) => (
           <button key={ws} type="button"
             className={`spx-workspace${ws === activeWorkspace ? " active" : ""}`}
-            onClick={() => setActiveWorkspace(ws)}>{ws}
+            onClick={() => { if (ws === "MoCap") { window.dispatchEvent(new CustomEvent("spx:openMocap")); } else { setActiveWorkspace(ws); } }}>{ws}
           </button>
         ))}
       </div>

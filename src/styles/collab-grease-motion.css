@@ -4,8 +4,7 @@
 
 /* ── CollaboratePanel ─────────────────────────────────── */
 .cp-overlay {
-  position: fixed;
-  inset: 0;
+  position:relative;
   z-index: 8700;
   background: rgba(0,0,0,0.75);
   display: flex;
@@ -150,8 +149,7 @@
 
 /* ── GreasePencilPanel (SPX Sketch) ───────────────────── */
 .gp-overlay {
-  position: fixed;
-  inset: 0;
+  position:relative;
   z-index: 8600;
   background: rgba(0,0,0,0.75);
   display: flex;

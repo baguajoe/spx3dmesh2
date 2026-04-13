@@ -64,9 +64,9 @@ html, body, #root {
   border: 1px solid #454545;
   background: #313131;
   color: #bdbdbd;
-  padding: 6px 10px;
+  padding: 4px 8px;
   border-radius: 5px;
-  font-size: 12px;
+  font-size: 9px;
   font-weight: 700;
   cursor: pointer;
   outline: none;
