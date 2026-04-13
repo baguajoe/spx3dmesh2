@@ -11,40 +11,34 @@ const BUILTIN_SCRIPTS = [
 
 const EXAMPLE_SCRIPTS = Object.entries(SCRIPT_EXAMPLES).map(([name, code]) => ({ name, code }));
 
+export default function MeshScriptPanel({ open, onClose, sceneRef, rendererRef, setStatus }) {
 
-// ── Live viewport wrapper — mirrors main renderer on left side ────────────
-function WithViewport({ rendererRef, open, children }) {
-  const _vref = React.useRef(null);
-  const _vaf  = React.useRef(null);
-  React.useEffect(() => {
+  // ── Live 3D viewport mirror ──────────────────────────────────────────────
+  const _vpRef    = useRef(null);
+  const _vpMirror = useRef(null);
+  useEffect(() => {
     if (!open) return;
     const tick = () => {
       const src = rendererRef?.current?.domElement;
-      const dst = _vref.current;
+      const dst = _vpRef.current;
       if (src && dst && dst.offsetWidth > 0) {
         dst.width  = dst.offsetWidth;
         dst.height = dst.offsetHeight;
         dst.getContext('2d').drawImage(src, 0, 0, dst.width, dst.height);
       }
-      _vaf.current = requestAnimationFrame(tick);
+      _vpMirror.current = requestAnimationFrame(tick);
     };
-    _vaf.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(_vaf.current);
+    _vpMirror.current = requestAnimationFrame(tick);
+    return () => { if (_vpMirror.current) cancelAnimationFrame(_vpMirror.current); };
   }, [open, rendererRef]);
-  return (
-    <div style={{display:'flex',width:'100%',height:'100%',overflow:'hidden'}}>
-      <div style={{flex:'0 0 45%',minWidth:0,display:'flex',flexDirection:'column',borderRight:'1px solid #21262d',background:'#060a10'}}>
-        <div style={{fontSize:9,fontWeight:700,color:'#444',letterSpacing:'1.5px',padding:'5px 10px',background:'#0a0d13',borderBottom:'1px solid #21262d',flexShrink:0,textTransform:'uppercase'}}>3D Scene — Live</div>
-        <canvas ref={_vref} style={{flex:1,width:'100%',display:'block',minHeight:0}} />
-      </div>
-      <div style={{flex:1,minWidth:0,overflow:'hidden',display:'flex',flexDirection:'column'}}>
-        {children}
-      </div>
+
+  const _vpCanvas = (
+    <div style={{display:'flex',flexDirection:'column',flex:'0 0 45%',minWidth:0,borderRight:'1px solid #21262d',overflow:'hidden',background:'#060a10'}}>
+      <div style={{fontSize:9,fontWeight:700,color:'#444',letterSpacing:'1.5px',padding:'5px 10px',background:'#0a0d13',borderBottom:'1px solid #21262d',flexShrink:0}}>3D SCENE — LIVE</div>
+      <canvas ref={_vpRef} style={{flex:1,width:'100%',display:'block',minHeight:0}} />
     </div>
   );
-}
 
-export default function MeshScriptPanel({open, onClose, sceneRef, setStatus, rendererRef}) {
   const [code, setCode]         = useState(SCRIPT_EXAMPLES.hello);
   const [output, setOutput]     = useState([]);
   const [history, setHistory]   = useState([]);
@@ -159,7 +153,6 @@ export default function MeshScriptPanel({open, onClose, sceneRef, setStatus, ren
 
   if (!open) return null;
   return (
-    <WithViewport rendererRef={rendererRef} open={open}>
     <div className="ms-overlay" onClick={onClose}>
       <div className="ms-panel" onClick={e => e.stopPropagation()}>
 
@@ -308,6 +301,5 @@ help()            — full command list`}</pre>
         </div>
       </div>
     </div>
-    </WithViewport>
   );
 }
