@@ -20,34 +20,40 @@ function Section({ title, color=C.teal, children, defaultOpen=true }) {
 
 const NODE_COLORS = { clip:'#0066cc', blend2:'#006644', blend3:'#006644', additive:'#884400', stateMachine:'#440088', output:'#00ffc8', twobone_ik:'#cc0044', layeredBlend:'#664488' };
 
-export default function AnimGraphPanel({ open, onClose, sceneRef, rendererRef }) {
 
-  // ── Live 3D viewport mirror ──────────────────────────────────────────────
-  const _vpRef    = useRef(null);
-  const _vpMirror = useRef(null);
-  useEffect(() => {
+// ── Live viewport wrapper — mirrors main renderer on left side ────────────
+function WithViewport({ rendererRef, open, children }) {
+  const _vref = React.useRef(null);
+  const _vaf  = React.useRef(null);
+  React.useEffect(() => {
     if (!open) return;
     const tick = () => {
       const src = rendererRef?.current?.domElement;
-      const dst = _vpRef.current;
+      const dst = _vref.current;
       if (src && dst && dst.offsetWidth > 0) {
         dst.width  = dst.offsetWidth;
         dst.height = dst.offsetHeight;
         dst.getContext('2d').drawImage(src, 0, 0, dst.width, dst.height);
       }
-      _vpMirror.current = requestAnimationFrame(tick);
+      _vaf.current = requestAnimationFrame(tick);
     };
-    _vpMirror.current = requestAnimationFrame(tick);
-    return () => { if (_vpMirror.current) cancelAnimationFrame(_vpMirror.current); };
+    _vaf.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(_vaf.current);
   }, [open, rendererRef]);
-
-  const _vpCanvas = (
-    <div style={{display:'flex',flexDirection:'column',flex:'0 0 45%',minWidth:0,borderRight:'1px solid #21262d',overflow:'hidden',background:'#060a10'}}>
-      <div style={{fontSize:9,fontWeight:700,color:'#444',letterSpacing:'1.5px',padding:'5px 10px',background:'#0a0d13',borderBottom:'1px solid #21262d',flexShrink:0}}>3D SCENE — LIVE</div>
-      <canvas ref={_vpRef} style={{flex:1,width:'100%',display:'block',minHeight:0}} />
+  return (
+    <div style={{display:'flex',width:'100%',height:'100%',overflow:'hidden'}}>
+      <div style={{flex:'0 0 45%',minWidth:0,display:'flex',flexDirection:'column',borderRight:'1px solid #21262d',background:'#060a10'}}>
+        <div style={{fontSize:9,fontWeight:700,color:'#444',letterSpacing:'1.5px',padding:'5px 10px',background:'#0a0d13',borderBottom:'1px solid #21262d',flexShrink:0,textTransform:'uppercase'}}>3D Scene — Live</div>
+        <canvas ref={_vref} style={{flex:1,width:'100%',display:'block',minHeight:0}} />
+      </div>
+      <div style={{flex:1,minWidth:0,overflow:'hidden',display:'flex',flexDirection:'column'}}>
+        {children}
+      </div>
     </div>
   );
+}
 
+export default function AnimGraphPanel({open, onClose, sceneRef, rendererRef}) {
   const [nodes, setNodes] = useState([
     { id:'clip1',  type:'clip',   x:60,  y:80,  params:{ clipName:'Idle' }},
     { id:'clip2',  type:'clip',   x:60,  y:180, params:{ clipName:'Walk' }},
@@ -110,8 +116,8 @@ export default function AnimGraphPanel({ open, onClose, sceneRef, rendererRef })
   const selNode = nodes.find(n => n.id === selectedNode);
 
   return (
-    <div className="ms-overlay" onClick={onClose} style={{display:"flex",flexDirection:"row",alignItems:"stretch"}}>
-      <>{_vpCanvas}<div className="ms-panel" style={{flex:1,minWidth:0,width:"auto"}} onClick={e=>e.stopPropagation()}>
+    <div className="ms-overlay" onClick={onClose}>
+      <div className="ms-panel" style={{width:680}} onClick={e=>e.stopPropagation()}>
 
         <div className="ms-header">
           <div className="ms-header-dot" style={{background:C.orange}}/>
@@ -266,6 +272,6 @@ export default function AnimGraphPanel({ open, onClose, sceneRef, rendererRef })
           )}
         </div>
       </div>
-    </></div>
+    </div>
   );
 }

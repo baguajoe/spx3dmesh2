@@ -35,6 +35,40 @@ function mkNode(type, x, y) {
   };
 }
 
+
+// ── Live viewport wrapper — mirrors main renderer on left side ────────────
+function WithViewport({ rendererRef, open, children }) {
+  const _vref = React.useRef(null);
+  const _vaf  = React.useRef(null);
+  React.useEffect(() => {
+    if (!open) return;
+    const tick = () => {
+      const src = rendererRef?.current?.domElement;
+      const dst = _vref.current;
+      if (src && dst && dst.offsetWidth > 0) {
+        dst.width  = dst.offsetWidth;
+        dst.height = dst.offsetHeight;
+        dst.getContext('2d').drawImage(src, 0, 0, dst.width, dst.height);
+      }
+      _vaf.current = requestAnimationFrame(tick);
+    };
+    _vaf.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(_vaf.current);
+  }, [open, rendererRef]);
+  return (
+    <WithViewport rendererRef={rendererRef} open={open}>
+    <div style={{display:'flex',width:'100%',height:'100%',overflow:'hidden'}}>
+      <div style={{flex:'0 0 45%',minWidth:0,display:'flex',flexDirection:'column',borderRight:'1px solid #21262d',background:'#060a10'}}>
+        <div style={{fontSize:9,fontWeight:700,color:'#444',letterSpacing:'1.5px',padding:'5px 10px',background:'#0a0d13',borderBottom:'1px solid #21262d',flexShrink:0,textTransform:'uppercase'}}>3D Scene — Live</div>
+        <canvas ref={_vref} style={{flex:1,width:'100%',display:'block',minHeight:0}} />
+      </div>
+      <div style={{flex:1,minWidth:0,overflow:'hidden',display:'flex',flexDirection:'column'}}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export default function NodeMaterialEditor({meshRef, open=true, onClose, rendererRef}) {
   const [nodes,    setNodes]    = useState(() => [mkNode('Output',400,200), mkNode('Principled',100,150)]);
   const [links,    setLinks]    = useState([]);
@@ -45,32 +79,6 @@ export default function NodeMaterialEditor({meshRef, open=true, onClose, rendere
 
   const addNode    = useCallback((type) => { setNodes(n => [...n, mkNode(type, 200-pan.x, 200-pan.y)]); }, [pan]);
   const deleteNode = useCallback((id)   => { setNodes(n => n.filter(x => x.id!==id)); setLinks(l => l.filter(x => x.fromNode!==id && x.toNode!==id)); }, []);
-
-  // ── Live 3D viewport mirror ──────────────────────────────────────────────
-  const _vpRef    = useRef(null);
-  const _vpMirror = useRef(null);
-  useEffect(() => {
-    if (!open) return;
-    const tick = () => {
-      const src = rendererRef?.current?.domElement;
-      const dst = _vpRef.current;
-      if (src && dst && dst.offsetWidth > 0) {
-        dst.width  = dst.offsetWidth;
-        dst.height = dst.offsetHeight;
-        dst.getContext('2d').drawImage(src, 0, 0, dst.width, dst.height);
-      }
-      _vpMirror.current = requestAnimationFrame(tick);
-    };
-    _vpMirror.current = requestAnimationFrame(tick);
-    return () => { if (_vpMirror.current) cancelAnimationFrame(_vpMirror.current); };
-  }, [open, rendererRef]);
-
-  const _vpCanvas = (
-    <div style={{display:'flex',flexDirection:'column',flex:'0 0 45%',minWidth:0,borderRight:'1px solid #21262d',overflow:'hidden',background:'#060a10'}}>
-      <div style={{fontSize:9,fontWeight:700,color:'#444',letterSpacing:'1.5px',padding:'5px 10px',background:'#0a0d13',borderBottom:'1px solid #21262d',flexShrink:0}}>3D SCENE — LIVE</div>
-      <canvas ref={_vpRef} style={{flex:1,width:'100%',display:'block',minHeight:0}} />
-    </div>
-  );
 
   const onMouseDown = useCallback((e, node) => {
     e.stopPropagation();
@@ -129,9 +137,6 @@ export default function NodeMaterialEditor({meshRef, open=true, onClose, rendere
   if (!open) return null;
 
   return (
-    <div style={{display:"flex",width:"100%",height:"100%",overflow:"hidden"}}>
-    {_vpCanvas}
-    <div style={{flex:1,minWidth:0,overflow:"hidden"}}>
     <div className="nme-overlay">
       <div className="nme-header">
         <div className="nme-header__dot" />
@@ -288,5 +293,6 @@ export default function NodeMaterialEditor({meshRef, open=true, onClose, rendere
         </div>
       )}
     </div>
+  </WithViewport>
   );
 }
