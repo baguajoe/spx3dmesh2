@@ -1,6 +1,9 @@
 .pattern-panel-float{
   width: 100%;
   box-sizing: border-box;
+  overflow-y: auto;
+
+  box-sizing: border-box;
 }
 
 .pattern-panel{

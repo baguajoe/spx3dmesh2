@@ -435,7 +435,7 @@
 
 .ml-preview-fill {
   position: absolute;
-  left: 0; top: 0;
+   
   height: 100%;
   background: var(--cat-color, #00ffc8);
   border-radius: 1px;
