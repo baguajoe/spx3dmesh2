@@ -1,521 +1,240 @@
-/* ═══════════════════════════════════════════════════════════════════
-   SPX World Generators — Environment, Terrain, City, Crowd
-   ═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════
+   world-generators.css  —  WORLD tab fullscreen panels
+   ═══════════════════════════════════════════════════════ */
 
-/* ── Shared Generator Layout ────────────────────────────────────────── */
-.gen-root {
+.wg-layout {
   display: flex;
   height: 100%;
-  background: var(--bg);
-  font-family: var(--font);
-  color: var(--text);
-  overflow: hidden;
-}
-
-.gen-root--stack {
-  flex-direction: column;
-  overflow-y: auto;
-  padding: 12px;
-  font-size: 12px;
-}
-
-/* ── Sidebar ────────────────────────────────────────────────────────── */
-.gen-sidebar {
-  width: 260px;
-  background: var(--bg2);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  overflow-y: auto;
-}
-
-.gen-sidebar--wide { width: 300px; }
-
-/* ── Main viewport area ─────────────────────────────────────────────── */
-.gen-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* ── Section Label ──────────────────────────────────────────────────── */
-.gen-sec-label {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-  padding: 14px 14px 6px;
-}
-
-/* ── Slider Row ─────────────────────────────────────────────────────── */
-.gen-slider-row {
-  display: flex;
-  align-items: center;
-  padding: 5px 14px;
-  gap: 8px;
-}
-
-.gen-slider-label {
-  font-size: 10px;
-  color: var(--muted);
-  min-width: 90px;
-}
-
-.gen-slider {
-  flex: 1;
-  accent-color: var(--teal);
-  cursor: pointer;
-}
-
-.gen-slider-val {
-  font-size: 9px;
-  color: var(--teal);
-  width: 36px;
-  text-align: right;
-  font-family: var(--font);
-}
-
-/* ── Row ────────────────────────────────────────────────────────────── */
-.gen-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 5px 14px;
-  gap: 8px;
-}
-
-.gen-row-label {
-  font-size: 10px;
-  color: var(--muted);
-  min-width: 90px;
-}
-
-/* ── Divider ────────────────────────────────────────────────────────── */
-.gen-divider {
-  height: 1px;
-  background: var(--border);
-  margin: 8px 0;
-}
-
-/* ── Toggle ─────────────────────────────────────────────────────────── */
-.gen-toggle {
-  width: 32px;
-  height: 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  position: relative;
-  flex-shrink: 0;
-  transition: background 0.2s, border-color 0.2s;
-  border: none;
-}
-
-.gen-toggle--off { background: var(--bg3); border: 1px solid var(--border); }
-.gen-toggle--on  { background: var(--teal); }
-
-.gen-toggle__dot {
-  position: absolute;
-  top: 2px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  transition: left 0.2s;
-}
-
-.gen-toggle__dot--off { left: 2px;  background: var(--muted); }
-.gen-toggle__dot--on  { left: 16px; background: var(--bg); }
-
-/* ── Buttons ────────────────────────────────────────────────────────── */
-.gen-btn-row {
-  display: flex;
-  gap: 6px;
-  padding: 10px 14px;
-  flex-wrap: wrap;
-}
-
-.gen-btn {
-  background: var(--bg3);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  font-family: var(--font);
-  font-size: 10px;
-  font-weight: 700;
-  padding: 6px 14px;
-  cursor: pointer;
-  letter-spacing: 0.06em;
-}
-
-.gen-btn--primary {
-  background: var(--teal);
-  color: var(--bg);
-  border-color: var(--teal);
-}
-
-.gen-btn--orange {
-  background: var(--orange);
-  color: #fff;
-  border-color: var(--orange);
-}
-
-.gen-btn--danger {
-  background: var(--bg3);
-  color: var(--danger);
-  border-color: var(--danger);
-}
-
-.gen-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* ── Stats Box ──────────────────────────────────────────────────────── */
-.gen-stats {
-  margin: 0 14px 14px;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px;
-}
-
-.gen-stats__label {
-  font-size: 9px;
-  color: var(--muted);
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.gen-stats__row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 9px;
-  margin-bottom: 2px;
-}
-
-.gen-stats__key { color: var(--muted); }
-.gen-stats__val { color: var(--teal); }
-.gen-stats__val--white { color: var(--text); }
-
-/* ── Toolbar ────────────────────────────────────────────────────────── */
-.gen-toolbar {
-  display: flex;
-  gap: 8px;
-  padding: 8px 12px;
-  background: var(--bg2);
-  border-bottom: 1px solid var(--border);
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.gen-toolbar__label { font-size: 10px; color: var(--muted); }
-.gen-toolbar__hint  { font-size: 9px;  color: var(--muted); }
-.gen-toolbar__right { margin-left: auto; display: flex; gap: 6px; }
-
-/* ── Tag / Badge ────────────────────────────────────────────────────── */
-.gen-tag {
-  display: inline-block;
-  font-size: 8px;
-  padding: 2px 6px;
-  border-radius: 2px;
-  letter-spacing: 0.06em;
-  font-family: var(--font);
-}
-
-/* ── Status Bar ─────────────────────────────────────────────────────── */
-.gen-statusbar {
-  display: flex;
-  gap: 16px;
-  padding: 6px 12px;
-  background: var(--bg2);
-  border-top: 1px solid var(--border);
-  font-size: 9px;
-  color: var(--muted);
-  flex-shrink: 0;
-  font-family: var(--font);
-}
-
-.gen-statusbar__right { margin-left: auto; color: var(--teal); }
-
-/* ── Canvas ─────────────────────────────────────────────────────────── */
-.gen-canvas {
-  flex: 1;
-  display: block;
   width: 100%;
-  height: 100%;
+  background: #0d1117;
+  color: #ccc;
+  font-family: 'JetBrains Mono', 'Segoe UI', monospace;
+  font-size: 11px;
+  overflow: hidden;
 }
 
-/* ── Tool Strip (Terrain) ───────────────────────────────────────────── */
-.gen-tool-strip {
-  width: 64px;
-  background: var(--bg2);
-  border-right: 1px solid var(--border);
+/* ── Sidebar ─────────────────────────────────────────── */
+.wg-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: #0a0d13;
+  border-right: 1px solid #21262d;
+  overflow-y: auto;
+  padding: 12px 8px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 8px 4px;
-  flex-shrink: 0;
-  overflow-y: auto;
 }
 
-.gen-tool-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 6px 4px;
-  border-radius: var(--radius);
-  border: 1px solid transparent;
-  background: transparent;
-  cursor: pointer;
-  font-family: var(--font);
+.wg-section-title {
+  font-size: 9px;
+  font-weight: 700;
+  color: #444;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 8px 4px 4px;
+  border-bottom: 1px solid #1a2030;
+  margin-bottom: 4px;
 }
 
-.gen-tool-btn--active {
-  background: rgba(0,255,200,0.1);
-  border-color: var(--teal);
-}
-
-.gen-tool-icon  { font-size: 16px; }
-.gen-tool-label { font-size: 7px; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; }
-
-/* ── Biome Grid ─────────────────────────────────────────────────────── */
-.gen-biome-grid {
+/* ── Biome / Formation grid ──────────────────────────── */
+.wg-biome-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4px;
-  padding: 0 12px 10px;
+  margin-bottom: 8px;
 }
 
-.gen-biome-btn {
+.wg-biome-btn {
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-radius: 4px;
+  color: #888;
   padding: 6px 4px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--bg3);
-  color: var(--muted);
-  font-family: var(--font);
-  font-size: 9px;
-  font-weight: 600;
   cursor: pointer;
-  text-align: center;
-}
-
-.gen-biome-btn--active {
-  border-color: var(--teal);
-  background: rgba(0,255,200,0.1);
-  color: var(--teal);
-}
-
-.gen-biome-swatches {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 2px;
-  justify-content: center;
-  margin-bottom: 3px;
+  transition: all 0.15s;
+  font-family: inherit;
 }
+.wg-biome-btn:hover { border-color: #444; color: #ccc; }
+.wg-biome-btn--active { border-color: #00ffc8 !important; color: #00ffc8 !important; background: #00ffc811 !important; }
 
-.gen-biome-swatch {
-  width: 8px;
-  height: 8px;
-  border-radius: 1px;
+.wg-biome-icon  { font-size: 16px; }
+.wg-biome-label { font-size: 8px; letter-spacing: 0.5px; }
+
+/* ── Brush grid ──────────────────────────────────────── */
+.wg-brush-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  margin-bottom: 8px;
 }
-
-/* ── Paint Color Row ────────────────────────────────────────────────── */
-.gen-paint-row {
+.wg-brush-btn {
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-radius: 3px;
+  color: #888;
+  padding: 5px 3px;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  padding: 5px 14px;
-  gap: 8px;
-}
-
-.gen-paint-swatch {
-  width: 24px;
-  height: 24px;
-  border-radius: 3px;
-  border: 1px solid var(--border);
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.gen-paint-hex {
-  font-size: 9px;
-  color: var(--muted);
-  font-family: var(--font);
-}
-
-/* ── City Style Grid ────────────────────────────────────────────────── */
-.gen-style-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  padding: 0 10px 10px;
-}
-
-.gen-style-btn {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 8px 6px;
-  cursor: pointer;
-  color: var(--text);
-  font-family: var(--font);
+  gap: 4px;
+  font-family: inherit;
   font-size: 10px;
-  font-weight: 600;
-  text-align: center;
+  transition: all 0.15s;
+}
+.wg-brush-btn:hover { border-color: #444; color: #ccc; }
+.wg-brush-btn--active { border-color: #44aaff !important; color: #44aaff !important; background: #44aaff11 !important; }
+.wg-brush-icon  { font-size: 13px; }
+.wg-brush-label { font-size: 9px; }
+
+/* ── Preset small ────────────────────────────────────── */
+.wg-preset-grid-sm { display: flex; flex-direction: column; gap: 3px; }
+.wg-preset-sm-btn {
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-radius: 3px;
+  color: #888;
+  padding: 5px 8px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  font-size: 10px;
+  transition: all 0.15s;
+}
+.wg-preset-sm-btn:hover { border-color: #44aaff; color: #44aaff; }
+
+/* ── Main area ───────────────────────────────────────── */
+.wg-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 12px;
+  gap: 12px;
 }
 
-.gen-style-btn--active {
-  background: rgba(0,255,200,0.1);
-  border-color: var(--teal);
-  color: var(--teal);
-}
-
-.gen-style-icon { font-size: 20px; margin-bottom: 3px; }
-
-/* ── Crowd Panel ────────────────────────────────────────────────────── */
-.gen-crowd-title {
-  color: var(--teal);
-  font-size: 13px;
-  margin-bottom: 10px;
-  letter-spacing: 0.06em;
-  font-family: var(--font);
-}
-
-.gen-crowd-viewport {
-  width: 100%;
-  height: 340px;
-  border-radius: var(--radius-lg);
-  margin-bottom: 10px;
-  border: 1px solid var(--border);
+/* ── Preview canvas ──────────────────────────────────── */
+.wg-preview-area {
+  flex: 1;
+  min-height: 200px;
+  background: #060a10;
+  border: 1px solid #21262d;
+  border-radius: 6px;
+  position: relative;
   overflow: hidden;
 }
-
-.gen-sec-box {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 10px;
-  margin-bottom: 8px;
-}
-
-.gen-sec-box-label {
-  font-size: 10px;
-  color: var(--muted);
+.wg-preview-canvas {
+  width: 100%;
+  height: 100%;
   display: block;
-  margin-bottom: 3px;
-  font-family: var(--font);
+}
+.wg-preview-label {
+  position: absolute;
+  bottom: 8px;
+  left: 10px;
+  font-size: 10px;
+  color: #555;
+  pointer-events: none;
 }
 
-.gen-sec-box-slider {
-  width: 100%;
-  accent-color: var(--teal);
-  cursor: pointer;
-  margin-bottom: 8px;
-}
-
-/* ── Formation Badges ───────────────────────────────────────────────── */
-.gen-formation-row {
+/* ── Params row ──────────────────────────────────────── */
+.wg-params-row {
   display: flex;
-  flex-wrap: wrap;
-  margin-bottom: 8px;
-  gap: 4px;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.wg-params-col {
+  flex: 1;
+  min-width: 0;
 }
 
-.gen-formation-badge {
-  padding: 3px 8px;
-  font-size: 9px;
-  border-radius: var(--radius);
+/* ── Slider row ──────────────────────────────────────── */
+.wg-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+}
+.wg-label {
+  font-size: 10px;
+  color: #666;
+  width: 90px;
+  flex-shrink: 0;
+}
+.wg-slider {
+  flex: 1;
+  accent-color: #44aaff;
   cursor: pointer;
-  font-weight: 600;
-  font-family: var(--font);
-  border: 1px solid var(--border);
-  background: var(--bg3);
-  color: var(--muted);
+  height: 14px;
+}
+.wg-val {
+  font-size: 10px;
+  color: #44aaff;
+  font-weight: 700;
+  width: 38px;
+  text-align: right;
+}
+.wg-color {
+  width: 32px;
+  height: 20px;
+  border: 1px solid #21262d;
+  border-radius: 3px;
+  cursor: pointer;
+  background: none;
+  padding: 0;
+}
+.wg-check {
+  accent-color: #44aaff;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+.wg-select {
+  flex: 1;
+  background: #0d1117;
+  border: 1px solid #21262d;
+  color: #ccc;
+  font-size: 10px;
+  padding: 3px 6px;
+  border-radius: 3px;
+  font-family: inherit;
 }
 
-.gen-formation-badge--active {
-  background: var(--teal);
-  color: var(--bg);
-  border-color: var(--teal);
+/* ── Stats ───────────────────────────────────────────── */
+.wg-stat-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #555;
+  margin-bottom: 3px;
 }
+.wg-swatch-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+.wg-swatch { width: 20px; height: 20px; border-radius: 50%; border: 1px solid #333; cursor: pointer; }
 
-/* ── Crowd Buttons ──────────────────────────────────────────────────── */
-.gen-crowd-btn {
-  background: var(--teal);
-  color: var(--bg);
+/* ── Actions bar ─────────────────────────────────────── */
+.wg-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  align-items: center;
+}
+.wg-btn {
+  padding: 8px 16px;
   border: none;
-  border-radius: var(--radius);
-  padding: 7px 14px;
-  font-family: var(--font);
-  font-size: 12px;
+  border-radius: 4px;
+  font-size: 11px;
   font-weight: 700;
   cursor: pointer;
-  margin-right: 6px;
-  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+  font-family: inherit;
+  transition: filter 0.15s;
 }
-
-.gen-crowd-btn--clear {
-  background: var(--orange);
-  color: #fff;
-}
-
-/* ── Environment Panel specific ─────────────────────────────────────── */
-.gen-env-title {
-  color: var(--teal);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  margin-bottom: 10px;
-  font-family: var(--font);
-}
-
-.gen-env-preset-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  margin-bottom: 10px;
-}
-
-.gen-env-preset {
-  padding: 8px 6px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--bg3);
-  cursor: pointer;
-  text-align: center;
-  font-family: var(--font);
-  font-size: 9px;
-  color: var(--muted);
-  font-weight: 600;
-}
-
-.gen-env-preset--active {
-  border-color: var(--teal);
-  background: rgba(0,255,200,0.1);
-  color: var(--teal);
-}
-
-.gen-env-preset-icon  { font-size: 18px; margin-bottom: 2px; }
-
-.gen-color-full {
-  width: 100%;
-  height: 28px;
-  border: none;
-  cursor: pointer;
-  margin-bottom: 8px;
-  border-radius: var(--radius);
-}
-
-.gen-hint {
-  font-size: 9px;
-  color: var(--muted);
-  margin-top: 8px;
-  line-height: 1.4;
-  font-family: var(--font);
-}
-
-.gen-water-box {
-  margin-top: 8px;
-  padding: 8px;
-  background: var(--bg);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-}
+.wg-btn:hover { filter: brightness(1.2); }
+.wg-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.wg-btn--generate  { background: #003a20; color: #00ffc8; border: 1px solid #00ffc844; flex: 1; }
+.wg-btn--secondary { background: #1a2030; color: #888; border: 1px solid #21262d; }
+.wg-btn--danger    { background: #2a0a0a; color: #ff4444; border: 1px solid #ff444444; }

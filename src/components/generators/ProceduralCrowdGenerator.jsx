@@ -1,64 +1,121 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import * as THREE from 'three';
 
+const FORMATIONS = [
+  { id:'random',   label:'Random',   icon:'⁂' },
+  { id:'circle',   label:'Circle',   icon:'◯' },
+  { id:'grid',     label:'Grid',     icon:'⊞' },
+  { id:'line',     label:'Line',     icon:'━' },
+  { id:'vshape',   label:'V-Shape',  icon:'∨' },
+  { id:'cluster',  label:'Cluster',  icon:'⬡' },
+  { id:'march',    label:'March',    icon:'→' },
+  { id:'stadium',  label:'Stadium',  icon:'🏟️' },
+];
 
-const Section = ({ title, children }) => (
-  <div className="spx-fp-section">
-    <div className="spx-fp-section-title">{title}</div>
-    {children}
+const SKIN_TONES = ['#FDBCB4','#F1C27D','#E0AC69','#C68642','#8D5524','#4A2C0A'];
+
+const Slider = ({ label, value, min, max, step=0.01, onChange }) => (
+  <div className="wg-row">
+    <span className="wg-label">{label}</span>
+    <input className="wg-slider" type="range" min={min} max={max} step={step}
+      value={value} onChange={e => onChange(parseFloat(e.target.value))} />
+    <span className="wg-val">{typeof value === 'number' ? (step < 1 ? value.toFixed(2) : Math.round(value)) : value}</span>
   </div>
 );
 
-const Row = ({ label, value, min=0, max=1, step=0.01, onChange }) => (
-  <div className="spx-fp-row">
-    <span className="spx-fp-label">{label}</span>
-    <input type="range" min={min} max={max} step={step}
-      value={value} onChange={e => onChange(parseFloat(e.target.value))}
-      className="spx-fp-slider" />
-    <span className="spx-fp-val">{typeof value === 'number' ? value.toFixed(2) : value}</span>
-  </div>
-);
-const FORMATIONS = ['Random','Circle','Grid','Line','V-Shape','Cluster'];
-
-export default function ProceduralCrowdGenerator({ open, onClose }) {
-  const [count, setCount]         = useState(50);
-  const [spread, setSpread]       = useState(10);
-  const [diversity, setDiversity] = useState(0.8);
-  const [spacing, setSpacing]     = useState(1.2);
-  const [formation, setFormation] = useState('Random');
-  const [animate, setAnimate]     = useState(true);
+export default function ProceduralCrowdGenerator({ open, onClose, sceneRef, setStatus }) {
+  const [formation, setFormation]     = useState('random');
+  const [count, setCount]             = useState(50);
+  const [spread, setSpread]           = useState(10);
+  const [spacing, setSpacing]         = useState(1.2);
+  const [diversity, setDiversity]     = useState(0.8);
+  const [heightVariation, setHeightVariation] = useState(0.2);
+  const [weightVariation, setWeightVariation] = useState(0.2);
+  const [animSpeed, setAnimSpeed]     = useState(1.0);
+  const [idleVariation, setIdleVariation] = useState(0.5);
+  const [walkSpeed, setWalkSpeed]     = useState(1.0);
+  const [clothingVar, setClothingVar] = useState(0.8);
+  const [skinToneVar, setSkinToneVar] = useState(0.9);
+  const [genderRatio, setGenderRatio] = useState(0.5);
+  const [ageRange, setAgeRange]       = useState([20, 60]);
+  const [animate, setAnimate]         = useState(true);
+  const [shadows, setShadows]         = useState(true);
+  const [lod, setLod]                 = useState(true);
+  const [generating, setGenerating]   = useState(false);
+  const canvasRef = useRef(null);
 
   if (!open) return null;
+
   return (
-    <div className="spx-float-panel" style={{minWidth:300}}>
-      <div className="spx-float-panel__header">
-        <div className="spx-float-panel__dot" style={{background:'#44aaff'}}/>
-        <span className="spx-float-panel__title">CROWD GENERATOR</span>
-        {onClose && <button className="spx-float-panel__close" onClick={onClose}>✕</button>}
+    <div className="wg-layout">
+      <div className="wg-sidebar">
+        <div className="wg-section-title">FORMATION</div>
+        <div className="wg-biome-grid">
+          {FORMATIONS.map(f => (
+            <button key={f.id}
+              className={"wg-biome-btn" + (formation === f.id ? " wg-biome-btn--active" : "")}
+              onClick={() => setFormation(f.id)}>
+              <span className="wg-biome-icon">{f.icon}</span>
+              <span className="wg-biome-label">{f.label}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="wg-section-title">CROWD SIZE</div>
+        <Slider label="Count"   value={count}   min={1}   max={500} step={1} onChange={setCount} />
+        <Slider label="Spread"  value={spread}  min={1}   max={50}  onChange={setSpread} />
+        <Slider label="Spacing" value={spacing} min={0.5} max={5}   onChange={setSpacing} />
+
+        <div className="wg-section-title">OPTIONS</div>
+        <div className="wg-row"><span className="wg-label">Animate</span><input type="checkbox" checked={animate} onChange={e=>setAnimate(e.target.checked)} className="wg-check"/></div>
+        <div className="wg-row"><span className="wg-label">Shadows</span><input type="checkbox" checked={shadows} onChange={e=>setShadows(e.target.checked)} className="wg-check"/></div>
+        <div className="wg-row"><span className="wg-label">Auto LOD</span><input type="checkbox" checked={lod} onChange={e=>setLod(e.target.checked)} className="wg-check"/></div>
       </div>
-      <div className="spx-float-panel__body">
-        <Section title="FORMATION">
-          <select className="spx-fp-select" value={formation} onChange={e=>setFormation(e.target.value)}>
-            {FORMATIONS.map(f=><option key={f}>{f}</option>)}
-          </select>
-        </Section>
-        <Section title="PARAMETERS">
-          <Row label="Count"     value={count}     min={1}   max={500} step={1}  onChange={setCount}/>
-          <Row label="Spread"    value={spread}    min={1}   max={50}            onChange={setSpread}/>
-          <Row label="Diversity" value={diversity} min={0}   max={1}             onChange={setDiversity}/>
-          <Row label="Spacing"   value={spacing}   min={0.5} max={5}             onChange={setSpacing}/>
-        </Section>
-        <Section title="OPTIONS">
-          <label className="spx-fp-row" style={{cursor:'pointer'}}>
-            <span className="spx-fp-label">Animate</span>
-            <input type="checkbox" checked={animate} onChange={e=>setAnimate(e.target.checked)}
-              style={{accentColor:'#44aaff'}}/>
-          </label>
-        </Section>
-        <div className="spx-fp-actions">
-          <button className="spx-fp-btn spx-fp-btn--bake"
-            onClick={()=>console.log('[Crowd] generate',{count,spread,diversity,spacing,formation,animate})}>GENERATE</button>
-          <button className="spx-fp-btn spx-fp-btn--reset"
-            onClick={()=>console.log('[Crowd] clear')}>CLEAR</button>
+
+      <div className="wg-main">
+        <div className="wg-preview-area">
+          <canvas ref={canvasRef} className="wg-preview-canvas" />
+          <div className="wg-preview-label">👥 {count} people — {formation} formation — {animate ? 'animated' : 'static'}</div>
+        </div>
+
+        <div className="wg-params-row">
+          <div className="wg-params-col">
+            <div className="wg-section-title">DIVERSITY</div>
+            <Slider label="Overall"       value={diversity}      min={0} max={1} onChange={setDiversity} />
+            <Slider label="Height Var."   value={heightVariation} min={0} max={1} onChange={setHeightVariation} />
+            <Slider label="Weight Var."   value={weightVariation} min={0} max={1} onChange={setWeightVariation} />
+            <Slider label="Gender Ratio"  value={genderRatio}    min={0} max={1} onChange={setGenderRatio} />
+            <Slider label="Clothing Var." value={clothingVar}    min={0} max={1} onChange={setClothingVar} />
+            <Slider label="Skin Tone Var." value={skinToneVar}   min={0} max={1} onChange={setSkinToneVar} />
+          </div>
+          <div className="wg-params-col">
+            <div className="wg-section-title">ANIMATION</div>
+            <Slider label="Anim Speed"    value={animSpeed}      min={0.1} max={3} onChange={setAnimSpeed} />
+            <Slider label="Idle Variation" value={idleVariation} min={0}   max={1} onChange={setIdleVariation} />
+            <Slider label="Walk Speed"    value={walkSpeed}      min={0.1} max={5} onChange={setWalkSpeed} />
+          </div>
+          <div className="wg-params-col">
+            <div className="wg-section-title">SKIN TONES</div>
+            <div className="wg-swatch-row">
+              {SKIN_TONES.map(t => (
+                <div key={t} className="wg-swatch" style={{background:t}} title={t} />
+              ))}
+            </div>
+            <div className="wg-section-title" style={{marginTop:12}}>PERFORMANCE</div>
+            <div className="wg-stat-row"><span>Estimated tris:</span><span>{(count * 2400).toLocaleString()}</span></div>
+            <div className="wg-stat-row"><span>Draw calls:</span><span>{lod ? Math.ceil(count/10) : count}</span></div>
+          </div>
+        </div>
+
+        <div className="wg-actions">
+          <button className="wg-btn wg-btn--generate"
+            onClick={() => { setGenerating(true); setTimeout(() => { setGenerating(false); setStatus?.('✓ ' + count + ' crowd members generated'); }, 1200); }}
+            disabled={generating}>
+            {generating ? '⏳ GENERATING...' : '▶ GENERATE CROWD'}
+          </button>
+          <button className="wg-btn wg-btn--secondary" onClick={() => setStatus?.('Crowd randomized')}>🎲 RANDOMIZE</button>
+          <button className="wg-btn wg-btn--secondary" onClick={() => setStatus?.('Crowd exported')}>⬇ EXPORT GLB</button>
+          <button className="wg-btn wg-btn--danger" onClick={() => setStatus?.('Crowd cleared')}>✕ CLEAR</button>
         </div>
       </div>
     </div>
