@@ -472,3 +472,8 @@
 
 /* Quad divider lines (drawn by canvas, but reinforce with CSS) */
 .spx-viewport-wrap { position: relative; }
+
+/* Prevent viewport UI bleeding through fullscreen overlays */
+.viewport-toolbar { z-index: 10 !important; }
+.quad-toggle-btn  { z-index: 10 !important; }
+.mesh-editor-canvas { z-index: 1; position: relative; }

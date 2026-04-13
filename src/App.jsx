@@ -4570,8 +4570,9 @@ export default function App() {
             <span className="spx-overlay-title">✂ UV EDITOR</span>
             <button onClick={() => setUvPanelOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
           </div>
-          <div className="spx-overlay-body">
-            <UVEditorPanel open={uvPanelOpen} onClose={() => setUvPanelOpen(false)} />
+          <div className="spx-overlay-body" style={{padding:0,overflow:'hidden'}}>
+            <UVEditorPanel open={uvPanelOpen} onClose={() => setUvPanelOpen(false)}
+              style={{width:'100%',height:'100%',border:'none',borderRadius:0}} />
           </div>
         </div>
       )}
@@ -4587,8 +4588,10 @@ export default function App() {
             <span className="spx-overlay-title">🎨 NODE MATERIAL EDITOR</span>
             <button onClick={() => setNodeEditorOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
           </div>
-          <div className="spx-overlay-body">
-            <NodeMaterialEditor open={nodeEditorOpen} onClose={() => setNodeEditorOpen(false)} meshRef={meshRef} sceneRef={sceneRef} setStatus={setStatus} />
+          <div className="spx-overlay-body" style={{padding:0,overflow:'hidden'}}>
+            <NodeMaterialEditor open={nodeEditorOpen} onClose={() => setNodeEditorOpen(false)}
+              meshRef={meshRef} sceneRef={sceneRef} setStatus={setStatus}
+              style={{width:'100%',height:'100%',border:'none',borderRadius:0}} />
           </div>
         </div>
       )}
