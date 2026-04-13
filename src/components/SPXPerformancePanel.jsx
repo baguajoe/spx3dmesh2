@@ -1,3 +1,4 @@
+import "../styles/spx-perf.css";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   createPerformanceSession,
@@ -451,7 +452,7 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
             <button className="spp-btn" onClick={handlePause}>⏸ Pause</button>
             <button className="spp-btn" onClick={handleStop}>⏹ Stop</button>
             <button
-              style={session.loop ? S.btnPrimary : S.btn}
+              className={session.loop ? "spp-btn spp-btn--primary" : "spp-btn"}
               onClick={handleLoop}
             >
               ↺ Loop
@@ -464,7 +465,7 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
             {[0.25, 0.5, 1, 2].map(sp => (
               <button
                 key={sp}
-                style={session.speed === sp ? S.btnPrimary : S.btn}
+                className={session.speed === sp ? "spp-btn spp-btn--primary" : "spp-btn"}
                 onClick={() => handleSpeed(sp)}
               >
                 {sp}x
@@ -496,7 +497,7 @@ export default function SPXPerformancePanel({ sceneObjects = [], activeObjId = n
             onKeyDown={e => { if (e.key === "Enter" && e.ctrlKey) handleAskAI(); }}
           />
           <button
-            style={aiLoading ? S.btn : S.btnPrimary}
+            className={aiLoading ? "spp-btn" : "spp-btn spp-btn--primary"}
             onClick={handleAskAI}
             disabled={aiLoading}
           >

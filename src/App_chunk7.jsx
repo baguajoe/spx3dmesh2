@@ -283,11 +283,7 @@
             )}
           </div>
 
-          {showPerformancePanel && (
-            <div className="perf-panel-overlay">
-              <SPXPerformancePanel sceneObjects={sceneObjects} activeObjId={activeObjId} />
-            </div>
-          )}
+
 
           <UVEditorPanel open={uvPanelOpen} onClose={() => setUvPanelOpen(false)} />
           <MaterialPanel open={materialPanelOpen} onClose={() => setMaterialPanelOpen(false)} meshRef={meshRef} />

@@ -1367,3 +1367,41 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 1px s
 .spx-bottom * { color: #c8cdd6 !important; }
 .spx-bottom input { color: #ffffff !important; }
 .spx-bottom select { color: #ffffff !important; }
+
+/* ── Performance Panel Overlay ───────────────────────────────── */
+.spx-perf-overlay {
+  position: fixed;
+  top: 80px;
+  left: 200px;
+  width: 380px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+  z-index: 500;
+}
+.spx-perf-overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #161b22;
+  border-bottom: 1px solid #21262d;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: #00ffc8;
+  letter-spacing: 0.1em;
+  border-radius: 8px 8px 0 0;
+}
+.spx-overlay-close {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
+}
+.spx-overlay-close:hover { color: #fff; }
