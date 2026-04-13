@@ -1,8 +1,6 @@
 .material-panel-float{
-  position:relative;
-  top:90px;
-  right:18px;
-  z-index:12100;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .material-panel{

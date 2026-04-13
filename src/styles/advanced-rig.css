@@ -1,9 +1,7 @@
 
 .advanced-rig-panel-float{
-  position:relative;
-  top:164px;
-  right:18px;
-  z-index:12800;
+  width: 100%;
+  box-sizing: border-box;
 }
 .advanced-rig-panel{
   width:980px;

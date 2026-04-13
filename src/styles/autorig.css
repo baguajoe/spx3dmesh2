@@ -1,9 +1,7 @@
 
 .autorig-panel-float{
-  position:relative;
-  top:154px;
-  right:18px;
-  z-index:12700;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .autorig-panel{

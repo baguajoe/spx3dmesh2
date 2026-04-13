@@ -1,8 +1,6 @@
 .pattern-panel-float{
-  position:relative;
-  top:90px;
-  right:18px;
-  z-index:12300;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .pattern-panel{

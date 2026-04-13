@@ -1,9 +1,6 @@
 .clothing-panel-float{
-  position:relative;
-  top:90px;
-  left:50%;
-  transform:translateX(-50%);
-  z-index:12200;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .clothing-panel{

@@ -429,14 +429,11 @@
 
 /* ── Lighting & Camera Panel (full) ─────────────────────────────────── */
 .lcp-wrap {
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--bg);
-  font-family: var(--font);
-  font-size: 11px;
-  color: #ccc;
-  overflow: hidden;
 }
 
 .lcp-header {

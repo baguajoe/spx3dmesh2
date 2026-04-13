@@ -1,8 +1,6 @@
 .hair-adv-panel-float{
-  position:relative;
-  top:134px;
-  right:18px;
-  z-index:12500;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .hair-adv-panel{

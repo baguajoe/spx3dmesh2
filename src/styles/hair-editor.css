@@ -1,9 +1,6 @@
 .hair-panel-float{
-  position:relative;
-  top:90px;
-  left:50%;
-  transform:translateX(-50%);
-  z-index:12400;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .hair-panel{
