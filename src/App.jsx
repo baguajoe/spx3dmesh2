@@ -4290,12 +4290,14 @@ export default function App() {
 
 
 
+      {customSkinPanelOpen && (
       <CustomSkinBuilderPanel
         open={customSkinPanelOpen}
         onClose={() => setCustomSkinPanelOpen(false)}
         onApply={(params) => { setCustomSkin(params); if(meshRef.current && typeof buildCustomSkin==='function'){ buildCustomSkin(meshRef.current, params); setStatus('Custom skin applied'); } }}
         onDownload={(params) => { setCustomSkin(params); if(typeof generateFullSkinTextures==='function'){ const t=generateFullSkinTextures({size:params.textureSize,poreScale:params.poreScale,wrinkleStrength:params.wrinkleStrength,age:params.age,region:params.region}); ['color','roughness','normal','ao'].forEach(k=>{const a=document.createElement('a');a.href=t[k].toDataURL('image/png');a.download='spx_custom_'+k+'.png';a.click();}); setStatus('Custom textures downloaded'); }}}
       />
+      )}
       {compositorOpen && (
         <div className="spx-fullscreen-overlay">
           <div className="spx-overlay-header">
