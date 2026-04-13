@@ -4412,9 +4412,17 @@ export default function App() {
           </div>
         </div>
       )}
-      {meshScriptOpen && <FloatPanel title="MESH SCRIPT" onClose={() => setMeshScriptOpen(false)} width={600}>
-        <MeshScriptPanel open={meshScriptOpen} onClose={() => setMeshScriptOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
-      </FloatPanel>}
+      {meshScriptOpen && (
+        <div className="spx-fullscreen-overlay">
+          <div className="spx-overlay-header">
+            <span className="spx-overlay-title">📝 MESH SCRIPT</span>
+            <button onClick={() => setMeshScriptOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
+          </div>
+          <div className="spx-overlay-body">
+            <MeshScriptPanel open={meshScriptOpen} onClose={() => setMeshScriptOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
+          </div>
+        </div>
+      )}
 
       {/* SPX Sketch Panel */}
       {greasePencilPanelOpen && <FloatPanel title="SPX SKETCH" onClose={() => setGreasePencilPanelOpen(false)} width={320}>

@@ -1436,3 +1436,65 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 1px s
 .float-panel-right-lg  { width: 360px !important; }
 .float-panel-right-xl  { width: 420px !important; }
 .uv-panel-float        { width: 480px !important; }
+
+
+/* ── Fullscreen overlay — covers EVERYTHING including toolbars ── */
+.spx-fullscreen-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 2000 !important;
+  background: #0d1117 !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.spx-overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #0a0d13;
+  border-bottom: 1px solid #21262d;
+  flex-shrink: 0;
+  height: 44px;
+}
+
+.spx-overlay-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #00ffc8;
+  letter-spacing: 1.5px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.spx-overlay-close {
+  background: #1a1a2a;
+  border: 1px solid #2a2a4a;
+  color: #888;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.15s;
+}
+
+.spx-overlay-close:hover {
+  background: #ff444422;
+  border-color: #ff4444;
+  color: #ff4444;
+}
+
+.spx-overlay-body {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
