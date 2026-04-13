@@ -639,3 +639,23 @@
 /* Quad/viewport toolbar stays below overlays */
 .viewport-toolbar { z-index: 10 !important; position: absolute !important; }
 .quad-toggle-btn  { z-index: 10 !important; }
+
+/* ── AnimGraph/MeshScript ms-overlay fills fullscreen ── */
+.ms-overlay {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: rgba(0,0,0,0.0) !important;
+  display: flex !important;
+  align-items: stretch !important;
+}
+.ms-panel {
+  width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+  max-height: none !important;
+  border-radius: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+}

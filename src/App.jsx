@@ -312,6 +312,34 @@ function SpxTabGroup({ label, color, tabs }) {
     </div>
   );
 }
+
+// ── Reusable live viewport mirror for fullscreen panels ───────────────────────
+function LiveViewportMirror({ rendererRef, open, label }) {
+  const canvasRef = React.useRef(null);
+  const rafRef    = React.useRef(null);
+  React.useEffect(() => {
+    if (!open) return;
+    const tick = () => {
+      const src = rendererRef?.current?.domElement;
+      const dst = canvasRef.current;
+      if (src && dst && dst.offsetWidth > 0) {
+        dst.width  = dst.offsetWidth;
+        dst.height = dst.offsetHeight;
+        dst.getContext('2d').drawImage(src, 0, 0, dst.width, dst.height);
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [open, rendererRef]);
+  return (
+    <div style={{flex:'0 0 45%',minWidth:0,display:'flex',flexDirection:'column',borderRight:'1px solid #21262d',background:'#060a10'}}>
+      <div style={{fontSize:9,fontWeight:700,color:'#444',letterSpacing:'1.5px',padding:'5px 10px',background:'#0a0d13',borderBottom:'1px solid #21262d',flexShrink:0,textTransform:'uppercase'}}>{label}</div>
+      <canvas ref={canvasRef} style={{flex:1,width:'100%',display:'block',minHeight:0}} />
+    </div>
+  );
+}
+
 export default function App() {
   const closeAllWindows = () => {
     const setters = [
@@ -4409,8 +4437,11 @@ export default function App() {
             <span className="spx-overlay-title">🔗 ANIMATION GRAPH</span>
             <button onClick={() => setAnimGraphOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
           </div>
-          <div className="spx-overlay-body">
-            <AnimGraphPanel open={animGraphOpen} onClose={() => setAnimGraphOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} />
+          <div className="spx-overlay-body" style={{flexDirection:'row'}}>
+            <LiveViewportMirror rendererRef={rendererRef} open={animGraphOpen} label="3D SCENE — LIVE" />
+            <div style={{flex:1,minWidth:0,overflow:'hidden',display:'flex',flexDirection:'column'}}>
+              <AnimGraphPanel open={animGraphOpen} onClose={() => setAnimGraphOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} />
+            </div>
           </div>
         </div>
       )}
@@ -4420,8 +4451,11 @@ export default function App() {
             <span className="spx-overlay-title">📝 MESH SCRIPT</span>
             <button onClick={() => setMeshScriptOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
           </div>
-          <div className="spx-overlay-body">
-            <MeshScriptPanel open={meshScriptOpen} onClose={() => setMeshScriptOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} setStatus={setStatus} />
+          <div className="spx-overlay-body" style={{flexDirection:'row'}}>
+            <LiveViewportMirror rendererRef={rendererRef} open={meshScriptOpen} label="3D SCENE — SCRIPT OUTPUT" />
+            <div style={{flex:1,minWidth:0,overflow:'hidden',display:'flex',flexDirection:'column'}}>
+              <MeshScriptPanel open={meshScriptOpen} onClose={() => setMeshScriptOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} setStatus={setStatus} />
+            </div>
           </div>
         </div>
       )}
