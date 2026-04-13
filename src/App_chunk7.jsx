@@ -366,9 +366,7 @@
           />
           <NodeCompositorPanel open={compositorOpen} onClose={() => setCompositorOpen(false)} />
           <SPX3DTo2DPanel open={style3DTo2DOpen} onClose={() => setStyle3DTo2DOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} cameraRef={cameraRef} />
-          {autoRigOpen && <FloatPanel title="AUTO RIG" onClose={() => setAutoRigOpen(false)} width={400}><AutoRigPanel open={autoRigOpen} onClose={() => setAutoRigOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></FloatPanel>}
-          {advancedRigOpen && <FloatPanel title="ADVANCED RIG" onClose={() => setAdvancedRigOpen(false)} width={420}><AdvancedRigPanel open={advancedRigOpen} onClose={() => setAdvancedRigOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></FloatPanel>}
-
+                    
           {showModelPicker && (
             <div className="model-picker-popup">
               <span className="model-picker-popup__label">MODEL</span>
@@ -420,21 +418,11 @@
             </div>
           )}
 
-          {filmCameraOpen && <FloatPanel title="FILM CAMERA" onClose={() => setFilmCameraOpen(false)}><FilmCameraPanel cameraRef={cameraRef} rendererRef={rendererRef} sceneRef={sceneRef} open={filmCameraOpen} onClose={() => setFilmCameraOpen(false)} /></FloatPanel>}
-          {filmVolOpen && <FloatPanel title="VOLUMETRICS" onClose={() => setFilmVolOpen(false)}><FilmVolumetricsPanel sceneRef={sceneRef} open={filmVolOpen} onClose={() => setFilmVolOpen(false)} /></FloatPanel>}
-          {filmPTOpen && <FloatPanel title="PATH TRACER" onClose={() => setFilmPTOpen(false)}><FilmPathTracerPanel rendererRef={rendererRef} sceneRef={sceneRef} cameraRef={cameraRef} open={filmPTOpen} onClose={() => setFilmPTOpen(false)} /></FloatPanel>}
-          {cinLightOpen && <FloatPanel title="CIN LIGHTING" onClose={() => setCinLightOpen(false)}><CinematicLightingPanel sceneRef={sceneRef} open={cinLightOpen} onClose={() => setCinLightOpen(false)} /></FloatPanel>}
-
-          {lightingCameraPanelOpen && <FloatPanel title="LIGHTING & CAMERA" onClose={() => setLightingCameraPanelOpen(false)} width={420}><LightingCameraPanel sceneRef={sceneRef} cameraRef={cameraRef} cameras={cameras} onApplyFunction={handleApplyFunction} onClose={() => setLightingCameraPanelOpen(false)} /></FloatPanel>}
-
-          {collaboratePanelOpen && <FloatPanel title="COLLABORATE" onClose={() => setCollaboratePanelOpen(false)}><CollaboratePanel sceneObjects={sceneObjects} onClose={() => setCollaboratePanelOpen(false)} /></FloatPanel>}
-
-          {greasePencilPanelOpen && <FloatPanel title="SPX SKETCH" onClose={() => setGreasePencilPanelOpen(false)}><GreasePencilPanel onApplyFunction={handleApplyFunction} onClose={() => setGreasePencilPanelOpen(false)} /></FloatPanel>}
-
-          {fluidPanelOpen && <FloatPanel title="FLUID" onClose={() => setFluidPanelOpen(false)}><FluidPanel open={fluidPanelOpen} onClose={() => setFluidPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></FloatPanel>}
-          {weatherPanelOpen && <FloatPanel title="WEATHER" onClose={() => setWeatherPanelOpen(false)}><WeatherPanel open={weatherPanelOpen} onClose={() => setWeatherPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></FloatPanel>}
-          {destructionPanelOpen && <FloatPanel title="DESTRUCTION" onClose={() => setDestructionPanelOpen(false)} width={360}><DestructionPanel open={destructionPanelOpen} onClose={() => setDestructionPanelOpen(false)} sceneRef={sceneRef} meshRef={meshRef} setStatus={setStatus} onApplyFunction={handleApplyFunction} /></FloatPanel>}
-
+                                        
+          
+          
+          
+                              
           {envGenOpen && (
             <div className="fullscreen-overlay">
               <div className="fullscreen-overlay__bar">
@@ -529,8 +517,7 @@
             </div>
           )}
 
-          {gamepadOpen && <FloatPanel title="GAMEPAD ANIMATOR" onClose={() => setGamepadOpen(false)}><GamepadAnimator open={gamepadOpen} onClose={() => setGamepadOpen(false)} sceneRef={sceneRef} meshRef={meshRef} setStatus={setStatus} onApplyFunction={handleApplyFunction} currentFrame={currentFrame} setCurrentFrame={setCurrentFrame} isPlaying={isPlaying} setIsPlaying={setIsPlaying} /></FloatPanel>}
-
+          
           <MocapWorkspace open={mocapWorkspaceOpen} onClose={() => setMocapWorkspaceOpen(false)} onExportGlb={() => window.dispatchEvent(new CustomEvent("spx:mocap-export-glb"))} />
 
           {(faceGenOpen || foliageGenOpen || vehicleGenOpen || creatureGenOpen || propGenOpen) && (
@@ -551,6 +538,41 @@
             </div>
           )}
 
+          <TabPanelManager
+            sceneRef={sceneRef} meshRef={meshRef} cameraRef={cameraRef}
+            rendererRef={rendererRef} setStatus={setStatus}
+            cameras={cameras} handleApplyFunction={handleApplyFunction}
+            currentFrame={currentFrame} setCurrentFrame={setCurrentFrame}
+            isPlaying={isPlaying} setIsPlaying={setIsPlaying}
+            uvPanelOpen={uvPanelOpen} setUvPanelOpen={setUvPanelOpen}
+            materialPanelOpen={materialPanelOpen} setMaterialPanelOpen={setMaterialPanelOpen}
+            paintPanelOpen={paintPanelOpen} setPaintPanelOpen={setPaintPanelOpen}
+            nodeEditorOpen={nodeEditorOpen} setNodeEditorOpen={setNodeEditorOpen}
+            clothingPanelOpen={clothingPanelOpen} setClothingPanelOpen={setClothingPanelOpen}
+            hairPanelOpen={hairPanelOpen} setHairPanelOpen={setHairPanelOpen}
+            displacementOpen={displacementOpen} setDisplacementOpen={setDisplacementOpen}
+            autoRigOpen={autoRigOpen} setAutoRigOpen={setAutoRigOpen}
+            advancedRigOpen={advancedRigOpen} setAdvancedRigOpen={setAdvancedRigOpen}
+            mocapRetargetOpen={mocapRetargetOpen} setMocapRetargetOpen={setMocapRetargetOpen}
+            gamepadOpen={gamepadOpen} setGamepadOpen={setGamepadOpen}
+            cinLightOpen={cinLightOpen} setCinLightOpen={setCinLightOpen}
+            lightingCameraPanelOpen={lightingCameraPanelOpen} setLightingCameraPanelOpen={setLightingCameraPanelOpen}
+            filmCameraOpen={filmCameraOpen} setFilmCameraOpen={setFilmCameraOpen}
+            filmVolOpen={filmVolOpen} setFilmVolOpen={setFilmVolOpen}
+            filmPTOpen={filmPTOpen} setFilmPTOpen={setFilmPTOpen}
+            filmPostOpen={filmPostOpen} setFilmPostOpen={setFilmPostOpen}
+            clothSimOpen={clothSimOpen} setClothSimOpen={setClothSimOpen}
+            fluidPanelOpen={fluidPanelOpen} setFluidPanelOpen={setFluidPanelOpen}
+            weatherPanelOpen={weatherPanelOpen} setWeatherPanelOpen={setWeatherPanelOpen}
+            destructionPanelOpen={destructionPanelOpen} setDestructionPanelOpen={setDestructionPanelOpen}
+            physicsOpen={physicsOpen} setPhysicsOpen={setPhysicsOpen}
+            envGenOpen={envGenOpen} setEnvGenOpen={setEnvGenOpen}
+            terrainOpen={terrainOpen} setTerrainOpen={setTerrainOpen}
+            cityGenOpen={cityGenOpen} setCityGenOpen={setCityGenOpen}
+            crowdGenOpen={crowdGenOpen} setCrowdGenOpen={setCrowdGenOpen}
+            proMeshOpen={proMeshOpen} setProMeshOpen={setProMeshOpen}
+            style3DTo2DOpen={style3DTo2DOpen} setStyle3DTo2DOpen={setStyle3DTo2DOpen}
+          />
           <RenderWorkspacePanel open={renderWorkspaceOpen} onClose={() => setRenderWorkspaceOpen(false)} sceneRef={sceneRef} canvasRef={canvasRef} setStatus={setStatus} />
         </div>
       }
