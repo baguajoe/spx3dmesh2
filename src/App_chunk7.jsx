@@ -336,13 +336,10 @@
               { label: "Environment", fn: () => openWorkspaceTool("env_gen") },
               { label: "Terrain",     fn: () => openWorkspaceTool("terrain") },
               { label: "City Gen",    fn: () => setCityGenOpen((v) => !v) },
-              { label: "Foliage",     fn: () => openWorkspaceTool("foliage_gen") },
               { label: "Crowd",       fn: () => setCrowdGenOpen((v) => !v) },
             ]} />
             <SpxTabGroup label="GEN" color="#FF6600" tabs={[
-              { label: "Face",        fn: () => openWorkspaceTool("face_gen") },
-              { label: "Vehicle",     fn: () => openWorkspaceTool("vehicle_gen") },
-              { label: "Creature",    fn: () => openWorkspaceTool("creature_gen") },
+
               { label: "Pro Mesh",    fn: () => openWorkspaceTool("pro_mesh") },
               { label: "3D→2D Style", fn: () => openWorkspaceTool("3d_to_2d") },
             ]} />

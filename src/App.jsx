@@ -4153,6 +4153,10 @@ export default function App() {
               />
             )}
           </div>
+      {nodeEditorOpen && <div className="float-panel-right-xl"><NodeMaterialEditor open={nodeEditorOpen} onClose={() => setNodeEditorOpen(false)} meshRef={meshRef} sceneRef={sceneRef} setStatus={setStatus} /></div>}
+      {clothSimOpen && <div className="float-panel-right-lg"><ClothSimPanel open={clothSimOpen} onClose={() => setClothSimOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></div>}
+      {mocapRetargetOpen && <div className="float-panel-right-lg"><MocapRetargetPanel open={mocapRetargetOpen} onClose={() => setMocapRetargetOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></div>}
+      {filmPostOpen && <div className="float-panel-right-xl"><FilmPostPanel open={filmPostOpen} onClose={() => setFilmPostOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} setStatus={setStatus} /></div>}
       {showPerformancePanel && (<div className="spx-perf-overlay"><div className="spx-perf-overlay-header"><span>PERFORMANCE</span><button onClick={()=>setShowPerformancePanel(false)} className="spx-overlay-close">✕</button></div><SPXPerformancePanel sceneObjects={sceneObjects} activeObjId={activeObjId} /></div>)}
       <UVEditorPanel
         open={uvPanelOpen}
