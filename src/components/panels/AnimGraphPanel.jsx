@@ -170,6 +170,7 @@ export default function AnimGraphPanel({open, onClose, sceneRef, rendererRef}) {
                   const color = NODE_COLORS[node.type] ?? C.border;
                   const isSel = selectedNode === node.id;
                   return (
+                    <WithViewport rendererRef={rendererRef} open={open}>
                     <div key={node.id}
                       style={{position:'absolute',left:node.x,top:node.y,width:120,background:C.panel,
                         border:`1.5px solid ${isSel?C.teal:color}`,borderRadius:5,cursor:'move',
@@ -273,5 +274,6 @@ export default function AnimGraphPanel({open, onClose, sceneRef, rendererRef}) {
         </div>
       </div>
     </div>
+                    </WithViewport>
   );
 }

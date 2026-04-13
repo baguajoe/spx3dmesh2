@@ -159,6 +159,7 @@ export default function MeshScriptPanel({open, onClose, sceneRef, setStatus, ren
 
   if (!open) return null;
   return (
+    <WithViewport rendererRef={rendererRef} open={open}>
     <div className="ms-overlay" onClick={onClose}>
       <div className="ms-panel" onClick={e => e.stopPropagation()}>
 
@@ -307,5 +308,6 @@ help()            — full command list`}</pre>
         </div>
       </div>
     </div>
+    </WithViewport>
   );
 }
