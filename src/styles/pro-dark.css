@@ -1405,3 +1405,34 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 1px s
   padding: 0 4px;
 }
 .spx-overlay-close:hover { color: #fff; }
+
+/* ── Universal floating panel system ────────────────────────── */
+.uv-panel-float,
+.float-panel-right-md,
+.float-panel-right-lg,
+.float-panel-right-xl,
+.float-panel-film-camera,
+.float-panel-film-vol,
+.float-panel-film-pt,
+.float-panel-cin-light,
+.float-panel-collab,
+.float-panel-grease,
+.float-panel-gamepad,
+.float-panel-gen {
+  position: fixed !important;
+  top: 80px !important;
+  left: 210px !important;
+  max-height: calc(100vh - 140px) !important;
+  overflow-y: auto !important;
+  background: #0d1117 !important;
+  border: 1px solid #21262d !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.7) !important;
+  z-index: 500 !important;
+  right: auto !important;
+}
+
+.float-panel-right-md  { width: 320px !important; }
+.float-panel-right-lg  { width: 360px !important; }
+.float-panel-right-xl  { width: 420px !important; }
+.uv-panel-float        { width: 480px !important; }

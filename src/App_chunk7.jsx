@@ -313,7 +313,6 @@
             ]} />
             <SpxTabGroup label="RIG" color="#ff88ff" tabs={[
               { label: "Rigging",     fn: () => openWorkspaceTool("rigging_suite") },
-              { label: "MoCap",       fn: () => openWorkspaceTool("mocap") },
               { label: "Retarget",    fn: () => setMocapRetargetOpen((v) => !v) },
               { label: "Gamepad",     fn: () => openWorkspaceTool("gamepad") },
             ]} />
@@ -349,6 +348,13 @@
               onClick={() => setShowPerformancePanel((v) => !v)}
             >
               <span className="spx-native-workspace-tab-label">Performance</span>
+            </button>
+            <button
+              type="button"
+              className="spx-native-workspace-tab workspace-tabs-mocap-btn"
+              onClick={() => setMocapWorkspaceOpen((v) => !v)}
+            >
+              <span className="spx-native-workspace-tab-label">MoCap</span>
             </button>
           </div>
 
@@ -414,44 +420,20 @@
             </div>
           )}
 
-          {filmCameraOpen && <div className="float-panel-film-camera"><FilmCameraPanel cameraRef={cameraRef} rendererRef={rendererRef} sceneRef={sceneRef} open={filmCameraOpen} onClose={() => setFilmCameraOpen(false)} /></div>}
-          {filmVolOpen    && <div className="float-panel-film-vol"><FilmVolumetricsPanel sceneRef={sceneRef} open={filmVolOpen} onClose={() => setFilmVolOpen(false)} /></div>}
-          {filmPTOpen     && <div className="float-panel-film-pt"><FilmPathTracerPanel rendererRef={rendererRef} sceneRef={sceneRef} cameraRef={cameraRef} open={filmPTOpen} onClose={() => setFilmPTOpen(false)} /></div>}
-          {cinLightOpen   && <div className="float-panel-cin-light"><CinematicLightingPanel sceneRef={sceneRef} open={cinLightOpen} onClose={() => setCinLightOpen(false)} /></div>}
+          {filmCameraOpen && <FloatPanel title="FILM CAMERA" onClose={() => setFilmCameraOpen(false)}><FilmCameraPanel cameraRef={cameraRef} rendererRef={rendererRef} sceneRef={sceneRef} open={filmCameraOpen} onClose={() => setFilmCameraOpen(false)} /></FloatPanel>}
+          {filmVolOpen && <FloatPanel title="VOLUMETRICS" onClose={() => setFilmVolOpen(false)}><FilmVolumetricsPanel sceneRef={sceneRef} open={filmVolOpen} onClose={() => setFilmVolOpen(false)} /></FloatPanel>}
+          {filmPTOpen && <FloatPanel title="PATH TRACER" onClose={() => setFilmPTOpen(false)}><FilmPathTracerPanel rendererRef={rendererRef} sceneRef={sceneRef} cameraRef={cameraRef} open={filmPTOpen} onClose={() => setFilmPTOpen(false)} /></FloatPanel>}
+          {cinLightOpen && <FloatPanel title="CIN LIGHTING" onClose={() => setCinLightOpen(false)}><CinematicLightingPanel sceneRef={sceneRef} open={cinLightOpen} onClose={() => setCinLightOpen(false)} /></FloatPanel>}
 
-          {lightingCameraPanelOpen && (
-            <div className="float-panel-right-xl">
-              <LightingCameraPanel sceneRef={sceneRef} cameraRef={cameraRef} cameras={cameras} onApplyFunction={handleApplyFunction} onClose={() => setLightingCameraPanelOpen(false)} />
-            </div>
-          )}
+          {lightingCameraPanelOpen && <FloatPanel title="LIGHTING & CAMERA" onClose={() => setLightingCameraPanelOpen(false)} width={420}><LightingCameraPanel sceneRef={sceneRef} cameraRef={cameraRef} cameras={cameras} onApplyFunction={handleApplyFunction} onClose={() => setLightingCameraPanelOpen(false)} /></FloatPanel>}
 
-          {collaboratePanelOpen && (
-            <div className="float-panel-collab">
-              <CollaboratePanel sceneObjects={sceneObjects} onClose={() => setCollaboratePanelOpen(false)} />
-            </div>
-          )}
+          {collaboratePanelOpen && <FloatPanel title="COLLABORATE" onClose={() => setCollaboratePanelOpen(false)}><CollaboratePanel sceneObjects={sceneObjects} onClose={() => setCollaboratePanelOpen(false)} /></FloatPanel>}
 
-          {greasePencilPanelOpen && (
-            <div className="float-panel-grease">
-              <GreasePencilPanel onApplyFunction={handleApplyFunction} onClose={() => setGreasePencilPanelOpen(false)} />
-            </div>
-          )}
+          {greasePencilPanelOpen && <FloatPanel title="SPX SKETCH" onClose={() => setGreasePencilPanelOpen(false)}><GreasePencilPanel onApplyFunction={handleApplyFunction} onClose={() => setGreasePencilPanelOpen(false)} /></FloatPanel>}
 
-          {fluidPanelOpen && (
-            <div className="float-panel-right-md">
-              <FluidPanel open={fluidPanelOpen} onClose={() => setFluidPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
-            </div>
-          )}
-          {weatherPanelOpen && (
-            <div className="float-panel-right-md">
-              <WeatherPanel open={weatherPanelOpen} onClose={() => setWeatherPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
-            </div>
-          )}
-          {destructionPanelOpen && (
-            <div className="float-panel-right-lg">
-              <DestructionPanel open={destructionPanelOpen} onClose={() => setDestructionPanelOpen(false)} sceneRef={sceneRef} meshRef={meshRef} setStatus={setStatus} onApplyFunction={handleApplyFunction} />
-            </div>
-          )}
+          {fluidPanelOpen && <FloatPanel title="FLUID" onClose={() => setFluidPanelOpen(false)}><FluidPanel open={fluidPanelOpen} onClose={() => setFluidPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></FloatPanel>}
+          {weatherPanelOpen && <FloatPanel title="WEATHER" onClose={() => setWeatherPanelOpen(false)}><WeatherPanel open={weatherPanelOpen} onClose={() => setWeatherPanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} /></FloatPanel>}
+          {destructionPanelOpen && <FloatPanel title="DESTRUCTION" onClose={() => setDestructionPanelOpen(false)} width={360}><DestructionPanel open={destructionPanelOpen} onClose={() => setDestructionPanelOpen(false)} sceneRef={sceneRef} meshRef={meshRef} setStatus={setStatus} onApplyFunction={handleApplyFunction} /></FloatPanel>}
 
           {envGenOpen && (
             <div className="fullscreen-overlay">
@@ -547,11 +529,7 @@
             </div>
           )}
 
-          {gamepadOpen && (
-            <div className="float-panel-gamepad">
-              <GamepadAnimator open={gamepadOpen} onClose={() => setGamepadOpen(false)} sceneRef={sceneRef} meshRef={meshRef} setStatus={setStatus} onApplyFunction={handleApplyFunction} currentFrame={currentFrame} setCurrentFrame={setCurrentFrame} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
-            </div>
-          )}
+          {gamepadOpen && <FloatPanel title="GAMEPAD ANIMATOR" onClose={() => setGamepadOpen(false)}><GamepadAnimator open={gamepadOpen} onClose={() => setGamepadOpen(false)} sceneRef={sceneRef} meshRef={meshRef} setStatus={setStatus} onApplyFunction={handleApplyFunction} currentFrame={currentFrame} setCurrentFrame={setCurrentFrame} isPlaying={isPlaying} setIsPlaying={setIsPlaying} /></FloatPanel>}
 
           <MocapWorkspace open={mocapWorkspaceOpen} onClose={() => setMocapWorkspaceOpen(false)} onExportGlb={() => window.dispatchEvent(new CustomEvent("spx:mocap-export-glb"))} />
 
