@@ -14,6 +14,7 @@ import MaterialTexturePanel from './components/panels/MaterialTexturePanel';
 import { ViewportHeader } from "./components/ViewportHeader";
 import { PropertyInspector } from "./components/PropertyInspector";
 import { Outliner } from "./components/Outliner";
+import ProMeshPanelNew from "./components/mesh/ProMeshPanel.jsx";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Draggable from 'react-draggable'; // (SPX: Draggable Window System)
 
@@ -1165,6 +1166,9 @@ export default function App() {
   const [slideAmount, setSlideAmount] = useState(0);
   const [history, setHistory] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
+  const [environmentOpen, setEnvironmentOpen] = useState(false);
+  const [crowdOpen, setCrowdOpen] = useState(false);
+  const [panel3DTo2DOpen, setPanel3DTo2DOpen] = useState(false);
   const [showPerformancePanel, setShowPerformancePanel] = useState(false);
   const [exportUnlit, setExportUnlit] = useState(false);
 
@@ -4240,15 +4244,15 @@ export default function App() {
           {label:"Particles",  fn:()=>{ closeAllWorkspacePanels(); setPhysicsOpen(true); }},
         ]}/>
         <SpxTabGroup label="WORLD" color="#44aaff" tabs={[
-          {label:"Environment",fn:()=>openWorkspaceTool("env_gen")},
-          {label:"Terrain",    fn:()=>openWorkspaceTool("terrain")},
-          {label:"City Gen",   fn:()=>{ closeAllWorkspacePanels(); setCityGenOpen(true); }},
-          {label:"Crowd",      fn:()=>{ closeAllWorkspacePanels(); setCrowdGenOpen(true); }},
+          {label:"Environment", fn:"openEnvironment"},
+          {label:"Terrain",     fn:"openTerrain"},
+          {label:"City Gen",    fn:"openCityGen"}},
+          {label:"Crowd",       fn:"openCrowd"}},
           {label:"L-System",   fn:()=>{ handleApplyFunction("lsystem_oak"); }},
         ]}/>
         <SpxTabGroup label="GEN" color="#FF6600" tabs={[
-          {label:"Pro Mesh",   fn:()=>openWorkspaceTool("pro_mesh")},
-          {label:"3D→2D",      fn:()=>openWorkspaceTool("3d_to_2d")},
+          {label:"Pro Mesh",    fn:"openProMesh"},
+          {label:"3D→2D Style", fn:"open3DTo2D"},
           {label:"Anim Graph", fn:()=>{ closeAllWorkspacePanels(); setAnimGraphOpen(true); }},
           {label:"Mesh Script",fn:()=>{ closeAllWorkspacePanels(); setMeshScriptOpen(true); }},
           {label:"Multi MoCap",fn:()=>{ closeAllWorkspacePanels(); setMocapWorkspaceOpen(true); }},
@@ -4433,7 +4437,10 @@ export default function App() {
       {displacementOpen && <FloatPanel title="DISPLACEMENT" onClose={() => setDisplacementOpen(false)} width={400}>
         <DisplacementPanel open={displacementOpen} onClose={() => setDisplacementOpen(false)} meshRef={meshRef} setStatus={setStatus} />
       </FloatPanel>}
-      {showPerformancePanel && (
+      {proMeshOpen && (
+  <ProMeshPanelNew open={proMeshOpen} onClose={()=>setProMeshOpen(false)} />
+)}
+{showPerformancePanel && (
         <div className="spx-fullscreen-overlay">
           <div className="spx-overlay-header">
             <span className="spx-overlay-title">⚡ SPX PERFORMANCE CAPTURE</span>
