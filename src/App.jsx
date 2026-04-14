@@ -1552,6 +1552,13 @@ export default function App() {
 
     const animate = () => {
       rafRef.current = requestAnimationFrame(animate);
+
+      // ── Pause render when fullscreen panel is covering the canvas ──
+      // This prevents the canvas from blinking through React overlays
+      if (typeof window.__spxFullscreenOpen !== 'undefined' && window.__spxFullscreenOpen) {
+        return;
+      }
+
       const _composer = rendererRef.current?._composer;
       if (_composer && typeof quadViewRef !== 'undefined' && !quadViewRef.current) {
         _composer.render();
