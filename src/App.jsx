@@ -3906,6 +3906,17 @@ export default function App() {
   const [pluginMarketplace, setPluginMarketplace] = useState({ presets: [] });
 
   // ── Render ─────────────────────────────────────────────────────────────────
+
+  // Pause render loop when any fullscreen panel is open
+  useEffect(() => {
+    window.__spxFullscreenOpen = uvPanelOpen || nodeEditorOpen || animGraphOpen ||
+      meshScriptOpen || gamepadOpen || mocapWorkspaceOpen || showPerformancePanel ||
+      compositorOpen || style3DTo2DOpen || filmPTOpen || envGenOpen || terrainOpen ||
+      cityGenOpen || crowdGenOpen;
+  }, [uvPanelOpen, nodeEditorOpen, animGraphOpen, meshScriptOpen, gamepadOpen,
+      mocapWorkspaceOpen, showPerformancePanel, compositorOpen, style3DTo2DOpen,
+      filmPTOpen, envGenOpen, terrainOpen, cityGenOpen, crowdGenOpen]);
+
   return (
     <>
     <ProfessionalShell
