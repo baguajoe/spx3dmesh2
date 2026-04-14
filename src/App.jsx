@@ -1473,12 +1473,12 @@ export default function App() {
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0.9,
-      depthTest: false
+      depthTest: true
     });
     const centerMarker = new THREE.Mesh(centerRingGeo, centerRingMat);
     centerMarker.rotation.x = -Math.PI / 2;
     centerMarker.position.set(0, 0.001, 0);
-    centerMarker.renderOrder = 999;
+    centerMarker.renderOrder = 1;
     centerMarker.userData.isHelper = true;
     scene.add(centerMarker);
 
@@ -1504,7 +1504,7 @@ export default function App() {
     });
 
     const centerGuides = new THREE.LineSegments(centerGuideGeo, centerGuideMat);
-    centerGuides.renderOrder = 998;
+    centerGuides.renderOrder = 1;
 
     scene.add(centerGuides);
 
@@ -4164,7 +4164,7 @@ export default function App() {
           </div>
 
           {/* XYZ orientation gizmo — top right corner */}
-          <div className="spx-xyz-gizmo">
+          <div className="spx-xyz-gizmo" style={{position:"absolute",top:8,right:8,left:"auto",zIndex:10,pointerEvents:"none"}}>
             <svg viewBox="0 0 64 64" width="64" height="64">
               <line x1="32" y1="32" x2="54" y2="44" stroke="#e44" strokeWidth="2"/>
               <line x1="32" y1="32" x2="32" y2="8"  stroke="#4e4" strokeWidth="2"/>
