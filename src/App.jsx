@@ -576,6 +576,7 @@ export default function App() {
   const [snapEnabled, setSnapEnabled] = useState(false);
   const [snapMode, setSnapMode] = useState('vertex'); // vertex | surface | grid
   const [compositorOpen, setCompositorOpen] = useState(false);
+  const [denoiserOpen, setDenoiserOpen] = useState(false);
 
   useEffect(() => {
     const onAutoRigKey = (e) => {
@@ -3909,7 +3910,7 @@ export default function App() {
 
   // Pause render loop when any fullscreen panel is open
   useEffect(() => {
-    window.__spxFullscreenOpen = uvPanelOpen || nodeEditorOpen || animGraphOpen ||
+    window.__spxFullscreenOpen = denoiserOpen || uvPanelOpen || nodeEditorOpen || animGraphOpen ||
       meshScriptOpen || gamepadOpen || mocapWorkspaceOpen || showPerformancePanel ||
       compositorOpen || style3DTo2DOpen || filmPTOpen || envGenOpen || terrainOpen ||
       cityGenOpen || crowdGenOpen;
@@ -4346,6 +4347,19 @@ export default function App() {
         onDownload={(params) => { setCustomSkin(params); if(typeof generateFullSkinTextures==='function'){ const t=generateFullSkinTextures({size:params.textureSize,poreScale:params.poreScale,wrinkleStrength:params.wrinkleStrength,age:params.age,region:params.region}); ['color','roughness','normal','ao'].forEach(k=>{const a=document.createElement('a');a.href=t[k].toDataURL('image/png');a.download='spx_custom_'+k+'.png';a.click();}); setStatus('Custom textures downloaded'); }}}
       />
       )}
+      
+      {denoiserOpen && (
+        <div className="spx-fullscreen-overlay">
+          <div className="spx-overlay-header">
+            <span className="spx-overlay-title">⚡ AI DENOISER</span>
+            <button onClick={() => setDenoiserOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
+          </div>
+          <div className="spx-overlay-body">
+            <DenoiserPanel open={denoiserOpen} onClose={() => setDenoiserOpen(false)} rendererRef={rendererRef} setStatus={setStatus} />
+          </div>
+        </div>
+      )}
+
       {compositorOpen && (
         <div className="spx-fullscreen-overlay">
           <div className="spx-overlay-header">
