@@ -5,7 +5,7 @@ let _idCounter = 0;
 export function buildPrimitiveMesh(type) {
   let geo;
   switch (type) {
-    case "sphere":     geo = new THREE.SphereGeometry(0.75, 64, 64); break;
+    case "sphere":     geo = new THREE.SphereGeometry(0.75, 32, 32); break;
     case "cylinder":   geo = new THREE.CylinderGeometry(0.6, 0.6, 1.5, 32); break;
     case "cone":       geo = new THREE.ConeGeometry(0.6, 1.5, 32); break;
     case "torus":      geo = new THREE.TorusGeometry(0.6, 0.25, 32, 64); break;
