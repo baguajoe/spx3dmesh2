@@ -4009,10 +4009,16 @@ export default function App() {
                 const _sel_ray = new THREE.Raycaster();
                 _sel_ray.setFromCamera(new THREE.Vector2(_sel_mx, _sel_my), _sel_camera);
                 const _sel_candidates = [];
-                sceneRef.current?.traverse(c => {
-                  if (!c.isMesh || !c.visible || c.userData?.isHelper) return;
-                  const mat = Array.isArray(c.material) ? c.material[0] : c.material;
-                  if (mat && mat.side !== undefined) _sel_candidates.push(c);
+                sceneObjectsRef.current.forEach(o => {
+                  if (!o.mesh) return;
+                  o.mesh.updateMatrixWorld?.(true);
+                  o.mesh.traverse(c => {
+                    if (!c.isMesh || !c.visible || c.userData?.isHelper) return;
+                    if (c.geometry?.computeBoundingSphere) c.geometry.computeBoundingSphere();
+                    if (c.geometry?.computeBoundingBox) c.geometry.computeBoundingBox();
+                    const mat = Array.isArray(c.material) ? c.material[0] : c.material;
+                    if (mat && mat.side !== undefined) _sel_candidates.push(c);
+                  });
                 });
                 let _sel_hits = [];
                 try { _sel_hits = _sel_candidates.length ? _sel_ray.intersectObjects(_sel_candidates, true) : []; } catch(_e) {}
@@ -4184,13 +4190,19 @@ export default function App() {
               const ray = new THREE.Raycaster();
               ray.setFromCamera(new THREE.Vector2(mx, my), camera);
               const candidates = [];
-              sceneRef.current?.traverse(c => {
-                if (c.isMesh && c.visible && c.material && !c.userData?.isHelper) {
-                  candidates.push(c);
-                }
+              sceneObjectsRef.current.forEach(o => {
+                if (!o.mesh) return;
+                o.mesh.updateMatrixWorld?.(true);
+                o.mesh.traverse(c => {
+                  if (!c.isMesh || !c.visible || c.userData?.isHelper) return;
+                  if (c.geometry?.computeBoundingSphere) c.geometry.computeBoundingSphere();
+                  if (c.geometry?.computeBoundingBox) c.geometry.computeBoundingBox();
+                  const mat = Array.isArray(c.material) ? c.material[0] : c.material;
+                  if (mat && mat.side !== undefined) candidates.push(c);
+                });
               });
               let hits = [];
-              try { hits = candidates.length ? ray.intersectObjects(candidates, false) : []; } catch(_e) {}
+              try { hits = candidates.length ? ray.intersectObjects(candidates, true) : []; } catch(_e) {}
               if (hits.length > 0) {
                 const hitMesh = hits[0].object;
                 const objs = sceneObjectsRef.current;
