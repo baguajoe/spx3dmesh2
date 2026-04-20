@@ -97,7 +97,7 @@ export function applySculpt(geometry, hitPoint, hitNormal, brush, options = {}) 
     }
 
     const t = dist / radius;
-    const influence = getFalloff(falloff, t) * strength * direction * 0.08;
+    const influence = getFalloff(falloff, t) * strength * direction * 0.012;
 
     _applyBrushType(type, pos, norm, i, vp, hitPoint, hitNormal, influence, brush);
     modified = true;
@@ -116,7 +116,7 @@ export function applySculpt(geometry, hitPoint, hitNormal, brush, options = {}) 
       const dist = vp.distanceTo(mirrorHit);
       if (dist > radius) continue;
       const t = dist / radius;
-      const influence = getFalloff(falloff, t) * strength * direction * 0.08;
+      const influence = getFalloff(falloff, t) * strength * direction * 0.012;
       _applyBrushType(type, pos, norm, i, vp, mirrorHit, mirrorNormal, influence, brush);
     }
   }
