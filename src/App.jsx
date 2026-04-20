@@ -1044,6 +1044,10 @@ export default function App() {
   const [sculptStrength, setSculptStrength] = useState(0.5);
   const [sculptFalloff, setSculptFalloff] = useState("smooth");
   const [sculptSymX, setSculptSymX] = useState(false);
+  const [sculptSymY, setSculptSymY] = useState(false);
+  const [sculptSymZ, setSculptSymZ] = useState(false);
+  const [brushSpacing, setBrushSpacing] = useState(0.12);
+  const [lazyStrength, setLazyStrength] = useState(0.85);
   const [alphaType, setAlphaType] = useState("none");
   const [alphaScale, setAlphaScale] = useState(6.0);
   const [sculptMatcap, setSculptMatcap] = useState(true);
@@ -1057,6 +1061,10 @@ export default function App() {
   const sculptStrengthRef = useRef(0.02);
   const sculptFalloffRef = useRef("smooth");
   const sculptSymXRef = useRef(false);
+  const sculptSymYRef = useRef(false);
+  const sculptSymZRef = useRef(false);
+  const brushSpacingRef = useRef(0.12);
+  const lazyStrengthRef = useRef(0.85);
   const alphaTypeRef = useRef("none");
   const alphaScaleRef = useRef(6.0);
   const [dyntopoEnabled, setDyntopoEnabled] = useState(false);
@@ -1264,6 +1272,10 @@ export default function App() {
   useEffect(() => { sculptStrengthRef.current = sculptStrength; }, [sculptStrength]);
   useEffect(() => { sculptFalloffRef.current = sculptFalloff; }, [sculptFalloff]);
   useEffect(() => { sculptSymXRef.current = sculptSymX; }, [sculptSymX]);
+  useEffect(() => { sculptSymYRef.current = sculptSymY; }, [sculptSymY]);
+  useEffect(() => { sculptSymZRef.current = sculptSymZ; }, [sculptSymZ]);
+  useEffect(() => { brushSpacingRef.current = brushSpacing; }, [brushSpacing]);
+  useEffect(() => { lazyStrengthRef.current = lazyStrength; }, [lazyStrength]);
   useEffect(() => { alphaTypeRef.current = alphaType; }, [alphaType]);
   useEffect(() => { alphaScaleRef.current = alphaScale; }, [alphaScale]);
   useEffect(() => {
@@ -3609,6 +3621,8 @@ export default function App() {
     if (fn === "brush_pinch")         { setSculptBrush("pinch"); setStatus("Pinch brush active"); return; }
     if (fn === "brush_polish")        { setSculptBrush("polish"); setStatus("Polish brush active"); return; }
     if (fn === "brush_noise")         { setSculptBrush("noise"); setStatus("Noise brush active"); return; }
+    if (fn === "brush_flatten")       { setSculptBrush("flatten"); setStatus("Flatten brush active"); return; }
+    if (fn === "brush_sharpen")       { setSculptBrush("sharpen"); setStatus("Sharpen brush active"); return; }
     if (fn === "mask_invert")         { if(maskRef.current){ invertMask(maskRef.current); setStatus("Mask inverted"); } else { setStatus("No mask to invert"); } return; }
     if (fn === "mask_clear")          { if(maskRef.current){ clearMask(maskRef.current); setStatus("Mask cleared"); } else { setStatus("No mask to clear"); } return; }
     if (fn === "mask_blur")           { if(maskRef.current){ blurMask(maskRef.current, 2); setStatus("Mask blurred"); } else { setStatus("No mask to blur"); } return; }
@@ -4008,6 +4022,11 @@ export default function App() {
             sculptCavity={sculptCavity} setSculptCavity={setSculptCavity}
             sculptLayers={sculptLayers} activeSculptLayer={activeSculptLayer}
             activeLayerIntensity={activeLayerIntensity} setActiveLayerIntensity={setActiveLayerIntensity}
+            sculptSymX={sculptSymX} setSculptSymX={setSculptSymX}
+            sculptSymY={sculptSymY} setSculptSymY={setSculptSymY}
+            sculptSymZ={sculptSymZ} setSculptSymZ={setSculptSymZ}
+            brushSpacing={brushSpacing} setBrushSpacing={setBrushSpacing}
+            lazyStrength={lazyStrength} setLazyStrength={setLazyStrength}
             vcPaintColor={vcPaintColor} setVcPaintColor={setVcPaintColor}
             vcRadius={vcRadius} setVcRadius={setVcRadius}
             vcStrength={vcStrength} setVcStrength={setVcStrength}

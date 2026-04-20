@@ -12,6 +12,8 @@ const BRUSHES = [
   { id: "mask",    label: "Mask",    icon: "🎭",  desc: "Mask vertices" },
   { id: "pinch",   label: "Pinch",   icon: "🤌",  desc: "Pinch geometry together" },
   { id: "polish",  label: "Polish",  icon: "⬒",  desc: "Polish surface" },
+  { id: "flatten", label: "Flatten", icon: "▭",  desc: "Flatten surface" },
+  { id: "sharpen", label: "Sharpen", icon: "✦",  desc: "Sharpen detail" },
   { id: "elastic", label: "Elastic", icon: "🪢",  desc: "Elastic deform" },
 ];
 
@@ -176,6 +178,17 @@ export function SculptPanel({ onApplyFunction, sculptBrush, setSculptBrush,
               <input type="range" min="0" max="2" step="0.05" value={activeLayerIntensity ?? 1}
                 onChange={(e)=>setActiveLayerIntensity?.(parseFloat(e.target.value))} />
               <span className="spnl-value">{(activeLayerIntensity ?? 1).toFixed(2)}</span>
+              <span className="spnl-label">Brush Spacing</span>
+              <input type="range" min="0.02" max="0.5" step="0.01" value={brushSpacing ?? 0.12}
+                onChange={(e)=>setBrushSpacing?.(parseFloat(e.target.value))} />
+              <span className="spnl-value">{(brushSpacing ?? 0.12).toFixed(2)}</span>
+              <span className="spnl-label">Stabilize</span>
+              <input type="range" min="0" max="1" step="0.05" value={lazyStrength ?? 0.85}
+                onChange={(e)=>setLazyStrength?.(parseFloat(e.target.value))} />
+              <span className="spnl-value">{(lazyStrength ?? 0.85).toFixed(2)}</span>
+              <label className="spnl-label"><input type="checkbox" checked={!!sculptSymX} onChange={e=>setSculptSymX?.(e.target.checked)} /> Sym X</label>
+              <label className="spnl-label"><input type="checkbox" checked={!!sculptSymY} onChange={e=>setSculptSymY?.(e.target.checked)} /> Sym Y</label>
+              <label className="spnl-label"><input type="checkbox" checked={!!sculptSymZ} onChange={e=>setSculptSymZ?.(e.target.checked)} /> Sym Z</label>
             </div>
             <div className="spnl-row" style={{marginTop:8}}>
               <label className="spnl-label">
