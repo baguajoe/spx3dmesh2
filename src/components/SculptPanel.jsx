@@ -257,6 +257,9 @@ export function SculptPanel({ onApplyFunction, sculptBrush, setSculptBrush,
               <button className="spnl-btn" onClick={() => onApplyFunction("multires_bake")}>Bake Down</button>
               <button className="spnl-btn" onClick={() => onApplyFunction("brush_mask")}>Mask</button>
               <button className="spnl-btn" onClick={() => onApplyFunction("brush_pose")}>Pose</button>
+              <button className="spnl-btn" onClick={() => onApplyFunction("mask_invert")}>Invert Mask</button>
+              <button className="spnl-btn" onClick={() => onApplyFunction("mask_clear")}>Clear Mask</button>
+              <button className="spnl-btn" onClick={() => onApplyFunction("mask_blur")}>Blur Mask</button>
             </div>
             <div className="spnl-btn-row">
               {[0,1,2,3,4].map(l => (

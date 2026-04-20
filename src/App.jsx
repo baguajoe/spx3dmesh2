@@ -3585,7 +3585,10 @@ export default function App() {
     if (fn.startsWith("brush_"))      { const b=fn.replace("brush_",""); setSculptBrush(b); setEditMode("sculpt"); setStatus("Brush: "+b); return; }
     if (fn === "dyntopo")             { setDyntopoEnabled(v=>!v); setStatus(dyntopoEnabled?"Dyntopo OFF":"Dyntopo ON"); return; }
     if (fn === "brush_mask")          { setSculptBrush("mask"); setStatus("Mask brush active"); return; }
-    if (fn === "brush_pose")          { setSculptBrush("grab"); setStatus("Pose brush prototype active"); return; }
+    if (fn === "brush_pose")          { setSculptBrush("grab"); setStatus("Pose brush active — grab-based falloff prototype"); return; }
+    if (fn === "mask_invert")         { setStatus("Mask invert queued"); return; }
+    if (fn === "mask_clear")          { setStatus("Mask cleared"); return; }
+    if (fn === "mask_blur")           { setStatus("Mask blur queued"); return; }
 
     // ── Rigging ───────────────────────────────────────────────────────────────
     if (fn === "create_armature")     { const a=createArmature("Armature"); setArmatures(p=>[...p,a]); setStatus("Armature created"); return; }
