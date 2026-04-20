@@ -4147,8 +4147,7 @@ export default function App() {
               const candidates = [];
               sceneRef.current?.traverse(c => {
                 if (c.isMesh && c.visible && c.material && !c.userData?.isHelper) {
-                  const mat = Array.isArray(c.material) ? c.material[0] : c.material;
-                  if (mat && mat.side !== undefined) candidates.push(c);
+                  candidates.push(c);
                 }
               });
               let hits = [];
