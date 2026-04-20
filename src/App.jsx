@@ -2578,15 +2578,20 @@ export default function App() {
     console.log("sculpt hit:", hit.point, "brush:", sculptBrush);
 
     pushHistory();
-    applySculptStroke(mesh, hit, {
-      type:       sculptBrushRef.current,
-      radius:     sculptRadiusRef.current,
-      strength:   sculptStrengthRef.current,
-      falloffType: sculptFalloffRef.current,
-      symmetryX:  sculptSymXRef.current,
-      symmetryY:  false,
-      symmetryZ:  false,
-    });
+    const _brush = {
+      type:         sculptBrushRef.current || 'draw',
+      radius:       sculptRadiusRef.current || 0.3,
+      strength:     Math.min(sculptStrengthRef.current || 0.02, 0.03),
+      falloff:      sculptFalloffRef.current || 'smooth',
+      direction:    1,
+      symmetry:     sculptSymXRef.current || false,
+      symmetryAxis: 'x',
+      backfaceCull: true,
+    };
+    const _invMat = new THREE.Matrix4().copy(mesh.matrixWorld).invert();
+    const _localPt = hit.point.clone().applyMatrix4(_invMat);
+    const _localNm = hit.normal.clone().transformDirection(_invMat).normalize();
+    applySculptStroke(mesh.geometry, _localPt, _localNm, _brush, {});
 
     // Force Three.js to re-render the updated geometry
     mesh.geometry.attributes.position.needsUpdate = true;
@@ -3649,6 +3654,18 @@ export default function App() {
     if (fn === "mod_triangulate"){ if (meshRef?.current?.geometry) { applyTriangulate(meshRef.current.geometry); } return; }
     if (fn === "mod_wireframe")  { if (meshRef?.current?.geometry) { applyWireframe(meshRef.current.geometry); } return; }
     if (fn === "mod_laplacian")  { if (meshRef?.current?.geometry) { applyLaplacianSmooth(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate=true; } return; }
+    if (fn === "mod_lattice")    { if (meshRef?.current?.geometry) { applyLattice(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate=true; setStatus("Lattice applied"); } return; }
+    if (fn === "mod_screw")      { if (meshRef?.current?.geometry) { applyScrew(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate=true; setStatus("Screw applied"); } return; }
+    if (fn === "mod_build")      { if (meshRef?.current?.geometry) { applyBuild(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate=true; setStatus("Build applied"); } return; }
+    if (fn === "mod_ocean")      { if (meshRef?.current?.geometry) { applyOcean(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate=true; setStatus("Ocean applied"); } return; }
+    if (fn === "mod_deform")     { if (meshRef?.current?.geometry) { applySimpleDeform(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate=true; setStatus("Deform applied"); } return; }
+    if (fn === "mod_shrinkwrap") { if (meshRef?.current?.geometry) { applyShrinkwrap(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate=true; setStatus("Shrinkwrap applied"); } return; }
+    if (fn === "mod_hook")       { if (meshRef?.current?.geometry) { applyHook(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate=true; setStatus("Hook applied"); } return; }
+    if (fn === "mod_volume")     { if (meshRef?.current?.geometry) { applyVolumeDisplace(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate=true; setStatus("Volume displace applied"); } return; }
+    if (fn === "mod_normal_edit"){ if (meshRef?.current?.geometry) { applyNormalEdit(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate=true; setStatus("Normal edit applied"); } return; }
+    if (fn === "mod_corrective") { if (meshRef?.current?.geometry) { applyCorrectiveSmooth(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate=true; setStatus("Corrective smooth applied"); } return; }
+    if (fn === "mod_triangulate"){ if (meshRef?.current?.geometry) { applyTriangulate(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate=true; setStatus("Triangulate applied"); } return; }
+    if (fn === "mod_wireframe")  { if (meshRef?.current?.geometry) { applyWireframe(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate=true; setStatus("Wireframe modifier applied"); } return; }
     // L-System tree
     if (fn === "lsystem_oak")    { buildLSystemTree(sceneRef.current, { preset:"oak" }, meshesRef); setStatus("Oak tree generated"); return; }
     if (fn === "lsystem_pine")   { buildLSystemTree(sceneRef.current, { preset:"pine" }, meshesRef); setStatus("Pine tree generated"); return; }
