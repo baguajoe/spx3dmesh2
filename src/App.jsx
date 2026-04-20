@@ -3972,6 +3972,7 @@ export default function App() {
               return;
             }
             if (e.button !== 0) return;
+            mouseDownPos.current = { x: e.clientX, y: e.clientY };
             // Check gizmo handle click first
             if (gizmoRef.current && cameraRef.current && canvasRef.current) {
               const rect = canvasRef.current.getBoundingClientRect();
