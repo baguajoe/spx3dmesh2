@@ -338,9 +338,32 @@ export function applySculptStroke(geometry, hitPoint, hitNormal, brush, options)
   return applySculpt(geometry, hitPoint, hitNormal, brush, options);
 }
 
-export function getSculptHit(raycaster, mesh) {
-  const hits = raycaster.intersectObject(mesh, false);
-  const hit = hits[0];
-  return { point: hit.point, normal: hit.face ? hit.face.normal.clone().transformDirection(mesh.matrixWorld) : new THREE.Vector3(0,1,0), distance: hit.distance, faceIndex: hit.faceIndex };
+export function getSculptHit(e, canvas, camera, mesh) {
+  if (!canvas || !camera || !mesh) return null;
+  try {
+    const rect = canvas.getBoundingClientRect();
+    const mx = ((e.clientX - rect.left) / rect.width)  *  2 - 1;
+    const my = ((e.clientY - rect.top)  / rect.height) * -2 + 1;
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(new THREE.Vector2(mx, my), camera);
+    // Ensure mesh geometry has up-to-date BVH / bounding sphere
+    if (mesh.geometry) {
+      mesh.geometry.computeBoundingSphere?.();
+      mesh.geometry.computeBoundingBox?.();
+    }
+    const hits = raycaster.intersectObject(mesh, false);
+    if (!hits || hits.length === 0) return null;
+    const hit = hits[0];
+    if (!hit) return null;
+    return {
+      point:     hit.point,
+      normal:    hit.face ? hit.face.normal.clone().transformDirection(mesh.matrixWorld) : new THREE.Vector3(0,1,0),
+      distance:  hit.distance,
+      faceIndex: hit.faceIndex
+    };
+  } catch(err) {
+    console.warn('[SculptEngine] getSculptHit error:', err.message);
+    return null;
+  }
 }
 

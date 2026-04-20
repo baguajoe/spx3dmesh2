@@ -2508,7 +2508,7 @@ export default function App() {
           setStatus(`Edge ${closest.id} selected`);
         }
       } else if (selectModeRef.current === "face") {
-        const hits = raycaster.intersectObject(meshRef.current, true);
+        const hits = meshRef.current?.material ? raycaster.intersectObject(meshRef.current, true) : [];
         if (hits.length > 0) {
           const faceIdx = hits[0].faceIndex;
           setSelectedFaces((sf) => {
@@ -2631,7 +2631,7 @@ export default function App() {
     };
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(midScreen, cameraRef.current);
-    const hits = raycaster.intersectObject(meshRef.current, true);
+    const hits = meshRef.current?.material ? raycaster.intersectObject(meshRef.current, true) : [];
     const planePoint =
       hits.length > 0 ? hits[0].point : { x: 0, y: 0, z: 0 };
 
@@ -4128,7 +4128,7 @@ export default function App() {
               const ray = new THREE.Raycaster();
               ray.setFromCamera(new THREE.Vector2(mx, my), camera);
               const candidates = [];
-              sceneRef.current?.traverse(c => { if (c.isMesh && c.type === "Mesh") candidates.push(c); });
+              sceneRef.current?.traverse(c => { if (c.isMesh && c.type === "Mesh" && c.material && c.visible) candidates.push(c); });
               const hits = ray.intersectObjects(candidates, false);
               if (hits.length > 0) {
                 const hitMesh = hits[0].object;
