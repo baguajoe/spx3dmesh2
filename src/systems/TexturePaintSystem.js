@@ -15,7 +15,7 @@ export class TexturePaintSystem {
     this.camera = camera;
 
     // Canvas & texture
-    this.size = options.size || 1024;
+    this.size = options.size || 2048;
     this.canvas = document.createElement('canvas');
     this.canvas.width = this.size;
     this.canvas.height = this.size;

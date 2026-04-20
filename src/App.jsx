@@ -2638,7 +2638,7 @@ export default function App() {
 
     sculptStrokeCountRef.current += 1;
     if (dyntopoEnabled && sculptStrokeCountRef.current % 2 === 0 && typeof window.applyDyntopo === "function") {
-      window.applyDyntopo(mesh, hit, { detailSize: 0.03, mode: "both", radius: sculptRadiusRef.current || 0.18 });
+      window.applyDyntopo(mesh, hit, { detailSize: 0.02, mode: "both", radius: sculptRadiusRef.current || 0.18 });
     }
 
     // Update stats

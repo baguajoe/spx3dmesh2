@@ -268,7 +268,7 @@ function _applyBrushType(type, pos, norm, i, vp, hitPoint, hitNormal, influence,
 
 // ─── Smooth ───────────────────────────────────────────────────────────────────
 
-export function smoothVertices(geometry, hitPoint, radius, strength, iterations = 3) {
+export function smoothVertices(geometry, hitPoint, radius, strength, iterations = 6) {
   const pos = geometry.attributes.position;
   const idx = geometry.index;
   if (!pos || !idx) return;
@@ -289,7 +289,7 @@ export function smoothVertices(geometry, hitPoint, radius, strength, iterations 
       if (dist > radius) continue;
 
       const t = dist / radius;
-      const influence = getFalloff('smooth', t) * strength * 0.85;
+      const influence = getFalloff('smooth', t) * strength * 0.92;
       const neighbors = Array.from(adj[i]);
       if (!neighbors.length) continue;
 
