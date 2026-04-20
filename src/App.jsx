@@ -4113,6 +4113,7 @@ export default function App() {
               return;
             }
             const _moveDist = Math.hypot(e.clientX - mouseDownPos.current.x, e.clientY - mouseDownPos.current.y);
+            console.log("[SELECT] wasDragging:", wasDragging, "wasBox:", wasBox, "moveDist:", _moveDist.toFixed(1), "editMode:", editModeRef.current);
             if (wasDragging && !wasBox && _moveDist > 5) {
               boxSelectStart.current = null;
               boxSelectActive.current = false;
