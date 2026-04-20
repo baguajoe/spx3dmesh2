@@ -2608,8 +2608,8 @@ export default function App() {
 
     // Dyntopo after every N strokes
     sculptStrokeCountRef.current += 1;
-    if (dyntopoEnabled && sculptStrokeCountRef.current % 2 === 0 && typeof window.applyDyntopo === "function") {
-      window.applyDyntopo(mesh, hit, { detailSize: 0.03, mode: "both", radius: sculptRadiusRef.current || 0.18 });
+    if (dyntopoEnabled && sculptStrokeCountRef.current % 3 === 0 && typeof window.applyDyntopo === "function") {
+      window.applyDyntopo(mesh, hit, { detailSize: 0.05 });
     }
 
     // Update stats
@@ -3772,7 +3772,7 @@ export default function App() {
   const [wpRadius, setWpRadius] = useState(0.5);
   const [wpStrength, setWpStrength] = useState(0.1);
   const [wpMode, setWpMode] = useState("add");
-  const [dyntopoDetail, setDyntopoDetail] = useState(0.03);
+  const [dyntopoDetail, setDyntopoDetail] = useState(0.05);
   const [nlaActions, setNlaActions] = useState([]);
   const [nlaTracks, setNlaTracks] = useState([createTrack("Track 1")]);
   const [showNLA, setShowNLA] = useState(false);

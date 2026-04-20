@@ -8,60 +8,6 @@ import * as THREE from 'three';
 // ─── Falloff Library ─────────────────────────────────────────────────────────
 
 function smoothFalloff(t)   { const u=1-t; return u*u*(3-2*u); }
-
-
-function _makeBrushFrame(hitNormal) {
-  const up = Math.abs(hitNormal.y) > 0.9
-    ? new THREE.Vector3(1, 0, 0)
-    : new THREE.Vector3(0, 1, 0);
-  const tangent = new THREE.Vector3().crossVectors(up, hitNormal).normalize();
-  const bitangent = new THREE.Vector3().crossVectors(hitNormal, tangent).normalize();
-  return { tangent, bitangent };
-}
-
-function sampleBrushAlpha(vp, hitPoint, hitNormal, brush) {
-  const alphaType = brush.alphaType || 'none';
-  if (alphaType === 'none') return 1.0;
-
-  const { tangent, bitangent } = _makeBrushFrame(hitNormal);
-  const rel = vp.clone().sub(hitPoint);
-  const rot = brush.alphaRotation || 0.0;
-  const scale = brush.alphaScale || 6.0;
-  const c = Math.cos(rot), s = Math.sin(rot);
-
-  let u = rel.dot(tangent) * scale;
-  let v = rel.dot(bitangent) * scale;
-
-  const ru = u * c - v * s;
-  const rv = u * s + v * c;
-  u = ru; v = rv;
-
-  let val = 1.0;
-
-  switch (alphaType) {
-    case 'pores':
-      val = 0.6 + 0.4 * Math.sin(u * 8.0) * Math.sin(v * 8.0);
-      break;
-    case 'stripes':
-      val = 0.5 + 0.5 * Math.sin(u * 10.0);
-      break;
-    case 'noise':
-      val = 0.5 + 0.25 * Math.sin(u * 11.7 + v * 3.1) + 0.25 * Math.sin(v * 13.3 - u * 2.7);
-      break;
-    case 'cracks':
-      val = Math.abs(Math.sin(u * 14.0) * Math.cos(v * 3.0));
-      val = 1.0 - val;
-      break;
-    case 'soft':
-      val = 1.0;
-      break;
-    default:
-      val = 1.0;
-  }
-
-  const alphaStrength = brush.alphaStrength ?? 1.0;
-  return Math.max(0.0, Math.min(1.0, val * alphaStrength + (1.0 - alphaStrength)));
-}
 function linearFalloff(t)   { return 1-t; }
 function sharpFalloff(t)    { return Math.pow(1-t, 4); }
 function sphereFalloff(t)   { return Math.sqrt(Math.max(0, 1-t*t)); }
@@ -91,8 +37,8 @@ export function getFalloff(type, t) {
 export function createBrushSettings(options = {}) {
   return {
     type:         options.type      ?? 'draw',
-    radius:       options.radius    ?? 0.18,
-    strength:     options.strength  ?? 0.4,
+    radius:       options.radius    ?? 0.3,
+    strength:     options.strength  ?? 0.5,
     falloff:      options.falloff   ?? 'smooth',
     direction:    options.direction ?? 1,      // 1=add, -1=subtract
     symmetry:     options.symmetry  ?? false,
@@ -151,9 +97,7 @@ export function applySculpt(geometry, hitPoint, hitNormal, brush, options = {}) 
     }
 
     const t = dist / radius;
-    const alpha = sampleBrushAlpha(vp, hitPoint, hitNormal, brush);
-    const radiusScale = 0.65 + radius * 0.75;
-    const influence = getFalloff(falloff, t) * alpha * strength * direction * radiusScale * 0.12;
+    const influence = getFalloff(falloff, t) * strength * direction * 0.12;
 
     _applyBrushType(type, pos, norm, i, vp, hitPoint, hitNormal, influence, brush);
     modified = true;
@@ -172,9 +116,7 @@ export function applySculpt(geometry, hitPoint, hitNormal, brush, options = {}) 
       const dist = vp.distanceTo(mirrorHit);
       if (dist > radius) continue;
       const t = dist / radius;
-      const alpha = sampleBrushAlpha(vp, hitPoint, hitNormal, brush);
-    const radiusScale = 0.65 + radius * 0.75;
-    const influence = getFalloff(falloff, t) * alpha * strength * direction * radiusScale * 0.12;
+      const influence = getFalloff(falloff, t) * strength * direction * 0.12;
       _applyBrushType(type, pos, norm, i, vp, mirrorHit, mirrorNormal, influence, brush);
     }
   }
@@ -268,7 +210,7 @@ function _applyBrushType(type, pos, norm, i, vp, hitPoint, hitNormal, influence,
 
 // ─── Smooth ───────────────────────────────────────────────────────────────────
 
-export function smoothVertices(geometry, hitPoint, radius, strength, iterations = 3) {
+export function smoothVertices(geometry, hitPoint, radius, strength, iterations = 2) {
   const pos = geometry.attributes.position;
   const idx = geometry.index;
   if (!pos || !idx) return;
@@ -289,7 +231,7 @@ export function smoothVertices(geometry, hitPoint, radius, strength, iterations 
       if (dist > radius) continue;
 
       const t = dist / radius;
-      const influence = getFalloff('smooth', t) * strength * 0.85;
+      const influence = getFalloff('smooth', t) * strength;
       const neighbors = Array.from(adj[i]);
       if (!neighbors.length) continue;
 
