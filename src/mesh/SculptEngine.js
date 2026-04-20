@@ -134,9 +134,9 @@ function _applyBrushType(type, pos, norm, i, vp, hitPoint, hitNormal, influence,
     case 'draw':
     case 'clay': {
       pos.setXYZ(i,
-        vp.x + hitNormal.x * influence * 0.01,
-        vp.y + hitNormal.y * influence * 0.01,
-        vp.z + hitNormal.z * influence * 0.01,
+        vp.x + hitNormal.x * influence,
+        vp.y + hitNormal.y * influence,
+        vp.z + hitNormal.z * influence,
       );
       break;
     }
