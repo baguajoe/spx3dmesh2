@@ -4160,6 +4160,12 @@ export default function App() {
             }
             const _moveDist = Math.hypot(e.clientX - mouseDownPos.current.x, e.clientY - mouseDownPos.current.y);
             console.log("[SELECT] wasDragging:", wasDragging, "wasBox:", wasBox, "moveDist:", _moveDist.toFixed(1), "editMode:", editModeRef.current);
+            if (editModeRef.current === "sculpt" || activeWorkspace === "Sculpt") {
+              boxSelectStart.current = null;
+              boxSelectActive.current = false;
+              setBoxSelect(null);
+              return;
+            }
             if (wasDragging && !wasBox && _moveDist > 5) {
               boxSelectStart.current = null;
               boxSelectActive.current = false;
