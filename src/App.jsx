@@ -4015,7 +4015,7 @@ export default function App() {
                   if (mat && mat.side !== undefined) _sel_candidates.push(c);
                 });
                 let _sel_hits = [];
-                try { _sel_hits = _sel_candidates.length ? _sel_ray.intersectObjects(_sel_candidates, false) : []; } catch(_e) {}
+                try { _sel_hits = _sel_candidates.length ? _sel_ray.intersectObjects(_sel_candidates, true) : []; } catch(_e) {}
                 console.log("[MD-SELECT] candidates:", _sel_candidates.length, "hits:", _sel_hits.length);
                 console.log("[MD-SELECT] rect:", JSON.stringify({l:Math.round(_sel_rect.left),t:Math.round(_sel_rect.top),w:Math.round(_sel_rect.width),h:Math.round(_sel_rect.height)}));
                 console.log("[MD-SELECT] mouse:", e.clientX, e.clientY, "ndc:", _sel_mx.toFixed(2), _sel_my.toFixed(2));
