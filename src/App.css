@@ -44,3 +44,11 @@ html, body, #root {
   width: 100% !important;
   height: 100% !important;
 }
+
+.spx-box-select {
+  position: absolute;
+  border: 1px solid #00ffc8;
+  background: rgba(0, 255, 200, 0.08);
+  pointer-events: none;
+  z-index: 100;
+}

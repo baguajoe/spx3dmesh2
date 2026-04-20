@@ -3981,7 +3981,7 @@ export default function App() {
           onMouseDown={e => {
             orbitButton.current = e.button;
             if (e.button === 1 || e.button === 2 || (e.button === 0 && e.altKey)) {
-              orbitDragging.current = true;
+              orbitDragging.current = false;
               orbitLast.current = { x: e.clientX, y: e.clientY };
               e.preventDefault();
               return;
@@ -4031,6 +4031,11 @@ export default function App() {
             }
           }}
           onMouseMove={e => {
+            if (e.button === 1 || e.button === 2 || orbitButton.current === 1 || orbitButton.current === 2 || (e.altKey && orbitButton.current === 0)) {
+              if (!orbitDragging.current && (Math.abs(e.clientX - orbitLast.current.x) > 3 || Math.abs(e.clientY - orbitLast.current.y) > 3)) {
+                orbitDragging.current = true;
+              }
+            }
             if (orbitDragging.current) {
               const dx = e.clientX - orbitLast.current.x;
               const dy = e.clientY - orbitLast.current.y;
