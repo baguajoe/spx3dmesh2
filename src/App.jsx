@@ -2579,13 +2579,17 @@ export default function App() {
 
     pushHistory();
     const _brush = {
-      type:     sculptBrushRef.current,
-      radius:   sculptRadiusRef.current,
-      strength: sculptStrengthRef.current,
+      type:     sculptBrushRef.current || 'draw',
+      radius:   sculptRadiusRef.current || 0.5,
+      strength: Math.min(sculptStrengthRef.current || 0.02, 0.05),
     };
-    applySculptStroke(mesh.geometry, hit.point, hit.normal, _brush, {
-      falloffType: sculptFalloffRef.current,
-      symmetryX:  sculptSymXRef.current,
+    // Transform hit point to local mesh space
+    const _invMatrix = new THREE.Matrix4().copy(mesh.matrixWorld).invert();
+    const _localPoint = hit.point.clone().applyMatrix4(_invMatrix);
+    const _localNormal = hit.normal.clone().transformDirection(_invMatrix).normalize();
+    applySculptStroke(mesh.geometry, _localPoint, _localNormal, _brush, {
+      falloffType: sculptFalloffRef.current || 'smooth',
+      symmetryX:  sculptSymXRef.current || false,
     });
 
     // Force Three.js to re-render the updated geometry
