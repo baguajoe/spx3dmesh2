@@ -1327,6 +1327,7 @@ export default function App() {
   const orbitLast = useRef({ x: 0, y: 0 });
   const orbitButton = useRef(-1);
   const boxSelectStart = useRef(null);
+  const mouseDownPos = useRef({ x: 0, y: 0 });
   const boxSelectActive = useRef(false);
   const sceneObjectsRef = useRef([]);
 
@@ -4111,7 +4112,8 @@ export default function App() {
               setBoxSelect(null);
               return;
             }
-            if (wasDragging && !wasBox) {
+            const _moveDist = Math.hypot(e.clientX - mouseDownPos.current.x, e.clientY - mouseDownPos.current.y);
+            if (wasDragging && !wasBox && _moveDist > 5) {
               boxSelectStart.current = null;
               boxSelectActive.current = false;
               setBoxSelect(null);
