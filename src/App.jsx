@@ -1050,6 +1050,7 @@ export default function App() {
   const [sculptCavity, setSculptCavity] = useState(true);
   const [sculptLayers, setSculptLayers] = useState([{ id: "base", name: "Base Layer", intensity: 1 }]);
   const [activeSculptLayer, setActiveSculptLayer] = useState("base");
+  const [activeLayerIntensity, setActiveLayerIntensity] = useState(1);
   const sculptingRef = useRef(false);
   const sculptBrushRef = useRef("push");
   const sculptRadiusRef = useRef(0.3);
@@ -3605,6 +3606,9 @@ export default function App() {
     if (fn === "dyntopo")             { setDyntopoEnabled(v=>!v); setStatus(dyntopoEnabled?"Dyntopo OFF":"Dyntopo ON"); return; }
     if (fn === "brush_mask")          { setSculptBrush("mask"); setStatus("Mask brush active"); return; }
     if (fn === "brush_pose")          { setSculptBrush("grab"); if(meshRef.current?.geometry && hitPointRef?.current){ applyPoseFalloff(meshRef.current.geometry, hitPointRef.current, sculptRadiusRef.current || 0.25, sculptStrengthRef.current || 0.25, "y"); } setStatus("Pose brush active — falloff deformation applied"); return; }
+    if (fn === "brush_pinch")         { setSculptBrush("pinch"); setStatus("Pinch brush active"); return; }
+    if (fn === "brush_polish")        { setSculptBrush("polish"); setStatus("Polish brush active"); return; }
+    if (fn === "brush_noise")         { setSculptBrush("noise"); setStatus("Noise brush active"); return; }
     if (fn === "mask_invert")         { if(maskRef.current){ invertMask(maskRef.current); setStatus("Mask inverted"); } else { setStatus("No mask to invert"); } return; }
     if (fn === "mask_clear")          { if(maskRef.current){ clearMask(maskRef.current); setStatus("Mask cleared"); } else { setStatus("No mask to clear"); } return; }
     if (fn === "mask_blur")           { if(maskRef.current){ blurMask(maskRef.current, 2); setStatus("Mask blurred"); } else { setStatus("No mask to blur"); } return; }
@@ -4003,6 +4007,7 @@ export default function App() {
             sculptMatcap={sculptMatcap} setSculptMatcap={setSculptMatcap}
             sculptCavity={sculptCavity} setSculptCavity={setSculptCavity}
             sculptLayers={sculptLayers} activeSculptLayer={activeSculptLayer}
+            activeLayerIntensity={activeLayerIntensity} setActiveLayerIntensity={setActiveLayerIntensity}
             vcPaintColor={vcPaintColor} setVcPaintColor={setVcPaintColor}
             vcRadius={vcRadius} setVcRadius={setVcRadius}
             vcStrength={vcStrength} setVcStrength={setVcStrength}

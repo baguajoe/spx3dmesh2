@@ -171,6 +171,10 @@ export function SculptPanel({ onApplyFunction, sculptBrush, setSculptBrush,
               <button className="spnl-btn" onClick={() => onApplyFunction("layer_new")}>New Layer</button>
               <button className="spnl-btn" onClick={() => onApplyFunction("layer_base")}>Base Layer</button>
               <span className="spnl-value">Active: {activeSculptLayer || "base"}</span>
+              <span className="spnl-label">Layer Intensity</span>
+              <input type="range" min="0" max="2" step="0.05" value={activeLayerIntensity ?? 1}
+                onChange={(e)=>setActiveLayerIntensity?.(parseFloat(e.target.value))} />
+              <span className="spnl-value">{(activeLayerIntensity ?? 1).toFixed(2)}</span>
             </div>
             <div className="spnl-row" style={{marginTop:8}}>
               <label className="spnl-label">
@@ -185,6 +189,11 @@ export function SculptPanel({ onApplyFunction, sculptBrush, setSculptBrush,
 
             <div className="spnl-row" style={{marginTop:8}}>
               <span className="spnl-label">Alpha</span>
+              <span className="spnl-label" style={{marginLeft:8}}>Alpha Presets</span>
+              <button className="spnl-btn" onClick={() => setAlphaType?.("soft")}>Soft</button>
+              <button className="spnl-btn" onClick={() => setAlphaType?.("pores")}>Pores</button>
+              <button className="spnl-btn" onClick={() => setAlphaType?.("cracks")}>Cracks</button>
+              <button className="spnl-btn" onClick={() => setAlphaType?.("noise")}>Noise</button>
               <select
                 className="spnl-select"
                 value={alphaType || "none"}
