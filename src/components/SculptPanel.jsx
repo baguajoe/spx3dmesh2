@@ -70,7 +70,7 @@ export function SculptPanel({ onApplyFunction, sculptBrush, setSculptBrush,
   const [lazyMouse, setLazyMouse] = useState(false);
   const [lazyRadius, setLazyRadius] = useState(0.1);
   const [alphaPreset, setAlphaPreset] = useState("circle");
-  const [remeshVoxel, setRemeshVoxel] = useState(0.05);
+  const [remeshVoxel, setRemeshVoxel] = useState(0.15);
   const [multiresLevel, setMultiresLevel] = useState(0);
   const [vcFalloff, setVcFalloff] = useState("smooth");
   const [vcColor2, setVcColor2] = useState("#00ffc8");
@@ -171,7 +171,7 @@ export function SculptPanel({ onApplyFunction, sculptBrush, setSculptBrush,
               </button>
             </div>
             {dyntopoEnabled && (<>
-              <Slider label="Detail" value={remeshVoxel} min={0.01} max={0.2} step={0.005}
+              <Slider label="Detail" value={remeshVoxel} min={0.02} max={0.5} step={0.01}
                 onChange={setRemeshVoxel} />
               <button className="spnl-btn-full" onClick={() => onApplyFunction("dyntopo_flood")}>
                 Flood Fill Topology
@@ -185,7 +185,7 @@ export function SculptPanel({ onApplyFunction, sculptBrush, setSculptBrush,
           <Section title="Remesh">
             <div className="spnl-row">
               <span className="spnl-label">Voxel Size</span>
-              <input className="spnl-input" type="number" value={remeshVoxel} step={0.005} min={0.01} max={0.5}
+              <input className="spnl-input" type="number" value={remeshVoxel} step={0.01} min={0.02} max={0.5}
                 onChange={e => setRemeshVoxel(Number(e.target.value))} />
             </div>
             <div className="spnl-btn-row">
