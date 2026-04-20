@@ -1030,13 +1030,13 @@ export default function App() {
 
   // ── Sessions 4-5: Sculpt state ────────────────────────────────────────────
   const [sculptBrush, setSculptBrush] = useState("push");
-  const [sculptRadius, setSculptRadius] = useState(0.8);
+  const [sculptRadius, setSculptRadius] = useState(0.3);
   const [sculptStrength, setSculptStrength] = useState(0.5);
   const [sculptFalloff, setSculptFalloff] = useState("smooth");
   const [sculptSymX, setSculptSymX] = useState(false);
   const sculptingRef = useRef(false);
   const sculptBrushRef = useRef("push");
-  const sculptRadiusRef = useRef(0.8);
+  const sculptRadiusRef = useRef(0.3);
   const sculptStrengthRef = useRef(0.02);
   const sculptFalloffRef = useRef("smooth");
   const sculptSymXRef = useRef(false);
