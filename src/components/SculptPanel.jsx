@@ -11,6 +11,7 @@ const BRUSHES = [
   { id: "grab",    label: "Grab",    icon: "✋",  desc: "Grab and move" },
   { id: "mask",    label: "Mask",    icon: "🎭",  desc: "Mask vertices" },
   { id: "pinch",   label: "Pinch",   icon: "🤌",  desc: "Pinch geometry together" },
+  { id: "polish",  label: "Polish",  icon: "⬒",  desc: "Polish surface" },
   { id: "elastic", label: "Elastic", icon: "🪢",  desc: "Elastic deform" },
 ];
 
