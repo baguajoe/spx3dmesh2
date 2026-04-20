@@ -17,7 +17,8 @@ export default function TexturePaintPanel({ open = false, onClose, meshRef = nul
   const [isPainting, setIsPainting] = useState(false);
   const [lastPoint, setLastPoint] = useState(null);
 
-  const paintState = useMemo(() => createPaintCanvas(1024, "#ffffff"), []);
+  const [paintResolution, setPaintResolution] = useState(2048);
+  const paintState = useMemo(() => createPaintCanvas(paintResolution, "#ffffff"), [paintResolution]);
 
   useEffect(() => {
     stateRef.current = paintState;
@@ -89,6 +90,12 @@ export default function TexturePaintPanel({ open = false, onClose, meshRef = nul
         <div className="paint-panel-header">
           <div>
             <strong>Texture Paint</strong>
+            <div className="paint-res-row" style={{display:"flex",gap:"8px",marginTop:"8px",marginBottom:"8px"}}>
+              <span style={{fontSize:"12px",opacity:0.8}}>Paint Resolution</span>
+              <button type="button" className="paint-btn" onClick={()=>setPaintResolution(1024)}>1K</button>
+              <button type="button" className="paint-btn" onClick={()=>setPaintResolution(2048)}>2K</button>
+              <button type="button" className="paint-btn" onClick={()=>setPaintResolution(4096)}>4K</button>
+            </div>
             <div className="paint-channel-row" style={{display:"flex",gap:"8px",marginTop:"8px"}}>
               <button type="button" className="paint-btn">Albedo</button>
               <button type="button" className="paint-btn">Roughness</button>

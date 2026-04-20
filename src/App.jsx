@@ -1,3 +1,18 @@
+
+
+function applySculptViewportLook(mesh, { matcap = true, cavity = false } = {}) {
+  if (!mesh || !mesh.material) return;
+  const mat = mesh.material;
+  if ("flatShading" in mat) mat.flatShading = false;
+  if ("metalness" in mat) mat.metalness = matcap ? 0.0 : mat.metalness;
+  if ("roughness" in mat) mat.roughness = matcap ? 0.85 : Math.min(1, mat.roughness ?? 0.85);
+  if ("envMapIntensity" in mat) mat.envMapIntensity = matcap ? 0.35 : (mat.envMapIntensity ?? 1.0);
+  if ("color" in mat && mat.color) {
+    if (matcap) mat.color.set("#b8bcc6");
+  }
+  mat.needsUpdate = true;
+}
+
 import NodeCompositorPanel from './components/mesh/NodeCompositorPanel';
 import CustomSkinBuilderPanel from './components/panels/CustomSkinBuilderPanel';
 import SPX3DTo2DPanel from './components/pipeline/SPX3DTo2DPanel';
@@ -1044,6 +1059,7 @@ export default function App() {
   const [dyntopoEnabled, setDyntopoEnabled] = useState(false);
   const lazyMouseRef = useRef({ x: 0, y: 0 });
   const sculptStrokeCountRef = useRef(0);
+  const maskRef = useRef(null);
 
   // ── Session 8: Vertex color paint state ──────────────────────────────────
   const [vcPaintColor, setVcPaintColor] = useState("#ff6600");
@@ -3518,10 +3534,10 @@ export default function App() {
     if (fn === "mat_smart")           { if(meshRef.current){applyPreset(meshRef.current,"chrome");setStatus("Smart material applied");} return; }
     if (fn === "mat_edge_wear")       { if(typeof window.applyEdgeWear==="function"&&meshRef.current){window.applyEdgeWear(meshRef.current);setStatus("Edge wear applied");} return; }
     if (fn === "mat_cavity")          { if(typeof window.applyCavityDirt==="function"&&meshRef.current){window.applyCavityDirt(meshRef.current,{ strength: 1.15, blur: 2 });setStatus("Cavity dirt applied");} return; }
-    if (fn === "sculpt_matcap_on")    { setSculptMatcap(true); setStatus("Sculpt matcap ON"); return; }
-    if (fn === "sculpt_matcap_off")   { setSculptMatcap(false); setStatus("Sculpt matcap OFF"); return; }
-    if (fn === "sculpt_cavity_on")    { setSculptCavity(true); if(typeof window.applyCavityDirt==="function"&&meshRef.current){window.applyCavityDirt(meshRef.current,{ strength: 1.15, blur: 2 });} setStatus("Sculpt cavity ON"); return; }
-    if (fn === "sculpt_cavity_off")   { setSculptCavity(false); setStatus("Sculpt cavity OFF"); return; }
+    if (fn === "sculpt_matcap_on")    { setSculptMatcap(true); if(meshRef.current) applySculptViewportLook(meshRef.current,{ matcap:true, cavity:sculptCavity }); setStatus("Sculpt matcap ON"); return; }
+    if (fn === "sculpt_matcap_off")   { setSculptMatcap(false); if(meshRef.current) applySculptViewportLook(meshRef.current,{ matcap:false, cavity:sculptCavity }); setStatus("Sculpt matcap OFF"); return; }
+    if (fn === "sculpt_cavity_on")    { setSculptCavity(true); if(meshRef.current) applySculptViewportLook(meshRef.current,{ matcap:sculptMatcap, cavity:true }); if(typeof window.applyCavityDirt==="function"&&meshRef.current){window.applyCavityDirt(meshRef.current,{ strength: 1.15, blur: 2 });} setStatus("Sculpt cavity ON"); return; }
+    if (fn === "sculpt_cavity_off")   { setSculptCavity(false); if(meshRef.current) applySculptViewportLook(meshRef.current,{ matcap:sculptMatcap, cavity:false }); setStatus("Sculpt cavity OFF"); return; }
     if (fn === "sh_toon")             { if(typeof window.createToonMaterial==="function"&&meshRef.current){meshRef.current.material=window.createToonMaterial();setStatus("Toon shader applied");} return; }
     if (fn === "sh_holo")             { if(typeof window.createHolographicMaterial==="function"&&meshRef.current){meshRef.current.material=window.createHolographicMaterial();setStatus("Holographic applied");} return; }
     if (fn === "sh_dissolve")         { if(typeof window.createDissolveMaterial==="function"&&meshRef.current){meshRef.current.material=window.createDissolveMaterial();setStatus("Dissolve applied");} return; }
@@ -3586,9 +3602,9 @@ export default function App() {
     if (fn === "dyntopo")             { setDyntopoEnabled(v=>!v); setStatus(dyntopoEnabled?"Dyntopo OFF":"Dyntopo ON"); return; }
     if (fn === "brush_mask")          { setSculptBrush("mask"); setStatus("Mask brush active"); return; }
     if (fn === "brush_pose")          { setSculptBrush("grab"); setStatus("Pose brush active — grab-based falloff prototype"); return; }
-    if (fn === "mask_invert")         { setStatus("Mask invert queued"); return; }
-    if (fn === "mask_clear")          { setStatus("Mask cleared"); return; }
-    if (fn === "mask_blur")           { setStatus("Mask blur queued"); return; }
+    if (fn === "mask_invert")         { if(maskRef.current){ invertMask(maskRef.current); setStatus("Mask inverted"); } else { setStatus("No mask to invert"); } return; }
+    if (fn === "mask_clear")          { if(maskRef.current){ clearMask(maskRef.current); setStatus("Mask cleared"); } else { setStatus("No mask to clear"); } return; }
+    if (fn === "mask_blur")           { if(maskRef.current){ blurMask(maskRef.current, 2); setStatus("Mask blurred"); } else { setStatus("No mask to blur"); } return; }
 
     // ── Rigging ───────────────────────────────────────────────────────────────
     if (fn === "create_armature")     { const a=createArmature("Armature"); setArmatures(p=>[...p,a]); setStatus("Armature created"); return; }
