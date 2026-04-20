@@ -1031,6 +1031,8 @@ export default function App() {
   const [sculptSymX, setSculptSymX] = useState(false);
   const [alphaType, setAlphaType] = useState("none");
   const [alphaScale, setAlphaScale] = useState(6.0);
+  const [sculptMatcap, setSculptMatcap] = useState(true);
+  const [sculptCavity, setSculptCavity] = useState(true);
   const sculptingRef = useRef(false);
   const sculptBrushRef = useRef("push");
   const sculptRadiusRef = useRef(0.3);
@@ -2627,6 +2629,13 @@ export default function App() {
     mesh.geometry.computeBoundingSphere();
 
     // Dyntopo after every N strokes
+    if (!multiresStack && mesh?.geometry && typeof createMultiresStack === "function") {
+      try {
+        const stack = createMultiresStack(mesh);
+        setMultiresStack(stack);
+      } catch (e) { console.warn("multires auto-init failed", e); }
+    }
+
     sculptStrokeCountRef.current += 1;
     if (dyntopoEnabled && sculptStrokeCountRef.current % 2 === 0 && typeof window.applyDyntopo === "function") {
       window.applyDyntopo(mesh, hit, { detailSize: 0.03, mode: "both", radius: sculptRadiusRef.current || 0.18 });
@@ -3571,6 +3580,8 @@ export default function App() {
     // ── Sculpt ────────────────────────────────────────────────────────────────
     if (fn.startsWith("brush_"))      { const b=fn.replace("brush_",""); setSculptBrush(b); setEditMode("sculpt"); setStatus("Brush: "+b); return; }
     if (fn === "dyntopo")             { setDyntopoEnabled(v=>!v); setStatus(dyntopoEnabled?"Dyntopo OFF":"Dyntopo ON"); return; }
+    if (fn === "brush_mask")          { setSculptBrush("mask"); setStatus("Mask brush active"); return; }
+    if (fn === "brush_pose")          { setSculptBrush("grab"); setStatus("Pose brush prototype active"); return; }
 
     // ── Rigging ───────────────────────────────────────────────────────────────
     if (fn === "create_armature")     { const a=createArmature("Armature"); setArmatures(p=>[...p,a]); setStatus("Armature created"); return; }
@@ -3959,6 +3970,8 @@ export default function App() {
             dyntopoEnabled={dyntopoEnabled} setDyntopoEnabled={setDyntopoEnabled}
             alphaType={alphaType} setAlphaType={setAlphaType}
             alphaScale={alphaScale} setAlphaScale={setAlphaScale}
+            sculptMatcap={sculptMatcap} setSculptMatcap={setSculptMatcap}
+            sculptCavity={sculptCavity} setSculptCavity={setSculptCavity}
             vcPaintColor={vcPaintColor} setVcPaintColor={setVcPaintColor}
             vcRadius={vcRadius} setVcRadius={setVcRadius}
             vcStrength={vcStrength} setVcStrength={setVcStrength}

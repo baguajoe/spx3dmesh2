@@ -165,6 +165,18 @@ export function SculptPanel({ onApplyFunction, sculptBrush, setSculptBrush,
           <Section title="Dynamic Topology">
             <div className="spnl-row">
   
+
+            <div className="spnl-row" style={{marginTop:8}}>
+              <label className="spnl-label">
+                <input type="checkbox" checked={!!sculptMatcap} onChange={e=>setSculptMatcap?.(e.target.checked)} />
+                Matcap
+              </label>
+              <label className="spnl-label">
+                <input type="checkbox" checked={!!sculptCavity} onChange={e=>setSculptCavity?.(e.target.checked)} />
+                Cavity
+              </label>
+            </div>
+
             <div className="spnl-row" style={{marginTop:8}}>
               <span className="spnl-label">Alpha</span>
               <select
@@ -243,6 +255,8 @@ export function SculptPanel({ onApplyFunction, sculptBrush, setSculptBrush,
             <div className="spnl-btn-row">
               <button className="spnl-btn" onClick={() => { setMultiresLevel(v=>v+1); onApplyFunction("multires_add"); }}>+ Subdivide</button>
               <button className="spnl-btn" onClick={() => onApplyFunction("multires_bake")}>Bake Down</button>
+              <button className="spnl-btn" onClick={() => onApplyFunction("brush_mask")}>Mask</button>
+              <button className="spnl-btn" onClick={() => onApplyFunction("brush_pose")}>Pose</button>
             </div>
             <div className="spnl-btn-row">
               {[0,1,2,3,4].map(l => (
