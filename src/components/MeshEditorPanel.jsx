@@ -244,7 +244,14 @@ export const MeshEditorPanel = ({ stats, onApplyFunction, onAddPrimitive }) => {
 
   const switchMode = (m) => {
     setMode(m);
-    onApplyFunction(m === "edit" ? "select" : m === "sculpt" ? "brush_draw" : "select");
+    if (m === "edit") {
+      onApplyFunction("toggle_edit");
+    } else if (m === "sculpt") {
+      onApplyFunction("brush_draw");
+    } else {
+      onApplyFunction("select");
+      onApplyFunction("toggle_edit");
+    }
   };
 
   return (

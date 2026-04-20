@@ -2004,7 +2004,8 @@ export default function App() {
       // Add primitives
       if (key === "Tab") {
         e.preventDefault();
-        setShowNPanel(v => !v);
+        if (activeWorkspace === "Modeling") toggleEditMode();
+        else setShowNPanel(v => !v);
       }
       if (key === "p" || key === "P") {
         e.preventDefault();
@@ -2867,6 +2868,7 @@ export default function App() {
     if (fn.startsWith("prim_"))       { addPrimitive(fn.replace("prim_","")); return; }
 
     // ── Edit tools ────────────────────────────────────────────────────────────
+    if (fn === "toggle_edit")         { toggleEditMode(); return; }
     if (fn === "select")              { setActiveTool("select"); setStatus("Select mode"); return; }
     if (fn === "grab") {
       if (proportionalEnabled && heMeshRef.current && selectedVerts.size > 0) {
