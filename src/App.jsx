@@ -2578,14 +2578,14 @@ export default function App() {
     console.log("sculpt hit:", hit.point, "brush:", sculptBrush);
 
     pushHistory();
-    applySculptStroke(mesh, hit, {
-      type:       sculptBrushRef.current,
-      radius:     sculptRadiusRef.current,
-      strength:   sculptStrengthRef.current,
+    const _brush = {
+      type:     sculptBrushRef.current,
+      radius:   sculptRadiusRef.current,
+      strength: sculptStrengthRef.current,
+    };
+    applySculptStroke(mesh.geometry, hit.point, hit.normal, _brush, {
       falloffType: sculptFalloffRef.current,
       symmetryX:  sculptSymXRef.current,
-      symmetryY:  false,
-      symmetryZ:  false,
     });
 
     // Force Three.js to re-render the updated geometry
@@ -3960,7 +3960,7 @@ export default function App() {
         )
       }
       centerPanel={
-        <div className={activeWorkspace === "Sculpt" ? "mesh-editor-canvas mesh-editor-canvas--sculpt" : "mesh-editor-canvas"}
+        <div className={activeWorkspace === "Sculpt" ? "mesh-editor-canvas mesh-editor-canvas--sculpt" : "mesh-editor-canvas"} style={{cursor: activeWorkspace==="Sculpt" ? "crosshair" : activeTool==="select" ? "default" : "crosshair"}}
           onMouseDown={e => {
             orbitButton.current = e.button;
             if (e.button === 1 || e.button === 2 || (e.button === 0 && e.altKey)) {
