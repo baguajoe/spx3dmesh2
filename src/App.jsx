@@ -4146,8 +4146,14 @@ export default function App() {
               const ray = new THREE.Raycaster();
               ray.setFromCamera(new THREE.Vector2(mx, my), camera);
               const candidates = [];
-              sceneRef.current?.traverse(c => { if (c.isMesh && c.type === "Mesh" && c.material && c.visible) candidates.push(c); });
-              const hits = ray.intersectObjects(candidates, false);
+              sceneRef.current?.traverse(c => {
+                if (c.isMesh && c.visible && c.material && !c.userData?.isHelper) {
+                  const mat = Array.isArray(c.material) ? c.material[0] : c.material;
+                  if (mat && mat.side !== undefined) candidates.push(c);
+                }
+              });
+              let hits = [];
+              try { hits = candidates.length ? ray.intersectObjects(candidates, false) : []; } catch(_e) {}
               if (hits.length > 0) {
                 const hitMesh = hits[0].object;
                 const objs = sceneObjectsRef.current;
