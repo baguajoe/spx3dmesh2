@@ -901,7 +901,7 @@ export default function App() {
     }
     setStatus("Selected: " + obj.name);
     // Build HalfEdge mesh so edit tools work immediately after selection
-    if (obj.mesh?.geometry && !heMeshRef.current) {
+    if (obj.mesh?.geometry) {
       try {
         const geo = obj.mesh.geometry.index
           ? obj.mesh.geometry.toNonIndexed()
@@ -2592,6 +2592,11 @@ export default function App() {
       symmetryAxis: 'x',
       backfaceCull: true,
     };
+    // Convert to non-indexed for sculpt so all vertices can be deformed independently
+    if (mesh.geometry.index) {
+      mesh.geometry = mesh.geometry.toNonIndexed();
+      mesh.geometry.computeVertexNormals();
+    }
     const _invMat = new THREE.Matrix4().copy(mesh.matrixWorld).invert();
     const _localPt = hit.point.clone().applyMatrix4(_invMat);
     const _localNm = hit.normal.clone().transformDirection(_invMat).normalize();
