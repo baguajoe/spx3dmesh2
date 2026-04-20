@@ -870,10 +870,7 @@ export default function App() {
     setActiveObjId(id);
     meshRef.current = obj.mesh;
     if (obj.mesh) {
-      if (obj.mesh.geometry?.index) {
-        obj.mesh.geometry = obj.mesh.geometry.toNonIndexed();
-        obj.mesh.geometry.computeVertexNormals();
-      }
+
       // Force orange highlight by replacing material
       obj.mesh.traverse(m => {
         if (m.isMesh) {
@@ -1383,11 +1380,6 @@ export default function App() {
 
   const addSceneObject = (type) => {
     const mesh = buildPrimitiveMesh(type);
-    // Convert to non-indexed geometry so sculpt engine can deform all vertices
-    if (mesh.geometry && mesh.geometry.index) {
-      mesh.geometry = mesh.geometry.toNonIndexed();
-      mesh.geometry.computeVertexNormals();
-    }
     mesh.position.set(
       (Math.random() - 0.5) * 2,
       0,
