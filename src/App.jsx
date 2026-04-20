@@ -3517,7 +3517,11 @@ export default function App() {
     if (fn === "mat_glass")           { if(typeof window.createTransmissionMaterial==="function"&&meshRef.current){meshRef.current.material=window.createTransmissionMaterial(transmissionPreset);setStatus("Glass applied");} return; }
     if (fn === "mat_smart")           { if(meshRef.current){applyPreset(meshRef.current,"chrome");setStatus("Smart material applied");} return; }
     if (fn === "mat_edge_wear")       { if(typeof window.applyEdgeWear==="function"&&meshRef.current){window.applyEdgeWear(meshRef.current);setStatus("Edge wear applied");} return; }
-    if (fn === "mat_cavity")          { if(typeof window.applyCavityDirt==="function"&&meshRef.current){window.applyCavityDirt(meshRef.current);setStatus("Cavity dirt applied");} return; }
+    if (fn === "mat_cavity")          { if(typeof window.applyCavityDirt==="function"&&meshRef.current){window.applyCavityDirt(meshRef.current,{ strength: 1.15, blur: 2 });setStatus("Cavity dirt applied");} return; }
+    if (fn === "sculpt_matcap_on")    { setSculptMatcap(true); setStatus("Sculpt matcap ON"); return; }
+    if (fn === "sculpt_matcap_off")   { setSculptMatcap(false); setStatus("Sculpt matcap OFF"); return; }
+    if (fn === "sculpt_cavity_on")    { setSculptCavity(true); if(typeof window.applyCavityDirt==="function"&&meshRef.current){window.applyCavityDirt(meshRef.current,{ strength: 1.15, blur: 2 });} setStatus("Sculpt cavity ON"); return; }
+    if (fn === "sculpt_cavity_off")   { setSculptCavity(false); setStatus("Sculpt cavity OFF"); return; }
     if (fn === "sh_toon")             { if(typeof window.createToonMaterial==="function"&&meshRef.current){meshRef.current.material=window.createToonMaterial();setStatus("Toon shader applied");} return; }
     if (fn === "sh_holo")             { if(typeof window.createHolographicMaterial==="function"&&meshRef.current){meshRef.current.material=window.createHolographicMaterial();setStatus("Holographic applied");} return; }
     if (fn === "sh_dissolve")         { if(typeof window.createDissolveMaterial==="function"&&meshRef.current){meshRef.current.material=window.createDissolveMaterial();setStatus("Dissolve applied");} return; }

@@ -168,11 +168,11 @@ export function SculptPanel({ onApplyFunction, sculptBrush, setSculptBrush,
 
             <div className="spnl-row" style={{marginTop:8}}>
               <label className="spnl-label">
-                <input type="checkbox" checked={!!sculptMatcap} onChange={e=>setSculptMatcap?.(e.target.checked)} />
+                <input type="checkbox" checked={!!sculptMatcap} onChange={e=>{ setSculptMatcap?.(e.target.checked); onApplyFunction?.(e.target.checked ? "sculpt_matcap_on" : "sculpt_matcap_off"); }} />
                 Matcap
               </label>
               <label className="spnl-label">
-                <input type="checkbox" checked={!!sculptCavity} onChange={e=>setSculptCavity?.(e.target.checked)} />
+                <input type="checkbox" checked={!!sculptCavity} onChange={e=>{ setSculptCavity?.(e.target.checked); onApplyFunction?.(e.target.checked ? "sculpt_cavity_on" : "sculpt_cavity_off"); }} />
                 Cavity
               </label>
             </div>

@@ -89,6 +89,12 @@ export default function TexturePaintPanel({ open = false, onClose, meshRef = nul
         <div className="paint-panel-header">
           <div>
             <strong>Texture Paint</strong>
+            <div className="paint-channel-row" style={{display:"flex",gap:"8px",marginTop:"8px"}}>
+              <button type="button" className="paint-btn">Albedo</button>
+              <button type="button" className="paint-btn">Roughness</button>
+              <button type="button" className="paint-btn">Normal</button>
+              <button type="button" className="paint-btn">AO</button>
+            </div>
             <span className="paint-panel-sub"> live mesh texture painting</span>
           </div>
           <div className="paint-header-actions">
