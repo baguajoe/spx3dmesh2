@@ -4009,7 +4009,11 @@ export default function App() {
                 const _sel_ray = new THREE.Raycaster();
                 _sel_ray.setFromCamera(new THREE.Vector2(_sel_mx, _sel_my), _sel_camera);
                 const _sel_hits = _sel_ray.intersectObjects(sceneRef.current?.children || [], true)
-                  .filter(h => h.object.isMesh && !h.object.userData?.isHelper);
+                  .filter(h => {
+                    if (!h.object.isMesh || h.object.userData?.isHelper) return false;
+                    const mat = Array.isArray(h.object.material) ? h.object.material[0] : h.object.material;
+                    return mat && mat.side !== undefined;
+                  });
                 if (_sel_hits.length > 0) {
                   const _sel_hit = _sel_hits[0].object;
                   const _sel_objs = sceneObjectsRef.current;
