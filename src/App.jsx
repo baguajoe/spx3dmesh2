@@ -4121,7 +4121,13 @@ export default function App() {
             orbitButton.current = -1;
             sculptingRef.current = false;
             confirmEdgeSlide();
-            if (wasDragging || e.button !== 0) {
+            if (e.button !== 0) {
+              boxSelectStart.current = null;
+              boxSelectActive.current = false;
+              setBoxSelect(null);
+              return;
+            }
+            if (wasDragging && !wasBox) {
               boxSelectStart.current = null;
               boxSelectActive.current = false;
               setBoxSelect(null);
