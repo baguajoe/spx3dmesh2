@@ -4016,6 +4016,7 @@ export default function App() {
                 });
                 let _sel_hits = [];
                 try { _sel_hits = _sel_candidates.length ? _sel_ray.intersectObjects(_sel_candidates, false) : []; } catch(_e) {}
+                console.log("[MD-SELECT] candidates:", _sel_candidates.length, "hits:", _sel_hits.length);
                 if (_sel_hits.length > 0) {
                   const _sel_hit = _sel_hits[0].object;
                   const _sel_objs = sceneObjectsRef.current;
