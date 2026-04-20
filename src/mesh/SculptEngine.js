@@ -134,16 +134,16 @@ function _applyBrushType(type, pos, norm, i, vp, hitPoint, hitNormal, influence,
     case 'draw':
     case 'clay': {
       pos.setXYZ(i,
-        vp.x + hitNormal.x * influence,
-        vp.y + hitNormal.y * influence,
-        vp.z + hitNormal.z * influence,
+        vp.x + hitNormal.x * influence * 0.01,
+        vp.y + hitNormal.y * influence * 0.01,
+        vp.z + hitNormal.z * influence * 0.01,
       );
       break;
     }
     case 'inflate': {
       if (!norm) break;
       const vn = new THREE.Vector3(norm.getX(i), norm.getY(i), norm.getZ(i)).normalize();
-      pos.setXYZ(i, vp.x + vn.x * influence, vp.y + vn.y * influence, vp.z + vn.z * influence);
+      pos.setXYZ(i, vp.x + vn.x * influence * 0.01, vp.y + vn.y * influence * 0.01, vp.z + vn.z * influence * 0.01);
       break;
     }
     case 'flatten': {
