@@ -3977,8 +3977,9 @@ export default function App() {
               const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
               const ray = new THREE.Raycaster();
               ray.setFromCamera(new THREE.Vector2(mx, my), cameraRef.current);
-              const handles = Object.values(gizmoRef.current.handles || {}).flat();
-              const hits = ray.intersectObjects(handles, true);
+              const handles = Object.values(gizmoRef.current.handles || {}).flat().filter(h => h && h.isMesh && h.material && h.material.side !== undefined);
+              let hits = [];
+              try { hits = handles.length ? ray.intersectObjects(handles, true) : []; } catch(_e) {}
               if (hits.length > 0) {
                 const axis = hits[0].object.userData.axis;
                 if (axis) {
