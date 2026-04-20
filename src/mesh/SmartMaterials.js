@@ -89,7 +89,7 @@ export function applyEdgeWear(mesh, { strength = 0.5, threshold = 0.3 } = {}) {
 }
 
 // ── Cavity dirt — darken concave areas ───────────────────────────────────────
-export function applyCavityDirt(mesh, { strength = 0.8, blur = 2 } = {}) {
+export function applyCavityDirt(mesh, { strength = 1.15, blur = 2 } = {}) {
   const geo = mesh.geometry;
   const pos = geo.attributes.position;
   const nor = geo.attributes.normal;
