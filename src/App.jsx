@@ -2578,18 +2578,14 @@ export default function App() {
     console.log("sculpt hit:", hit.point, "brush:", sculptBrush);
 
     pushHistory();
-    const _brush = {
-      type:     sculptBrushRef.current || 'draw',
-      radius:   sculptRadiusRef.current || 0.5,
-      strength: Math.min(sculptStrengthRef.current || 0.02, 0.05),
-    };
-    // Transform hit point to local mesh space
-    const _invMatrix = new THREE.Matrix4().copy(mesh.matrixWorld).invert();
-    const _localPoint = hit.point.clone().applyMatrix4(_invMatrix);
-    const _localNormal = hit.normal.clone().transformDirection(_invMatrix).normalize();
-    applySculptStroke(mesh.geometry, _localPoint, _localNormal, _brush, {
-      falloffType: sculptFalloffRef.current || 'smooth',
-      symmetryX:  sculptSymXRef.current || false,
+    applySculptStroke(mesh, hit, {
+      type:       sculptBrushRef.current,
+      radius:     sculptRadiusRef.current,
+      strength:   sculptStrengthRef.current,
+      falloffType: sculptFalloffRef.current,
+      symmetryX:  sculptSymXRef.current,
+      symmetryY:  false,
+      symmetryZ:  false,
     });
 
     // Force Three.js to re-render the updated geometry
@@ -3964,7 +3960,7 @@ export default function App() {
         )
       }
       centerPanel={
-        <div className={activeWorkspace === "Sculpt" ? "mesh-editor-canvas mesh-editor-canvas--sculpt" : "mesh-editor-canvas"} style={{cursor: activeWorkspace==="Sculpt" ? "crosshair" : activeTool==="select" ? "default" : "crosshair"}}
+        <div className={activeWorkspace === "Sculpt" ? "mesh-editor-canvas mesh-editor-canvas--sculpt" : "mesh-editor-canvas"}
           onMouseDown={e => {
             orbitButton.current = e.button;
             if (e.button === 1 || e.button === 2 || (e.button === 0 && e.altKey)) {
