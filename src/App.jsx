@@ -1,5 +1,35 @@
 
 
+function computeTexelDensity(geometry, textureSize = 2048) {
+  if (!geometry?.attributes?.uv || !geometry?.attributes?.position) return 0;
+
+  const uv = geometry.attributes.uv;
+  const pos = geometry.attributes.position;
+
+  let totalUV = 0;
+  let totalWorld = 0;
+
+  for (let i = 0; i < uv.count - 2; i += 3) {
+    const u0 = uv.getX(i), v0 = uv.getY(i);
+    const u1 = uv.getX(i+1), v1 = uv.getY(i+1);
+    const u2 = uv.getX(i+2), v2 = uv.getY(i+2);
+
+    const x0 = pos.getX(i), y0 = pos.getY(i), z0 = pos.getZ(i);
+    const x1 = pos.getX(i+1), y1 = pos.getY(i+1), z1 = pos.getZ(i+1);
+    const x2 = pos.getX(i+2), y2 = pos.getY(i+2), z2 = pos.getZ(i+2);
+
+    const uvArea = Math.abs((u1-u0)*(v2-v0) - (u2-u0)*(v1-v0));
+    const worldArea = Math.abs((x1-x0)*(y2-y0) - (x2-x0)*(y1-y0));
+
+    totalUV += uvArea;
+    totalWorld += worldArea;
+  }
+
+  return totalWorld > 0 ? (totalUV * textureSize) / totalWorld : 0;
+}
+
+
+
 function applySculptViewportLook(mesh, { matcap = true, cavity = false } = {}) {
   if (!mesh || !mesh.material) return;
   const mat = mesh.material;
@@ -3371,6 +3401,14 @@ export default function App() {
     if (fn === "uv_box")              { if(heMeshRef.current){uvBoxProject(heMeshRef.current);setStatus("Box UV applied");} return; }
     if (fn === "uv_sphere")           { if(heMeshRef.current){uvSphereProject(heMeshRef.current);setStatus("Sphere UV applied");} return; }
     if (fn === "uv_planar")           { if(heMeshRef.current){uvPlanarProject(heMeshRef.current);setStatus("Planar UV applied");} return; }
+    if (fn === "uv_density") {
+      if(meshRef.current?.geometry){
+        const d = computeTexelDensity(meshRef.current.geometry, 2048);
+        setStatus("Texel density: " + d.toFixed(2));
+      }
+      return;
+    }
+
     if (fn === "udim_layout")         { if(typeof window.createUDIMLayout==="function"){window.createUDIMLayout(4);setStatus("UDIM layout created");} return; }
 
     // ── Bake ──────────────────────────────────────────────────────────────────

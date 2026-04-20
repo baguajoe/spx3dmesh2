@@ -239,6 +239,7 @@ export default function UVEditorPanel({ open = false, onClose }) {
 <button type="button" className="uv-btn" onClick={() => onApplyFunction?.("pack_islands")}>Pack Islands</button>
 <button type="button" className="uv-btn" onClick={() => onApplyFunction?.("live_unwrap")}>Live Unwrap</button>
 <button type="button" className="uv-btn" onClick={() => onApplyFunction?.("udim_layout")}>UDIM Layout</button>
+<button className='uv-btn' onClick={()=>onApplyFunction?.('uv_density')}>Texel Density</button></button>
           <select
             className="uv-input"
             value={projectionMode}
