@@ -4017,6 +4017,8 @@ export default function App() {
                 let _sel_hits = [];
                 try { _sel_hits = _sel_candidates.length ? _sel_ray.intersectObjects(_sel_candidates, false) : []; } catch(_e) {}
                 console.log("[MD-SELECT] candidates:", _sel_candidates.length, "hits:", _sel_hits.length);
+                console.log("[MD-SELECT] rect:", JSON.stringify({l:Math.round(_sel_rect.left),t:Math.round(_sel_rect.top),w:Math.round(_sel_rect.width),h:Math.round(_sel_rect.height)}));
+                console.log("[MD-SELECT] mouse:", e.clientX, e.clientY, "ndc:", _sel_mx.toFixed(2), _sel_my.toFixed(2));
                 if (_sel_hits.length > 0) {
                   const _sel_hit = _sel_hits[0].object;
                   const _sel_objs = sceneObjectsRef.current;
