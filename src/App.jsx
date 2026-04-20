@@ -151,7 +151,7 @@ import { optimizeScene, applyProceduralAnimation, createAudioAnalyzer, getSceneS
 import { MaterialEditor } from "./components/MaterialEditor.jsx";
 import { UVEditor } from "./components/UVEditor.jsx";
 import { TransformGizmo } from "./components/TransformGizmo.js";
-import { createSceneObject, buildPrimitiveMesh } from "./components/SceneManager.js";
+import { createSceneObject, buildPrimitiveMesh, createFilmSculptLighting } from "./components/SceneManager.js";
 import { MeshEditorPanel, PropertiesPanel } from "./components/MeshEditorPanel.jsx";
 import { SceneOutliner } from "./components/SceneOutliner.jsx";
 import { SculptPanel } from "./components/SculptPanel.jsx";
@@ -1029,12 +1029,16 @@ export default function App() {
   const [sculptStrength, setSculptStrength] = useState(0.5);
   const [sculptFalloff, setSculptFalloff] = useState("smooth");
   const [sculptSymX, setSculptSymX] = useState(false);
+  const [alphaType, setAlphaType] = useState("none");
+  const [alphaScale, setAlphaScale] = useState(6.0);
   const sculptingRef = useRef(false);
   const sculptBrushRef = useRef("push");
   const sculptRadiusRef = useRef(0.3);
   const sculptStrengthRef = useRef(0.02);
   const sculptFalloffRef = useRef("smooth");
   const sculptSymXRef = useRef(false);
+  const alphaTypeRef = useRef("none");
+  const alphaScaleRef = useRef(6.0);
   const [dyntopoEnabled, setDyntopoEnabled] = useState(false);
   const lazyMouseRef = useRef({ x: 0, y: 0 });
   const sculptStrokeCountRef = useRef(0);
@@ -1238,6 +1242,8 @@ export default function App() {
   useEffect(() => { sculptStrengthRef.current = sculptStrength; }, [sculptStrength]);
   useEffect(() => { sculptFalloffRef.current = sculptFalloff; }, [sculptFalloff]);
   useEffect(() => { sculptSymXRef.current = sculptSymX; }, [sculptSymX]);
+  useEffect(() => { alphaTypeRef.current = alphaType; }, [alphaType]);
+  useEffect(() => { alphaScaleRef.current = alphaScale; }, [alphaScale]);
   useEffect(() => {
     const onProportionalKey = (e) => {
       if (e.key.toLowerCase() === 'o' && editModeRef.current === 'edit') {
@@ -1511,6 +1517,10 @@ export default function App() {
     scene.add(centerGuides);
 
     sceneRef.current = scene;
+    if (!scene.userData.__filmSculptLightingApplied) {
+      createFilmSculptLighting(scene);
+      scene.userData.__filmSculptLightingApplied = true;
+    }
 
     const camera = new THREE.PerspectiveCamera(
       55,
@@ -3937,6 +3947,8 @@ export default function App() {
             sculptFalloff={sculptFalloff} setSculptFalloff={setSculptFalloff}
             sculptSymX={sculptSymX} setSculptSymX={setSculptSymX}
             dyntopoEnabled={dyntopoEnabled} setDyntopoEnabled={setDyntopoEnabled}
+            alphaType={alphaType} setAlphaType={setAlphaType}
+            alphaScale={alphaScale} setAlphaScale={setAlphaScale}
             vcPaintColor={vcPaintColor} setVcPaintColor={setVcPaintColor}
             vcRadius={vcRadius} setVcRadius={setVcRadius}
             vcStrength={vcStrength} setVcStrength={setVcStrength}

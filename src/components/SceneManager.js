@@ -35,3 +35,24 @@ export function createSceneObject(type, name, mesh) {
     parentId: null,
   };
 }
+
+
+export function createFilmSculptLighting(scene) {
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1.25);
+  keyLight.position.set(3, 5, 4);
+
+  const fillLight = new THREE.DirectionalLight(0xbfc7d6, 0.35);
+  fillLight.position.set(-4, 2, 1);
+
+  const rimLight = new THREE.DirectionalLight(0xffffff, 0.75);
+  rimLight.position.set(-2, 4, -5);
+
+  const ambient = new THREE.AmbientLight(0xffffff, 0.15);
+
+  scene.add(keyLight);
+  scene.add(fillLight);
+  scene.add(rimLight);
+  scene.add(ambient);
+
+  return { keyLight, fillLight, rimLight, ambient };
+}

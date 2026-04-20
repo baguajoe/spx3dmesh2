@@ -164,12 +164,52 @@ export function SculptPanel({ onApplyFunction, sculptBrush, setSculptBrush,
 
           <Section title="Dynamic Topology">
             <div className="spnl-row">
-              <button
+  
+            <div className="spnl-row" style={{marginTop:8}}>
+              <span className="spnl-label">Alpha</span>
+              <select
+                className="spnl-select"
+                value={alphaType || "none"}
+                onChange={(e)=>setAlphaType?.(e.target.value)}
+              >
+                <option value="none">None</option>
+                <option value="soft">Soft</option>
+                <option value="noise">Noise</option>
+                <option value="pores">Pores</option>
+                <option value="cracks">Cracks</option>
+                <option value="stripes">Stripes</option>
+              </select>
+            </div>
+
+            <div className="spnl-row">
+              <span className="spnl-label">Alpha Scale</span>
+              <input
+                type="range"
+                min="1"
+                max="20"
+                step="0.5"
+                value={alphaScale ?? 6}
+                onChange={(e)=>setAlphaScale?.(parseFloat(e.target.value))}
+              />
+              <span className="spnl-value">{(alphaScale ?? 6).toFixed?.(1) ?? alphaScale}</span>
+            </div>
+
+            <button
                 className={`spnl-btn-toggle${dyntopoEnabled?" spnl-btn-toggle--on":""}`}
                 onClick={() => { setDyntopoEnabled(v => !v); onApplyFunction("dyntopo"); }}>
                 {dyntopoEnabled ? "⬤ Dyntopo ON" : "○ Dyntopo OFF"}
               </button>
             </div>
+
+            <div className="spnl-row" style={{marginTop:8, marginBottom:8}}>
+              <button
+                className="spnl-btn-full"
+                onClick={() => onApplyFunction?.("quad_remesh")}
+              >
+                Quad Remesh (Film)
+              </button>
+            </div>
+
             {dyntopoEnabled && (<>
               <Slider label="Detail" value={remeshVoxel} min={0.02} max={0.5} step={0.01}
                 onChange={setRemeshVoxel} />
