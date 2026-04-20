@@ -3993,6 +3993,31 @@ export default function App() {
                 }
               }
             }
+            // Always try object selection on mousedown
+            {
+              const _sel_canvas = canvasRef.current;
+              const _sel_camera = cameraRef.current;
+              if (_sel_canvas && _sel_camera && sceneObjectsRef.current.length > 0) {
+                const _sel_rect = _sel_canvas.getBoundingClientRect();
+                const _sel_mx = ((e.clientX - _sel_rect.left) / _sel_rect.width) * 2 - 1;
+                const _sel_my = -((e.clientY - _sel_rect.top) / _sel_rect.height) * 2 + 1;
+                const _sel_ray = new THREE.Raycaster();
+                _sel_ray.setFromCamera(new THREE.Vector2(_sel_mx, _sel_my), _sel_camera);
+                const _sel_hits = _sel_ray.intersectObjects(sceneRef.current?.children || [], true)
+                  .filter(h => h.object.isMesh && !h.object.userData?.isHelper);
+                if (_sel_hits.length > 0) {
+                  const _sel_hit = _sel_hits[0].object;
+                  const _sel_objs = sceneObjectsRef.current;
+                  let _sel_match = _sel_objs.find(o => o.mesh === _sel_hit || o.mesh?.uuid === _sel_hit.uuid);
+                  if (!_sel_match) _sel_objs.forEach(o => { if (!o.mesh) return; o.mesh.traverse(m => { if (m === _sel_hit) _sel_match = o; }); });
+                  if (!_sel_match && _sel_objs.length > 0) {
+                    let _d = Infinity;
+                    _sel_objs.forEach(o => { if (!o.mesh) return; const dd = o.mesh.position.distanceTo(_sel_hits[0].point); if (dd < _d) { _d = dd; _sel_match = o; } });
+                  }
+                  if (_sel_match) selectSceneObject(_sel_match.id);
+                }
+              }
+            }
             if (activeWorkspace === "Sculpt") {
               if (!meshRef.current && sceneObjects.length > 0) {
                 const obj = sceneObjects.find(o => o.id === activeObjId) || sceneObjects[0];
