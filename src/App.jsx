@@ -903,6 +903,16 @@ export default function App() {
       }
     }
     setStatus("Selected: " + obj.name);
+    // Build HalfEdge mesh so edit tools work immediately after selection
+    if (obj.mesh?.geometry && !heMeshRef.current) {
+      try {
+        const geo = obj.mesh.geometry.index
+          ? obj.mesh.geometry.toNonIndexed()
+          : obj.mesh.geometry;
+        heMeshRef.current = HalfEdgeMesh.fromBufferGeometry(geo);
+        setStats(heMeshRef.current.stats());
+      } catch(e) {}
+    }
   };
 
   const renameSceneObject = (id, name) => {
@@ -2870,6 +2880,15 @@ export default function App() {
     // ── Edit tools ────────────────────────────────────────────────────────────
     if (fn === "toggle_edit")         { toggleEditMode(); return; }
     if (fn === "select")              { setActiveTool("select"); setStatus("Select mode"); return; }
+    if (fn === "grab")                { setActiveTool("grab"); if(editModeRef.current!=="edit"){toggleEditMode();} setStatus("Grab — G"); return; }
+    if (fn === "rotate")              { setActiveTool("rotate"); if(editModeRef.current!=="edit"){toggleEditMode();} setStatus("Rotate — R"); return; }
+    if (fn === "scale")               { setActiveTool("scale"); if(editModeRef.current!=="edit"){toggleEditMode();} setStatus("Scale — S"); return; }
+    if (fn === "extrude")             { if(editModeRef.current!=="edit"){toggleEditMode();} setActiveTool("extrude"); setStatus("Extrude — E"); return; }
+    if (fn === "loop_cut")            { if(editModeRef.current!=="edit"){toggleEditMode();} setActiveTool("loop_cut"); applyLoopCut(); return; }
+    if (fn === "knife")               { if(editModeRef.current!=="edit"){toggleEditMode();} setActiveTool("knife"); setStatus("Knife — K"); return; }
+    if (fn === "edge_slide")          { if(editModeRef.current!=="edit"){toggleEditMode();} startEdgeSlide(); return; }
+    if (fn === "bevel")               { if(editModeRef.current!=="edit"){toggleEditMode();} if(heMeshRef.current){pushHistory();heMeshRef.current.bevelEdges(0.1);rebuildMeshGeometry();setStatus("Bevel applied");} return; }
+    if (fn === "inset")               { if(editModeRef.current!=="edit"){toggleEditMode();} if(heMeshRef.current&&selectedFaces.size>0){pushHistory();heMeshRef.current.insetFaces([...selectedFaces],0.1);rebuildMeshGeometry();setStatus("Inset applied");} return; }
     if (fn === "grab") {
       if (proportionalEnabled && heMeshRef.current && selectedVerts.size > 0) {
         // Proportional grab — will be applied on mouse move via delta
@@ -2880,9 +2899,9 @@ export default function App() {
         return;
       }
     }
-    if (fn === "_grab_legacy")                { setActiveTool("grab"); setStatus("Grab — G"); return; }
-    if (fn === "rotate")              { setActiveTool("rotate"); setStatus("Rotate — R"); return; }
-    if (fn === "scale")               { setActiveTool("scale"); setStatus("Scale — S"); return; }
+
+
+
     if (fn === "sss_skin") {
       if (meshRef.current) {
         import("./mesh/RenderSystem.js").then(({applySSSMaterial}) => {
@@ -3229,40 +3248,11 @@ export default function App() {
     if (fn === "circularize")      { if(heMeshRef.current){ const sel=[...selectedVerts]; heMeshRef.current.circularize(sel); rebuildMeshGeometry(); setStatus("Circularize applied"); } return; }
     if (fn === "reorder_verts")    { if(heMeshRef.current){ const n=heMeshRef.current.reorderVertices(); setStatus(`Reordered ${n} vertices`); } return; }
     if (fn === "connect_comps")    { if(heMeshRef.current){ const sel=[...selectedVerts]; if(sel.length>=2){ heMeshRef.current.connectComponents(sel[0],sel[1]); rebuildMeshGeometry(); setStatus("Components connected"); }} return; }
-    if (fn === "extrude") {
-      if (heMeshRef.current && selectedFaces.size > 0) {
-        pushHistory();
-        const faceIds = [...selectedFaces];
-        heMeshRef.current.extrudeFaces(faceIds, 0.3);
-        rebuildMeshGeometry();
-        setStatus(`Extruded ${faceIds.length} face(s)`);
-        return;
-      }
-    }
     if (fn === "_extrude_legacy")             { setActiveTool("extrude"); setStatus("Extrude — select faces first"); return; }
-    if (fn === "loop_cut")            { setActiveTool("loop_cut"); applyLoopCut(); return; }
-    if (fn === "knife")               { setActiveTool("knife"); setEditMode("edit"); setStatus("Knife — click points, Enter to cut"); return; }
-    if (fn === "edge_slide")          { startEdgeSlide(); return; }
-    if (fn === "bevel") {
-      if (heMeshRef.current) {
-        pushHistory();
-        heMeshRef.current.bevelEdges(0.1);
-        rebuildMeshGeometry();
-        setStatus("Bevel applied");
-        return;
-      }
-    }
+
+
+
     if (fn === "_bevel_legacy")               { setStatus("Bevel — Ctrl+B in viewport"); return; }
-    if (fn === "inset") {
-      if (heMeshRef.current && selectedFaces.size > 0) {
-        pushHistory();
-        const faceIds = [...selectedFaces];
-        heMeshRef.current.insetFaces(faceIds, 0.1);
-        rebuildMeshGeometry();
-        setStatus(`Inset ${faceIds.length} face(s)`);
-        return;
-      }
-    }
     if (fn === "_inset_legacy")               { setStatus("Inset — I in viewport"); return; }
     if (fn === "gizmo_move")          { setGizmoMode("move"); setStatus("Gizmo: Move"); return; }
     if (fn === "gizmo_rotate")        { setGizmoMode("rotate"); setStatus("Gizmo: Rotate"); return; }
