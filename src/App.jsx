@@ -2581,7 +2581,7 @@ export default function App() {
     const _brush = {
       type:         sculptBrushRef.current || 'draw',
       radius:       sculptRadiusRef.current || 0.3,
-      strength:     Math.min((sculptStrengthRef.current || 0.02) * 0.01, 0.008),
+      strength:     sculptStrengthRef.current || 0.5,
       falloff:      sculptFalloffRef.current || 'smooth',
       direction:    1,
       symmetry:     sculptSymXRef.current || false,
