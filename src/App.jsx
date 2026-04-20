@@ -1048,6 +1048,8 @@ export default function App() {
   const [alphaScale, setAlphaScale] = useState(6.0);
   const [sculptMatcap, setSculptMatcap] = useState(true);
   const [sculptCavity, setSculptCavity] = useState(true);
+  const [sculptLayers, setSculptLayers] = useState([{ id: "base", name: "Base Layer", intensity: 1 }]);
+  const [activeSculptLayer, setActiveSculptLayer] = useState("base");
   const sculptingRef = useRef(false);
   const sculptBrushRef = useRef("push");
   const sculptRadiusRef = useRef(0.3);
@@ -1060,6 +1062,7 @@ export default function App() {
   const lazyMouseRef = useRef({ x: 0, y: 0 });
   const sculptStrokeCountRef = useRef(0);
   const maskRef = useRef(null);
+  const hitPointRef = useRef(null);
 
   // ── Session 8: Vertex color paint state ──────────────────────────────────
   const [vcPaintColor, setVcPaintColor] = useState("#ff6600");
@@ -3601,10 +3604,14 @@ export default function App() {
     if (fn.startsWith("brush_"))      { const b=fn.replace("brush_",""); setSculptBrush(b); setEditMode("sculpt"); setStatus("Brush: "+b); return; }
     if (fn === "dyntopo")             { setDyntopoEnabled(v=>!v); setStatus(dyntopoEnabled?"Dyntopo OFF":"Dyntopo ON"); return; }
     if (fn === "brush_mask")          { setSculptBrush("mask"); setStatus("Mask brush active"); return; }
-    if (fn === "brush_pose")          { setSculptBrush("grab"); setStatus("Pose brush active — grab-based falloff prototype"); return; }
+    if (fn === "brush_pose")          { setSculptBrush("grab"); if(meshRef.current?.geometry && hitPointRef?.current){ applyPoseFalloff(meshRef.current.geometry, hitPointRef.current, sculptRadiusRef.current || 0.25, sculptStrengthRef.current || 0.25, "y"); } setStatus("Pose brush active — falloff deformation applied"); return; }
     if (fn === "mask_invert")         { if(maskRef.current){ invertMask(maskRef.current); setStatus("Mask inverted"); } else { setStatus("No mask to invert"); } return; }
     if (fn === "mask_clear")          { if(maskRef.current){ clearMask(maskRef.current); setStatus("Mask cleared"); } else { setStatus("No mask to clear"); } return; }
     if (fn === "mask_blur")           { if(maskRef.current){ blurMask(maskRef.current, 2); setStatus("Mask blurred"); } else { setStatus("No mask to blur"); } return; }
+    if (fn === "mask_grow")           { if(maskRef.current){ growMask(maskRef.current, 1); setStatus("Mask grown"); } else { setStatus("No mask to grow"); } return; }
+    if (fn === "mask_shrink")         { if(maskRef.current){ shrinkMask(maskRef.current, 1); setStatus("Mask shrunk"); } else { setStatus("No mask to shrink"); } return; }
+    if (fn === "layer_new")            { const id = `layer_${Date.now()}`; setSculptLayers(v => [...v, { id, name: `Layer ${v.length}`, intensity: 1 }]); setActiveSculptLayer(id); setStatus("New sculpt layer created"); return; }
+    if (fn === "layer_base")           { setActiveSculptLayer("base"); setStatus("Base sculpt layer active"); return; }
 
     // ── Rigging ───────────────────────────────────────────────────────────────
     if (fn === "create_armature")     { const a=createArmature("Armature"); setArmatures(p=>[...p,a]); setStatus("Armature created"); return; }
@@ -3995,6 +4002,7 @@ export default function App() {
             alphaScale={alphaScale} setAlphaScale={setAlphaScale}
             sculptMatcap={sculptMatcap} setSculptMatcap={setSculptMatcap}
             sculptCavity={sculptCavity} setSculptCavity={setSculptCavity}
+            sculptLayers={sculptLayers} activeSculptLayer={activeSculptLayer}
             vcPaintColor={vcPaintColor} setVcPaintColor={setVcPaintColor}
             vcRadius={vcRadius} setVcRadius={setVcRadius}
             vcStrength={vcStrength} setVcStrength={setVcStrength}

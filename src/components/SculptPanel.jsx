@@ -166,6 +166,12 @@ export function SculptPanel({ onApplyFunction, sculptBrush, setSculptBrush,
             <div className="spnl-row">
   
 
+
+            <div className="spnl-row" style={{marginTop:8}}>
+              <button className="spnl-btn" onClick={() => onApplyFunction("layer_new")}>New Layer</button>
+              <button className="spnl-btn" onClick={() => onApplyFunction("layer_base")}>Base Layer</button>
+              <span className="spnl-value">Active: {activeSculptLayer || "base"}</span>
+            </div>
             <div className="spnl-row" style={{marginTop:8}}>
               <label className="spnl-label">
                 <input type="checkbox" checked={!!sculptMatcap} onChange={e=>{ setSculptMatcap?.(e.target.checked); onApplyFunction?.(e.target.checked ? "sculpt_matcap_on" : "sculpt_matcap_off"); }} />
@@ -260,6 +266,8 @@ export function SculptPanel({ onApplyFunction, sculptBrush, setSculptBrush,
               <button className="spnl-btn" onClick={() => onApplyFunction("mask_invert")}>Invert Mask</button>
               <button className="spnl-btn" onClick={() => onApplyFunction("mask_clear")}>Clear Mask</button>
               <button className="spnl-btn" onClick={() => onApplyFunction("mask_blur")}>Blur Mask</button>
+              <button className="spnl-btn" onClick={() => onApplyFunction("mask_grow")}>Grow Mask</button>
+              <button className="spnl-btn" onClick={() => onApplyFunction("mask_shrink")}>Shrink Mask</button>
             </div>
             <div className="spnl-btn-row">
               {[0,1,2,3,4].map(l => (

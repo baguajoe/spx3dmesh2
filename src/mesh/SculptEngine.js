@@ -425,3 +425,55 @@ export function getSculptHit(e, canvas, camera, mesh) {
   }
 }
 
+
+
+export function growMask(mask, iterations = 1) {
+  if (!mask) return mask;
+  for (let k = 0; k < iterations; k++) {
+    const next = new Float32Array(mask.length);
+    for (let i = 0; i < mask.length; i++) {
+      const a = mask[i - 1] ?? mask[i];
+      const b = mask[i];
+      const c = mask[i + 1] ?? mask[i];
+      next[i] = Math.max(a, b, c);
+    }
+    mask.set(next);
+  }
+  return mask;
+}
+
+export function shrinkMask(mask, iterations = 1) {
+  if (!mask) return mask;
+  for (let k = 0; k < iterations; k++) {
+    const next = new Float32Array(mask.length);
+    for (let i = 0; i < mask.length; i++) {
+      const a = mask[i - 1] ?? mask[i];
+      const b = mask[i];
+      const c = mask[i + 1] ?? mask[i];
+      next[i] = Math.min(a, b, c);
+    }
+    mask.set(next);
+  }
+  return mask;
+}
+
+export function applyPoseFalloff(geometry, hitPoint, radius, strength = 0.25, axis = 'y') {
+  if (!geometry?.attributes?.position) return;
+  const pos = geometry.attributes.position;
+  const pivot = hitPoint.clone ? hitPoint.clone() : hitPoint;
+  for (let i = 0; i < pos.count; i++) {
+    const vx = pos.getX(i), vy = pos.getY(i), vz = pos.getZ(i);
+    const dx = vx - pivot.x, dy = vy - pivot.y, dz = vz - pivot.z;
+    const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+    if (dist > radius) continue;
+    const t = Math.max(0, Math.min(1, dist / radius));
+    const w = (1 - t) * (1 - t) * strength;
+
+    if (axis === 'x') pos.setXYZ(i, vx + w * 0.2, vy, vz);
+    else if (axis === 'z') pos.setXYZ(i, vx, vy, vz + w * 0.2);
+    else pos.setXYZ(i, vx, vy + w * 0.2, vz);
+  }
+  pos.needsUpdate = true;
+  geometry.computeVertexNormals?.();
+  if (geometry.attributes.normal) geometry.attributes.normal.needsUpdate = true;
+}
