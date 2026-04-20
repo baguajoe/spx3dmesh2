@@ -1517,6 +1517,16 @@ export default function App() {
     scene.add(centerGuides);
 
     sceneRef.current = scene;
+    if (rendererRef.current) {
+      try {
+        rendererRef.current.toneMappingExposure = 1.1;
+        rendererRef.current.physicallyCorrectLights = true;
+        rendererRef.current.outputColorSpace = THREE.SRGBColorSpace;
+        if ("shadowMap" in rendererRef.current) {
+          rendererRef.current.shadowMap.enabled = true;
+        }
+      } catch (e) { console.warn("film viewport defaults failed", e); }
+    }
     if (!scene.userData.__filmSculptLightingApplied) {
       createFilmSculptLighting(scene);
       scene.userData.__filmSculptLightingApplied = true;
@@ -3312,7 +3322,7 @@ export default function App() {
       }
       return;
     }
-    if (fn === "quad_remesh")         { if(typeof window.quadRemesh==="function"&&meshRef.current){window.quadRemesh(meshRef.current);setStatus("Quad remesh done");} return; }
+    if (fn === "quad_remesh")         { if(typeof window.quadRemesh==="function"&&meshRef.current){window.quadRemesh(meshRef.current,{ target:"film", preserveHardEdges:true, density:"high" });setStatus("Quad remesh done (film)");} return; }
     if (fn === "auto_retopo")         { if(typeof window.quadDominantRetopo==="function"&&meshRef.current){const r=window.quadDominantRetopo(meshRef.current,createRetopoSettings());setRetopoResult(r);setStatus("Retopo done");} return; }
     if (fn === "marching_cubes")      { if(typeof window.marchingCubesRemesh==="function"&&meshRef.current){window.marchingCubesRemesh(meshRef.current,mcResolution,mcIsolevel);setStatus("Marching cubes done");} return; }
 
@@ -3900,8 +3910,8 @@ export default function App() {
   const [densityPattern, setDensityPattern] = useState("center");
   const [tourState, setTourState] = useState(createTourState());
   const [hairGroup, setHairGroup] = useState(null);
-  const [bloomEnabled, setBloomEnabled] = useState(false);
-  const [ssaoEnabled, setSsaoEnabled] = useState(false);
+  const [bloomEnabled, setBloomEnabled] = useState(true);
+  const [ssaoEnabled, setSsaoEnabled] = useState(true);
   const [dofEnabled, setDofEnabled] = useState(false);
   const [mcIsolevel, setMcIsolevel] = useState(0.5);
   const [mcResolution, setMcResolution] = useState(32);
