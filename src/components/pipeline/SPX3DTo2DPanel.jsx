@@ -11,6 +11,34 @@ const CATEGORIES = [
   { id:"digital",  label:"Digital" },
 ];
 
+
+const VISIBLE_STYLES = [
+  "cinematic",
+  "film_noir",
+  "vintage_film",
+
+  "toon",
+  "cel",
+  "anime",
+  "manga",
+  "comic",
+  "pixar",
+
+  "oil",
+  "watercolor",
+  "gouache",
+  "impressionist",
+  "ink_wash",
+
+  "pencil",
+  "charcoal",
+  "blueprint",
+  "linocut",
+  "risograph",
+
+  "low_poly"
+];
+
 const STYLES = [
   { id:"cinematic",      label:"Cinematic",        cat:"photo",    color:"#ffaa00" },
   { id:"photorealistic", label:"Photorealistic",    cat:"photo",    color:"#ffaa00" },
@@ -73,12 +101,30 @@ function applyStyleFilter(srcCanvas, style, params) {
       }
       break;
     }
-    case 'toon': case 'cel': case 'pixar': {
-      const lv = params.toonLevels||5;
+    case 'toon': case 'cel': case 'pixar': case 'anime': case 'manga': case 'comic': {
+      const lv = params.toonLevels || 5;
+      const sb = params.shadowBands || 3;
+      const hc = params.highlightClamp || 0.85;
       for (let i = 0; i < d.length; i += 4) {
-        d[i]  =Math.round(d[i]  /(255/lv))*(255/lv);
-        d[i+1]=Math.round(d[i+1]/(255/lv))*(255/lv);
-        d[i+2]=Math.round(d[i+2]/(255/lv))*(255/lv);
+        let r = d[i] / 255;
+        let g = d[i+1] / 255;
+        let b = d[i+2] / 255;
+
+        r = Math.min(r, hc);
+        g = Math.min(g, hc);
+        b = Math.min(b, hc);
+
+        r = Math.round(r * lv) / lv;
+        g = Math.round(g * lv) / lv;
+        b = Math.round(b * lv) / lv;
+
+        const lum = (r + g + b) / 3;
+        const band = Math.round(lum * sb) / sb;
+        const boost = band > 0.66 ? 1.08 : band < 0.33 ? 0.88 : 1.0;
+
+        d[i]   = Math.max(0, Math.min(255, r * 255 * boost));
+        d[i+1] = Math.max(0, Math.min(255, g * 255 * boost));
+        d[i+2] = Math.max(0, Math.min(255, b * 255 * boost));
       }
       break;
     }
@@ -162,23 +208,126 @@ function applyStyleFilter(srcCanvas, style, params) {
 
 const isElectron = typeof window !== 'undefined' && !!window.electronAPI;
 
+
+function makeLinePass(srcCanvas, threshold=24, bias=1.0){
+  const dst = document.createElement('canvas');
+  dst.width = srcCanvas.width;
+  dst.height = srcCanvas.height;
+  const ctx = dst.getContext('2d');
+  ctx.drawImage(srcCanvas, 0, 0);
+  const id = ctx.getImageData(0, 0, dst.width, dst.height);
+  const d = id.data;
+
+  const lumAt = (x, y, w) => {
+    const i = (y * w + x) * 4;
+    return 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+  };
+
+  const out = new Uint8ClampedArray(d.length);
+
+  for (let y = 1; y < dst.height - 1; y++) {
+    for (let x = 1; x < dst.width - 1; x++) {
+      const i = (y * dst.width + x) * 4;
+
+      const tl = lumAt(x-1,y-1,dst.width);
+      const tc = lumAt(x,y-1,dst.width);
+      const tr = lumAt(x+1,y-1,dst.width);
+      const ml = lumAt(x-1,y,dst.width);
+      const mr = lumAt(x+1,y,dst.width);
+      const bl = lumAt(x-1,y+1,dst.width);
+      const bc = lumAt(x,y+1,dst.width);
+      const br = lumAt(x+1,y+1,dst.width);
+
+      const gx = (-tl - 2*ml - bl) + (tr + 2*mr + br);
+      const gy = (-tl - 2*tc - tr) + (bl + 2*bc + br);
+
+      const edge = Math.min(255, Math.sqrt(gx*gx + gy*gy) * bias);
+      const ink = edge > threshold ? 0 : 255;
+
+      out[i] = out[i+1] = out[i+2] = ink;
+      out[i+3] = 255;
+    }
+  }
+
+  id.data.set(out);
+  ctx.putImageData(id, 0, 0);
+  return dst;
+}
+
+
+function temporalBlendCanvas(currentCanvas, blend=0.35){
+
+  if(!prevFrameRef.current){
+    prevFrameRef.current = currentCanvas;
+    return currentCanvas;
+  }
+
+  const dst = document.createElement('canvas');
+  dst.width = currentCanvas.width;
+  dst.height = currentCanvas.height;
+
+  const ctx = dst.getContext('2d');
+
+  ctx.globalAlpha = 1-blend;
+  ctx.drawImage(prevFrameRef.current,0,0);
+
+  ctx.globalAlpha = blend;
+  ctx.drawImage(currentCanvas,0,0);
+
+  ctx.globalAlpha = 1;
+
+  prevFrameRef.current = dst;
+
+  return dst;
+}
+
+function makeFlatColorPass(srcCanvas, levels=4){
+  const dst = document.createElement('canvas');
+  dst.width = srcCanvas.width;
+  dst.height = srcCanvas.height;
+  const ctx = dst.getContext('2d');
+  ctx.drawImage(srcCanvas, 0, 0);
+  const id = ctx.getImageData(0, 0, dst.width, dst.height);
+  const d = id.data;
+
+  for (let i = 0; i < d.length; i += 4) {
+    d[i]   = Math.round(d[i]   /(255/levels))*(255/levels);
+    d[i+1] = Math.round(d[i+1] /(255/levels))*(255/levels);
+    d[i+2] = Math.round(d[i+2] /(255/levels))*(255/levels);
+  }
+
+  ctx.putImageData(id, 0, 0);
+  return dst;
+}
+
+
 export default function SPX3DTo2DPanel({ open, onClose, sceneRef, rendererRef, cameraRef }) {
   const [activeCat,    setActiveCat]    = useState('all');
   const [activeStyle,  setActiveStyle]  = useState('cinematic');
-  const [outlineWidth, setOutlineWidth] = useState(1.5);
+  
+const [outlineWidth, setOutlineWidth] = useState(1.5);
+const [edgeStrength, setEdgeStrength] = useState(1.0);
+const [edgeThreshold, setEdgeThreshold] = useState(24);
+const [edgeBias, setEdgeBias] = useState(1.0);
+
   const [toonLevels,   setToonLevels]   = useState(4);
+const [shadowBands, setShadowBands] = useState(3);
+const [highlightClamp, setHighlightClamp] = useState(0.85);
   const [renderScale,  setRenderScale]  = useState(2);
   const [rendering,    setRendering]    = useState(false);
   const [exporting,    setExporting]    = useState(false);
   const [exportFormat, setExportFormat] = useState('png');
+  const [exportMode, setExportMode] = useState('final');
+const [temporalBlend, setTemporalBlend] = useState(0.35);
   const [status,       setStatus]       = useState('Select a style and click Render');
 
   const previewRef = useRef(null);
+const prevFrameRef = useRef(null);
   const liveRef    = useRef(null);
   const animRef    = useRef(null);
 
-  const filtered      = activeCat === 'all' ? STYLES : STYLES.filter(s => s.cat === activeCat);
-  const currentStyle  = STYLES.find(s => s.id === activeStyle) || STYLES[0];
+  const filtered = (activeCat === 'all' ? STYLES : STYLES.filter(s => s.cat === activeCat)).filter(s => VISIBLE_STYLES.includes(s.id));
+  const currentStyle = STYLES.find(s => s.id === activeStyle && VISIBLE_STYLES.includes(s.id)) || STYLES.find(s => VISIBLE_STYLES.includes(s.id)) || STYLES[0];
 
   // Mirror main renderer into live canvas
   useEffect(() => {
@@ -197,7 +346,44 @@ export default function SPX3DTo2DPanel({ open, onClose, sceneRef, rendererRef, c
     return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
   }, [open, rendererRef]);
 
-  const captureAndProcess = useCallback((scale = 1) => {
+  
+function applyNPRIfNeeded(style, sceneRef){
+  if(!sceneRef?.current) return;
+
+  const toonStyles = [
+    "toon",
+    "cel",
+    "anime",
+    "manga",
+    "comic",
+    "pixar"
+  ];
+
+  if(!toonStyles.includes(style)) return;
+
+  if(!window.createToonMaterial) return;
+
+  sceneRef.current.traverse(obj=>{
+    if(!obj.isMesh) return;
+
+    const mat = window.createToonMaterial({
+      levels: 4
+    });
+
+    obj.material = mat;
+
+    if(window.addOutlineToMesh){
+      window.addOutlineToMesh(obj, sceneRef.current,{ thickness:0.002 * edgeStrength,
+        thickness:0.003
+      });
+    }
+
+  });
+
+}
+
+
+const captureAndProcess = useCallback((scale = 1) => {
     const src = rendererRef?.current?.domElement;
     if (!src) return null;
     const tmp = document.createElement('canvas');
@@ -207,14 +393,29 @@ export default function SPX3DTo2DPanel({ open, onClose, sceneRef, rendererRef, c
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(src, 0, 0, tmp.width, tmp.height);
-    return applyStyleFilter(tmp, activeStyle, { outlineWidth, toonLevels });
-  }, [activeStyle, outlineWidth, toonLevels, rendererRef]);
+    if (exportMode === 'line') {
+      return makeLinePass(tmp, edgeThreshold, edgeBias);
+    }
+    if (exportMode === 'flat') {
+      return makeFlatColorPass(tmp, toonLevels);
+    }
+    const result = applyStyleFilter(tmp, activeStyle, { outlineWidth, toonLevels, shadowBands, highlightClamp });
+
+if(exportMode === 'final'){
+  return temporalBlendCanvas(result, temporalBlend);
+}
+
+return result;
+  }, [activeStyle, outlineWidth, toonLevels, shadowBands, highlightClamp, exportMode, edgeThreshold, edgeBias, temporalBlend, rendererRef]);
 
   const handleRender = useCallback(async () => {
     if (!rendererRef?.current) { setStatus('⚠ No renderer — add a mesh first'); return; }
     setRendering(true); setStatus('Rendering...');
     try {
-      const out = captureAndProcess(1);
+      
+applyNPRIfNeeded(activeStyle, sceneRef);
+const out = captureAndProcess(1);
+
       if (out && previewRef.current) {
         previewRef.current.width  = out.width;
         previewRef.current.height = out.height;
@@ -237,7 +438,10 @@ export default function SPX3DTo2DPanel({ open, onClose, sceneRef, rendererRef, c
     if (!rendererRef?.current) { setStatus('⚠ No renderer'); return; }
     setExporting(true); setStatus('Rendering 4K...');
     try {
-      const out = captureAndProcess(renderScale);
+      
+applyNPRIfNeeded(activeStyle, sceneRef);
+const out = captureAndProcess(renderScale);
+
       if (!out) { setStatus('Render failed'); setExporting(false); return; }
       const dataURL = out.toDataURL('image/png');
       if (isElectron && window.electronAPI?.saveFile) {
@@ -272,7 +476,10 @@ export default function SPX3DTo2DPanel({ open, onClose, sceneRef, rendererRef, c
     const frames = [];
     setStatus(`Capturing ${FRAMES} frames...`);
     for (let i = 0; i < FRAMES; i++) {
-      const out = captureAndProcess(1);
+      
+applyNPRIfNeeded(activeStyle, sceneRef);
+const out = captureAndProcess(1);
+
       if (out) frames.push(out.toDataURL('image/jpeg', 0.9));
       if (i % 10 === 0) setStatus(`Capturing frame ${i}/${FRAMES}...`);
       await new Promise(r => setTimeout(r, 16));
