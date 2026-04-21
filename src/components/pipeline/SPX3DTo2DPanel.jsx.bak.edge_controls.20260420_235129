@@ -1,0 +1,466 @@
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import * as THREE from "three";
+
+const CATEGORIES = [
+  { id:"all",      label:"All 41" },
+  { id:"photo",    label:"Photo" },
+  { id:"cartoon",  label:"Cartoon" },
+  { id:"paint",    label:"Paint" },
+  { id:"sketch",   label:"Sketch" },
+  { id:"stylized", label:"Stylized" },
+  { id:"digital",  label:"Digital" },
+];
+
+
+const VISIBLE_STYLES = [
+  "cinematic",
+  "film_noir",
+  "vintage_film",
+
+  "toon",
+  "cel",
+  "anime",
+  "manga",
+  "comic",
+  "pixar",
+
+  "oil",
+  "watercolor",
+  "gouache",
+  "impressionist",
+  "ink_wash",
+
+  "pencil",
+  "charcoal",
+  "blueprint",
+  "linocut",
+  "risograph",
+
+  "low_poly"
+];
+
+const STYLES = [
+  { id:"cinematic",      label:"Cinematic",        cat:"photo",    color:"#ffaa00" },
+  { id:"photorealistic", label:"Photorealistic",    cat:"photo",    color:"#ffaa00" },
+  { id:"hdr",            label:"HDR",               cat:"photo",    color:"#ffaa00" },
+  { id:"film_noir",      label:"Film Noir",         cat:"photo",    color:"#ffaa00" },
+  { id:"vintage_film",   label:"Vintage Film",      cat:"photo",    color:"#ffaa00" },
+  { id:"infrared",       label:"Infrared",          cat:"photo",    color:"#ffaa00" },
+  { id:"thermal",        label:"Thermal Camera",    cat:"photo",    color:"#ffaa00" },
+  { id:"toon",           label:"Toon Shading",      cat:"cartoon",  color:"#00ccff" },
+  { id:"cel",            label:"Cel Animation",     cat:"cartoon",  color:"#00ccff" },
+  { id:"anime",          label:"Anime",             cat:"cartoon",  color:"#00ccff" },
+  { id:"manga",          label:"Manga",             cat:"cartoon",  color:"#00ccff" },
+  { id:"comic",          label:"Comic Book",        cat:"cartoon",  color:"#00ccff" },
+  { id:"pixar",          label:"Pixar/3D Cartoon",  cat:"cartoon",  color:"#00ccff" },
+  { id:"ink_wash",       label:"Ink Wash",          cat:"cartoon",  color:"#00ccff" },
+  { id:"oil",            label:"Oil Painting",      cat:"paint",    color:"#ff6644" },
+  { id:"watercolor",     label:"Watercolor",        cat:"paint",    color:"#ff6644" },
+  { id:"gouache",        label:"Gouache",           cat:"paint",    color:"#ff6644" },
+  { id:"impressionist",  label:"Impressionist",     cat:"paint",    color:"#ff6644" },
+  { id:"expressionist",  label:"Expressionist",     cat:"paint",    color:"#ff6644" },
+  { id:"dutch_masters",  label:"Dutch Masters",     cat:"paint",    color:"#ff6644" },
+  { id:"fresco",         label:"Fresco",            cat:"paint",    color:"#ff6644" },
+  { id:"pencil",         label:"Pencil Sketch",     cat:"sketch",   color:"#aaaaaa" },
+  { id:"charcoal",       label:"Charcoal",          cat:"sketch",   color:"#aaaaaa" },
+  { id:"blueprint",      label:"Blueprint",         cat:"sketch",   color:"#aaaaaa" },
+  { id:"wireframe",      label:"Wireframe",         cat:"sketch",   color:"#aaaaaa" },
+  { id:"stipple",        label:"Stipple/Pointilist", cat:"sketch",  color:"#aaaaaa" },
+  { id:"linocut",        label:"Linocut Print",     cat:"sketch",   color:"#aaaaaa" },
+  { id:"risograph",      label:"Risograph Print",   cat:"sketch",   color:"#aaaaaa" },
+  { id:"low_poly",       label:"Low Poly",          cat:"stylized", color:"#aa44ff" },
+  { id:"voxel",          label:"Voxel",             cat:"stylized", color:"#aa44ff" },
+  { id:"ukiyo_e",        label:"Ukiyo-e",           cat:"stylized", color:"#aa44ff" },
+  { id:"stained_glass",  label:"Stained Glass",     cat:"stylized", color:"#aa44ff" },
+  { id:"mosaic",         label:"Mosaic/Tile",       cat:"stylized", color:"#aa44ff" },
+  { id:"x_ray",          label:"X-Ray",             cat:"stylized", color:"#aa44ff" },
+  { id:"hologram",       label:"Hologram",          cat:"digital",  color:"#00ffc8" },
+  { id:"neon",           label:"Neon/Synthwave",    cat:"digital",  color:"#00ffc8" },
+  { id:"glitch",         label:"Glitch Art",        cat:"digital",  color:"#00ffc8" },
+  { id:"retrowave",      label:"Retrowave",         cat:"digital",  color:"#00ffc8" },
+  { id:"tron",           label:"Tron/Grid",         cat:"digital",  color:"#00ffc8" },
+  { id:"matrix",         label:"Matrix/Digital",    cat:"digital",  color:"#00ffc8" },
+  { id:"anamorphic",     label:"Anamorphic Lens",   cat:"digital",  color:"#00ffc8" },
+];
+
+function applyStyleFilter(srcCanvas, style, params) {
+  const dst = document.createElement('canvas');
+  dst.width  = srcCanvas.width;
+  dst.height = srcCanvas.height;
+  const ctx  = dst.getContext('2d');
+  ctx.drawImage(srcCanvas, 0, 0);
+  const id = ctx.getImageData(0, 0, dst.width, dst.height);
+  const d  = id.data;
+
+  switch (style) {
+    case 'film_noir': {
+      for (let i = 0; i < d.length; i += 4) {
+        const g = 0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
+        const c = Math.max(0,Math.min(255,(g-128)*1.4+128));
+        d[i]=d[i+1]=d[i+2]=c;
+      }
+      break;
+    }
+    case 'toon': case 'cel': case 'pixar': {
+      const lv = params.toonLevels||5;
+      for (let i = 0; i < d.length; i += 4) {
+        d[i]  =Math.round(d[i]  /(255/lv))*(255/lv);
+        d[i+1]=Math.round(d[i+1]/(255/lv))*(255/lv);
+        d[i+2]=Math.round(d[i+2]/(255/lv))*(255/lv);
+      }
+      break;
+    }
+    case 'infrared': {
+      for (let i = 0; i < d.length; i += 4) {
+        const r=d[i],g=d[i+1],b=d[i+2];
+        d[i]=g; d[i+1]=r; d[i+2]=255-b;
+      }
+      break;
+    }
+    case 'x_ray': {
+      for (let i = 0; i < d.length; i += 4) {
+        const g=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
+        d[i]=d[i+1]=d[i+2]=255-g;
+      }
+      break;
+    }
+    case 'thermal': {
+      for (let i = 0; i < d.length; i += 4) {
+        const g=(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2])/255;
+        d[i]=Math.min(255,g*2*255);
+        d[i+1]=Math.min(255,Math.max(0,(g-0.5)*2*255));
+        d[i+2]=Math.max(0,(1-g*2)*255);
+      }
+      break;
+    }
+    case 'vintage_film': {
+      for (let i = 0; i < d.length; i += 4) {
+        d[i]  =Math.min(255,d[i]  *1.1+20);
+        d[i+1]=Math.min(255,d[i+1]*0.9+10);
+        d[i+2]=Math.max(0,  d[i+2]*0.7);
+      }
+      break;
+    }
+    case 'neon': case 'tron': case 'matrix': {
+      for (let i = 0; i < d.length; i += 4) {
+        const g=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
+        if(g>180){d[i]=0;d[i+1]=255;d[i+2]=200;}
+        else if(g>100){d[i]=180;d[i+1]=0;d[i+2]=255;}
+        else{d[i]=0;d[i+1]=0;d[i+2]=Math.min(255,g*2);}
+      }
+      break;
+    }
+    case 'hologram': {
+      for (let i = 0; i < d.length; i += 4) {
+        const g=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
+        d[i]=0; d[i+1]=Math.min(255,g*1.2); d[i+2]=Math.min(255,g*1.5);
+        d[i+3]=Math.min(255,g+50);
+      }
+      break;
+    }
+    case 'blueprint': {
+      for (let i = 0; i < d.length; i += 4) {
+        const g=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
+        d[i]=Math.max(0,30-g*0.1); d[i+1]=Math.max(0,60-g*0.1); d[i+2]=Math.min(255,100+g);
+      }
+      break;
+    }
+    case 'sepia': case 'dutch_masters': {
+      for (let i = 0; i < d.length; i += 4) {
+        const r=d[i],g=d[i+1],b=d[i+2];
+        d[i]  =Math.min(255,r*0.393+g*0.769+b*0.189);
+        d[i+1]=Math.min(255,r*0.349+g*0.686+b*0.168);
+        d[i+2]=Math.min(255,r*0.272+g*0.534+b*0.131);
+      }
+      break;
+    }
+    case 'retrowave': {
+      for (let i = 0; i < d.length; i += 4) {
+        d[i]  =Math.min(255,d[i]  *1.3);
+        d[i+1]=Math.max(0,  d[i+1]*0.4);
+        d[i+2]=Math.min(255,d[i+2]*1.5);
+      }
+      break;
+    }
+    default: break;
+  }
+  ctx.putImageData(id, 0, 0);
+  return dst;
+}
+
+const isElectron = typeof window !== 'undefined' && !!window.electronAPI;
+
+export default function SPX3DTo2DPanel({ open, onClose, sceneRef, rendererRef, cameraRef }) {
+  const [activeCat,    setActiveCat]    = useState('all');
+  const [activeStyle,  setActiveStyle]  = useState('cinematic');
+  const [outlineWidth, setOutlineWidth] = useState(1.5);
+  const [toonLevels,   setToonLevels]   = useState(4);
+  const [renderScale,  setRenderScale]  = useState(2);
+  const [rendering,    setRendering]    = useState(false);
+  const [exporting,    setExporting]    = useState(false);
+  const [exportFormat, setExportFormat] = useState('png');
+  const [status,       setStatus]       = useState('Select a style and click Render');
+
+  const previewRef = useRef(null);
+  const liveRef    = useRef(null);
+  const animRef    = useRef(null);
+
+  const filtered = (activeCat === 'all' ? STYLES : STYLES.filter(s => s.cat === activeCat)).filter(s => VISIBLE_STYLES.includes(s.id));
+  const currentStyle = STYLES.find(s => s.id === activeStyle && VISIBLE_STYLES.includes(s.id)) || STYLES.find(s => VISIBLE_STYLES.includes(s.id)) || STYLES[0];
+
+  // Mirror main renderer into live canvas
+  useEffect(() => {
+    if (!open) return;
+    const mirror = () => {
+      const src = rendererRef?.current?.domElement;
+      const dst = liveRef.current;
+      if (src && dst) {
+        dst.width  = dst.offsetWidth  || 600;
+        dst.height = dst.offsetHeight || 400;
+        dst.getContext('2d').drawImage(src, 0, 0, dst.width, dst.height);
+      }
+      animRef.current = requestAnimationFrame(mirror);
+    };
+    animRef.current = requestAnimationFrame(mirror);
+    return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
+  }, [open, rendererRef]);
+
+  
+function applyNPRIfNeeded(style, sceneRef){
+  if(!sceneRef?.current) return;
+
+  const toonStyles = [
+    "toon",
+    "cel",
+    "anime",
+    "manga",
+    "comic",
+    "pixar"
+  ];
+
+  if(!toonStyles.includes(style)) return;
+
+  if(!window.createToonMaterial) return;
+
+  sceneRef.current.traverse(obj=>{
+    if(!obj.isMesh) return;
+
+    const mat = window.createToonMaterial({
+      levels: 4
+    });
+
+    obj.material = mat;
+
+    if(window.addOutlineToMesh){
+      window.addOutlineToMesh(obj, sceneRef.current,{
+        thickness:0.003
+      });
+    }
+
+  });
+
+}
+
+
+const captureAndProcess = useCallback((scale = 1) => {
+    const src = rendererRef?.current?.domElement;
+    if (!src) return null;
+    const tmp = document.createElement('canvas');
+    tmp.width  = src.width  * scale;
+    tmp.height = src.height * scale;
+    const ctx = tmp.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(src, 0, 0, tmp.width, tmp.height);
+    return applyStyleFilter(tmp, activeStyle, { outlineWidth, toonLevels });
+  }, [activeStyle, outlineWidth, toonLevels, rendererRef]);
+
+  const handleRender = useCallback(async () => {
+    if (!rendererRef?.current) { setStatus('⚠ No renderer — add a mesh first'); return; }
+    setRendering(true); setStatus('Rendering...');
+    try {
+      
+applyNPRIfNeeded(activeStyle, sceneRef);
+const out = captureAndProcess(1);
+
+      if (out && previewRef.current) {
+        previewRef.current.width  = out.width;
+        previewRef.current.height = out.height;
+        previewRef.current.getContext('2d').drawImage(out, 0, 0);
+      }
+      setStatus(`✓ ${currentStyle.label} — ${out?.width}×${out?.height}`);
+    } catch(e) { setStatus(`Error: ${e.message}`); }
+    setRendering(false);
+  }, [captureAndProcess, currentStyle, rendererRef]);
+
+  const handleExportBrowser = () => {
+    if (!previewRef.current) { setStatus('Render first'); return; }
+    const url = previewRef.current.toDataURL(`image/${exportFormat}`);
+    const a = document.createElement('a');
+    a.href = url; a.download = `spx_${activeStyle}.${exportFormat}`; a.click();
+    setStatus(`✓ Exported ${exportFormat.toUpperCase()}`);
+  };
+
+  const handleRender4K = useCallback(async () => {
+    if (!rendererRef?.current) { setStatus('⚠ No renderer'); return; }
+    setExporting(true); setStatus('Rendering 4K...');
+    try {
+      
+applyNPRIfNeeded(activeStyle, sceneRef);
+const out = captureAndProcess(renderScale);
+
+      if (!out) { setStatus('Render failed'); setExporting(false); return; }
+      const dataURL = out.toDataURL('image/png');
+      if (isElectron && window.electronAPI?.saveFile) {
+        const result = await window.electronAPI.saveFile({
+          title: 'Save 4K Render',
+          defaultPath: `spx_${activeStyle}_${out.width}x${out.height}.png`,
+          filters: [{ name: 'PNG Image', extensions: ['png'] }, { name: 'JPEG', extensions: ['jpg'] }]
+        });
+        if (result?.filePath) {
+          // Write via IPC
+          await window.electronAPI.invoke?.('render:save-image', { dataURL, filePath: result.filePath });
+          setStatus(`✓ Saved to ${result.filePath.split('/').pop()} (${out.width}×${out.height})`);
+        } else {
+          setStatus('Save cancelled');
+        }
+      } else {
+        // Fallback to browser download
+        const a = document.createElement('a');
+        a.href = dataURL;
+        a.download = `spx_${activeStyle}_${out.width}x${out.height}.png`;
+        a.click();
+        setStatus(`✓ ${out.width}×${out.height} exported`);
+      }
+    } catch(e) { setStatus(`Error: ${e.message}`); }
+    setExporting(false);
+  }, [captureAndProcess, activeStyle, renderScale, rendererRef]);
+
+  const handleVideoExport = useCallback(async () => {
+    if (!rendererRef?.current) { setStatus('⚠ No renderer'); return; }
+    setExporting(true);
+    const FRAMES = 60;
+    const frames = [];
+    setStatus(`Capturing ${FRAMES} frames...`);
+    for (let i = 0; i < FRAMES; i++) {
+      
+applyNPRIfNeeded(activeStyle, sceneRef);
+const out = captureAndProcess(1);
+
+      if (out) frames.push(out.toDataURL('image/jpeg', 0.9));
+      if (i % 10 === 0) setStatus(`Capturing frame ${i}/${FRAMES}...`);
+      await new Promise(r => setTimeout(r, 16));
+    }
+    if (isElectron && window.electronAPI?.invoke) {
+      setStatus('Sending to FFmpeg...');
+      try {
+        const result = await window.electronAPI.invoke('render:export-video', {
+          frames,
+          fps: 24,
+          style: activeStyle,
+        });
+        setStatus(result?.outputPath ? `✓ Video: ${result.outputPath.split('/').pop()}` : '✓ Video exported');
+      } catch(e) {
+        setStatus(`FFmpeg error: ${e.message}`);
+      }
+    } else {
+      setStatus(`✓ ${frames.length} frames captured (FFmpeg requires desktop app)`);
+    }
+    setExporting(false);
+  }, [captureAndProcess, activeStyle, rendererRef]);
+
+  if (!open) return null;
+
+  return (
+    <div className="s2d-root">
+
+      {/* LEFT — 3D Live Viewport */}
+      <div className="s2d-viewport">
+        <div className="s2d-viewport-label">3D VIEWPORT — LIVE</div>
+        <canvas ref={liveRef} className="s2d-viewport-canvas" />
+        <div className="s2d-viewport-hint">Live mirror of your scene</div>
+      </div>
+
+      {/* CENTER — 2D Styled Output */}
+      <div className="s2d-output">
+        <div className="s2d-viewport-label">
+          2D OUTPUT —&nbsp;
+          <span style={{color: currentStyle.color}}>{currentStyle.label.toUpperCase()}</span>
+        </div>
+        <canvas ref={previewRef} className="s2d-viewport-canvas" />
+        <div className="s2d-output-actions">
+          <button className="s2d-btn s2d-btn--render" onClick={handleRender} disabled={rendering}>
+            {rendering ? '⏳ RENDERING...' : '▶ RENDER'}
+          </button>
+          <select className="s2d-select" value={exportFormat} onChange={e=>setExportFormat(e.target.value)}>
+            <option value="png">PNG</option>
+            <option value="jpeg">JPEG</option>
+            <option value="webp">WebP</option>
+          </select>
+          <button className="s2d-btn s2d-btn--export" onClick={handleExportBrowser}>⬇ SAVE</button>
+        </div>
+        <div className="s2d-status">{status}</div>
+      </div>
+
+      {/* RIGHT — Controls */}
+      <div className="s2d-controls">
+        <div className="s2d-section-title">CATEGORY</div>
+        <div className="s2d-cat-row">
+          {CATEGORIES.map(c => (
+            <button key={c.id}
+              className={"s2d-cat-btn" + (activeCat===c.id ? " s2d-cat-btn--active" : "")}
+              onClick={() => setActiveCat(c.id)}>{c.label}</button>
+          ))}
+        </div>
+
+        <div className="s2d-section-title">STYLE — {filtered.length} OPTIONS</div>
+        <div className="s2d-style-grid">
+          {filtered.map(s => (
+            <button key={s.id}
+              className={"s2d-style-btn" + (activeStyle===s.id ? " s2d-style-btn--active" : "")}
+              style={activeStyle===s.id ? {borderColor:s.color, color:s.color} : {}}
+              onClick={() => setActiveStyle(s.id)}>{s.label}</button>
+          ))}
+        </div>
+
+        <div className="s2d-section-title">PARAMETERS</div>
+        <div className="s2d-param-row">
+          <span className="s2d-param-label">Outline Width</span>
+          <input type="range" min={0} max={5} step={0.5} value={outlineWidth}
+            onChange={e=>setOutlineWidth(+e.target.value)} className="s2d-slider"/>
+          <span className="s2d-param-val">{outlineWidth}</span>
+        </div>
+        <div className="s2d-param-row">
+          <span className="s2d-param-label">Toon Levels</span>
+          <input type="range" min={2} max={10} step={1} value={toonLevels}
+            onChange={e=>setToonLevels(+e.target.value)} className="s2d-slider"/>
+          <span className="s2d-param-val">{toonLevels}</span>
+        </div>
+        <div className="s2d-param-row">
+          <span className="s2d-param-label">4K Scale</span>
+          <input type="range" min={1} max={4} step={1} value={renderScale}
+            onChange={e=>setRenderScale(+e.target.value)} className="s2d-slider"/>
+          <span className="s2d-param-val">{renderScale}x</span>
+        </div>
+
+        <div className="s2d-native-actions">
+          <div className="s2d-section-title">
+            DESKTOP EXPORT
+            {isElectron && <span className="s2d-electron-badge">ELECTRON</span>}
+          </div>
+          <button className="s2d-native-btn s2d-native-btn--4k"
+            onClick={handleRender4K} disabled={exporting}>
+            <span>⚡ RENDER {renderScale}K</span>
+            <span className="s2d-native-label">Native save dialog</span>
+          </button>
+          <button className="s2d-native-btn s2d-native-btn--video"
+            onClick={handleVideoExport} disabled={exporting}>
+            <span>🎬 EXPORT VIDEO</span>
+            <span className="s2d-native-label">60 frames → MP4</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  );
+}

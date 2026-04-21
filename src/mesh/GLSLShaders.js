@@ -415,6 +415,137 @@ export function setDissolveAmount(material, amount) {
 }
 
 // ── Shader preset registry ────────────────────────────────────────────────────
+
+export const FILM_SKIN_PRESETS = {
+  cinematic_light: {
+    color: "#d9b19c",
+    roughness: 0.62,
+    metalness: 0.0,
+    clearcoat: 0.0,
+    sheen: 0.18,
+    sheenRoughness: 0.72,
+    transmission: 0.0,
+    thickness: 0.45,
+    ior: 1.38,
+    specularIntensity: 0.42,
+    envMapIntensity: 0.55,
+    normalScale: 0.22,
+    bumpScale: 0.015
+  },
+  cinematic_medium: {
+    color: "#9f6f56",
+    roughness: 0.64,
+    metalness: 0.0,
+    clearcoat: 0.0,
+    sheen: 0.16,
+    sheenRoughness: 0.74,
+    transmission: 0.0,
+    thickness: 0.48,
+    ior: 1.38,
+    specularIntensity: 0.4,
+    envMapIntensity: 0.52,
+    normalScale: 0.22,
+    bumpScale: 0.015
+  },
+  cinematic_dark: {
+    color: "#5f3f31",
+    roughness: 0.66,
+    metalness: 0.0,
+    clearcoat: 0.0,
+    sheen: 0.15,
+    sheenRoughness: 0.76,
+    transmission: 0.0,
+    thickness: 0.5,
+    ior: 1.38,
+    specularIntensity: 0.38,
+    envMapIntensity: 0.5,
+    normalScale: 0.22,
+    bumpScale: 0.015
+  },
+  anime_skin: {
+    color: "#f2c8b8",
+    roughness: 0.78,
+    metalness: 0.0,
+    clearcoat: 0.0,
+    sheen: 0.05,
+    sheenRoughness: 0.9,
+    transmission: 0.0,
+    thickness: 0.18,
+    ior: 1.35,
+    specularIntensity: 0.2,
+    envMapIntensity: 0.25,
+    normalScale: 0.04,
+    bumpScale: 0.003
+  }
+};
+
+function buildSkinMicroNormal(strength = 0.22, size = 256) {
+  const data = new Uint8Array(size * size * 3);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const i = (y * size + x) * 3;
+      const nx = 128 + Math.floor((Math.random() - 0.5) * 22 * strength / 0.22);
+      const ny = 128 + Math.floor((Math.random() - 0.5) * 22 * strength / 0.22);
+      data[i] = Math.max(0, Math.min(255, nx));
+      data[i + 1] = Math.max(0, Math.min(255, ny));
+      data[i + 2] = 255;
+    }
+  }
+  const tex = new THREE.DataTexture(data, size, size, THREE.RGBFormat);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+export function createFilmSkinMaterial(options = {}) {
+  const presetName = options.preset || "cinematic_medium";
+  const preset = FILM_SKIN_PRESETS[presetName] || FILM_SKIN_PRESETS.cinematic_medium;
+
+  const material = new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color(options.color || preset.color),
+    roughness: options.roughness ?? preset.roughness,
+    metalness: options.metalness ?? preset.metalness,
+    clearcoat: options.clearcoat ?? preset.clearcoat,
+    sheen: options.sheen ?? preset.sheen,
+    sheenRoughness: options.sheenRoughness ?? preset.sheenRoughness,
+    transmission: options.transmission ?? preset.transmission,
+    thickness: options.thickness ?? preset.thickness,
+    ior: options.ior ?? preset.ior,
+    envMapIntensity: options.envMapIntensity ?? preset.envMapIntensity
+  });
+
+  material.specularIntensity = options.specularIntensity ?? preset.specularIntensity;
+
+  const normalStrength = options.normalScale ?? preset.normalScale;
+  const bumpStrength = options.bumpScale ?? preset.bumpScale;
+
+  if (!options.normalMap) {
+    material.normalMap = buildSkinMicroNormal(normalStrength);
+    material.normalScale = new THREE.Vector2(normalStrength, normalStrength);
+  } else {
+    material.normalMap = options.normalMap;
+    material.normalScale = new THREE.Vector2(normalStrength, normalStrength);
+  }
+
+  if (options.bumpMap) {
+    material.bumpMap = options.bumpMap;
+    material.bumpScale = bumpStrength;
+  }
+
+  material.userData.skinPreset = presetName;
+  material.userData.isFilmSkin = true;
+
+  return material;
+}
+
+export function applyFilmSkin(mesh, options = {}) {
+  if (!mesh) return null;
+  const mat = createFilmSkinMaterial(options);
+  mesh.material = mat;
+  return mat;
+}
+
+
 export const SHADER_PRESETS = {
   hair:        { label:"Anisotropic Hair", create: createHairShaderMaterial,  icon:"💇" },
   toon:        { label:"Toon/NPR",         create: createToonMaterial,         icon:"🎨" },
@@ -422,6 +553,7 @@ export const SHADER_PRESETS = {
   holographic: { label:"Holographic",      create: createHolographicMaterial,  icon:"🔮" },
   dissolve:    { label:"Dissolve",         create: createDissolveMaterial,     icon:"💨" },
   outline:     { label:"Outline",          create: createOutlineMaterial,      icon:"⬡" },
+  film_skin:   { label:"Film Skin",       create: createFilmSkinMaterial,      icon:"🫧" },
 };
 
 export function applyShaderPreset(mesh, presetKey, options = {}) {

@@ -1,0 +1,220 @@
+import React, { useEffect, useState, useCallback } from "react";
+
+function Slider({ label, value, min, max, step = 0.01, onChange }) {
+  return (
+    <div className="spx-slider-wrap">
+      <div className="spx-slider-header">
+        <span>{label}</span>
+        <span className="spx-slider-header__val">{typeof value === "number" ? value.toFixed(step < 0.1 ? 2 : 0) : value}</span>
+      </div>
+      <input
+        className="spx-slider-input"
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+      />
+    </div>
+  );
+}
+
+export default function FilmSkinPanel({ open, onClose, meshRef, setStatus }) {
+  const [preset, setPreset] = useState("cinematic_medium");
+  const [color, setColor] = useState("#9f6f56");
+  const [roughness, setRoughness] = useState(0.64);
+  const [sheen, setSheen] = useState(0.16);
+  const [specularIntensity, setSpecularIntensity] = useState(0.4);
+  const [thickness, setThickness] = useState(0.48);
+  const [normalScale, setNormalScale] = useState(0.22);
+  const [bumpScale, setBumpScale] = useState(0.015);
+  const [undertone, setUndertone] = useState("neutral");
+  const [oiliness, setOiliness] = useState(0.4);
+  const [ageLevel, setAgeLevel] = useState(0.25);
+  const [melanin, setMelanin] = useState(0.5);
+  const [subsurface, setSubsurface] = useState(0.35);
+  const [poreDetail, setPoreDetail] = useState(0.25);
+  const [microRoughness, setMicroRoughness] = useState(0.18);
+  const [cheekWarmth, setCheekWarmth] = useState(0.12);
+
+  const presetMap = {
+    cinematic_light: {
+      color: "#d9b19c", roughness: 0.62, sheen: 0.18, specularIntensity: 0.42, thickness: 0.45, normalScale: 0.22, bumpScale: 0.015
+    },
+    cinematic_medium: {
+      color: "#9f6f56", roughness: 0.64, sheen: 0.16, specularIntensity: 0.4, thickness: 0.48, normalScale: 0.22, bumpScale: 0.015
+    },
+    cinematic_dark: {
+      color: "#5f3f31", roughness: 0.66, sheen: 0.15, specularIntensity: 0.38, thickness: 0.5, normalScale: 0.22, bumpScale: 0.015
+    },
+    anime_skin: {
+      color: "#f2c8b8", roughness: 0.78, sheen: 0.05, specularIntensity: 0.2, thickness: 0.18, normalScale: 0.04, bumpScale: 0.003
+    },
+    creature_skin: {
+      color: "#6b7460", roughness: 0.82, sheen: 0.03, specularIntensity: 0.18, thickness: 0.62, normalScale: 0.32, bumpScale: 0.028
+    },
+    kaiju_skin: {
+      color: "#55614b", roughness: 0.88, sheen: 0.02, specularIntensity: 0.12, thickness: 0.72, normalScale: 0.38, bumpScale: 0.035
+    }
+  };
+
+
+  const adjustSkinTone = useCallback((hex, mel, under) => {
+    const clean = hex.replace("#", "");
+    const r0 = parseInt(clean.slice(0, 2), 16);
+    const g0 = parseInt(clean.slice(2, 4), 16);
+    const b0 = parseInt(clean.slice(4, 6), 16);
+
+    let r = r0 * (0.72 + mel * 0.55);
+    let g = g0 * (0.78 + mel * 0.35);
+    let b = b0 * (0.82 + mel * 0.22);
+
+    if (under === "warm") {
+      r *= 1.05;
+      g *= 0.98;
+      b *= 0.94;
+    } else if (under === "cool") {
+      r *= 0.95;
+      g *= 1.0;
+      b *= 1.06;
+    } else if (under === "olive") {
+      r *= 0.96;
+      g *= 1.03;
+      b *= 0.92;
+    }
+
+    const clamp = (v) => Math.max(0, Math.min(255, Math.round(v)));
+    const rr = clamp(r).toString(16).padStart(2, "0");
+    const gg = clamp(g).toString(16).padStart(2, "0");
+    const bb = clamp(b).toString(16).padStart(2, "0");
+    return `#${rr}${gg}${bb}`;
+  }, []);
+
+  const loadPreset = useCallback((name) => {
+    const p = presetMap[name];
+    if (!p) return;
+    setPreset(name);
+    setColor(p.color);
+    setRoughness(p.roughness);
+    setSheen(p.sheen);
+    setSpecularIntensity(p.specularIntensity);
+    setThickness(p.thickness);
+    setNormalScale(p.normalScale);
+    setBumpScale(p.bumpScale);
+  }, []);
+
+  const applyToMesh = useCallback(() => {
+    const mesh = meshRef?.current;
+    if (!mesh || typeof window.applyFilmSkin !== "function") return;
+
+    const shapedColor = adjustSkinTone(color, melanin, undertone);
+    const agedRoughness = Math.max(0, Math.min(1, roughness + ageLevel * 0.16 - oiliness * 0.08));
+    const agedBump = Math.max(0, bumpScale + ageLevel * 0.02);
+    const agedSpec = Math.max(0, Math.min(1, specularIntensity + oiliness * 0.22 - ageLevel * 0.08));
+
+    const warmedColor = shapedColor;
+
+    window.applyFilmSkin(mesh, {
+      preset,
+      color: warmedColor,
+      roughness: Math.max(0, Math.min(1, agedRoughness + microRoughness * 0.08 - oiliness * 0.03)),
+      sheen,
+      specularIntensity: agedSpec,
+      thickness: Math.max(0, Math.min(1, thickness + subsurface * 0.08)),
+      normalScale: Math.max(0, normalScale + poreDetail * 0.08),
+      bumpScale: agedBump
+    });
+
+    setStatus?.(`Film skin applied: ${preset} · ${undertone} undertone`);
+  }, [meshRef, setStatus, preset, color, roughness, sheen, specularIntensity, thickness, normalScale, bumpScale, undertone, oiliness, ageLevel, melanin, subsurface, poreDetail, microRoughness, cheekWarmth, adjustSkinTone]);
+
+  useEffect(() => {
+    if (!open) return;
+    applyToMesh();
+  }, [open, applyToMesh]);
+
+  useEffect(() => {
+    if (!open) return;
+    applyToMesh();
+  }, [color, roughness, sheen, specularIntensity, thickness, normalScale, bumpScale, preset, open, applyToMesh]);
+
+  if (!open) return null;
+
+  return (
+    <div className="spx-float-panel fcam-panel" style={{ right: 20, top: 110, width: 360, zIndex: 35 }}>
+      <div className="spx-float-panel__header">
+        <div className="spx-float-panel__dot fcam-dot" />
+        <span className="spx-float-panel__title fcam-title">FILM SKIN</span>
+        {onClose && <button className="spx-float-panel__close" onClick={onClose}>×</button>}
+      </div>
+
+      <div className="spx-float-panel__body">
+        <div className="fcam-focal-chips" style={{ marginBottom: 12 }}>
+          {[
+            ["cinematic_light", "LIGHT"],
+            ["cinematic_medium", "MEDIUM"],
+            ["cinematic_dark", "DARK"],
+            ["anime_skin", "ANIME"],
+            ["creature_skin", "CREATURE"],
+            ["kaiju_skin", "KAIJU"]
+          ].map(([id, label]) => (
+            <button
+              key={id}
+              className={`fcam-chip${preset === id ? " fcam-chip--active-gold" : ""}`}
+              onClick={() => loadPreset(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="spx-slider-wrap">
+          <div className="spx-slider-header">
+            <span>TONE COLOR</span>
+            <span className="spx-slider-header__val">{color}</span>
+          </div>
+          <input
+            className="spx-slider-input"
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+          />
+        </div>
+
+        <Slider label="ROUGHNESS" value={roughness} min={0.2} max={1} step={0.01} onChange={setRoughness} />
+        <Slider label="SHEEN" value={sheen} min={0} max={1} step={0.01} onChange={setSheen} />
+        <Slider label="SPECULAR" value={specularIntensity} min={0} max={1} step={0.01} onChange={setSpecularIntensity} />
+        <Slider label="THICKNESS" value={thickness} min={0} max={1} step={0.01} onChange={setThickness} />
+        <Slider label="PORE DETAIL" value={normalScale} min={0} max={0.5} step={0.01} onChange={setNormalScale} />
+        <Slider label="WRINKLE / BUMP" value={bumpScale} min={0} max={0.05} step={0.001} onChange={setBumpScale} />
+
+
+        <div className="spx-slider-wrap">
+          <div className="spx-slider-header">
+            <span>UNDERTONE</span>
+            <span className="spx-slider-header__val">{undertone}</span>
+          </div>
+          <select className="spx-slider-input" value={undertone} onChange={(e)=>setUndertone(e.target.value)}>
+            <option value="neutral">neutral</option>
+            <option value="warm">warm</option>
+            <option value="cool">cool</option>
+            <option value="olive">olive</option>
+          </select>
+        </div>
+
+        <Slider label="MELANIN" value={melanin} min={0} max={1} step={0.01} onChange={setMelanin} />
+        <Slider label="OILINESS" value={oiliness} min={0} max={1} step={0.01} onChange={setOiliness} />
+        <Slider label="AGE / WRINKLE" value={ageLevel} min={0} max={1} step={0.01} onChange={setAgeLevel} />
+        <Slider label="SUBSURFACE" value={subsurface} min={0} max={1} step={0.01} onChange={setSubsurface} />
+        <Slider label="PORE DETAIL" value={poreDetail} min={0} max={1} step={0.01} onChange={setPoreDetail} />
+        <Slider label="MICRO ROUGHNESS" value={microRoughness} min={0} max={1} step={0.01} onChange={setMicroRoughness} />
+        <Slider label="CHEEK WARMTH" value={cheekWarmth} min={0} max={1} step={0.01} onChange={setCheekWarmth} />
+
+        <div className="fcam-focal-chips" style={{ marginTop: 12 }}>
+          <button className="fcam-chip fcam-chip--active-gold" onClick={applyToMesh}>APPLY</button>
+        </div>
+      </div>
+    </div>
+  );
+}

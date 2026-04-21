@@ -40,6 +40,8 @@ const VISIBLE_STYLES = [
 ];
 
 const STYLES = [
+  // MYTHIC INK CINEMA PACK + NOIR PANEL PACK live below
+
   { id:"cinematic",      label:"Cinematic",        cat:"photo",    color:"#ffaa00" },
   { id:"photorealistic", label:"Photorealistic",    cat:"photo",    color:"#ffaa00" },
   { id:"hdr",            label:"HDR",               cat:"photo",    color:"#ffaa00" },
@@ -81,6 +83,19 @@ const STYLES = [
   { id:"tron",           label:"Tron/Grid",         cat:"digital",  color:"#00ffc8" },
   { id:"matrix",         label:"Matrix/Digital",    cat:"digital",  color:"#00ffc8" },
   { id:"anamorphic",     label:"Anamorphic Lens",   cat:"digital",  color:"#00ffc8" },
+
+  { id:"mythic_ink",      label:"Mythic Ink",       cat:"stylized", color:"#88aaff" },
+  { id:"celestial_glow",  label:"Celestial Glow",   cat:"stylized", color:"#b8d8ff" },
+  { id:"silk_mist",       label:"Silk Mist",        cat:"stylized", color:"#d8e2ff" },
+  { id:"spirit_flame",    label:"Spirit Flame",     cat:"stylized", color:"#ff9b6b" },
+  { id:"moonlit_legend",  label:"Moonlit Legend",   cat:"stylized", color:"#89a7ff" },
+
+  { id:"heavy_ink",       label:"Heavy Ink",        cat:"sketch",   color:"#111111" },
+  { id:"halftone_action", label:"Halftone Action",  cat:"sketch",   color:"#111111" },
+  { id:"shadow_panel",    label:"Shadow Panel",     cat:"sketch",   color:"#111111" },
+  { id:"crime_neon",      label:"Crime Neon",       cat:"digital",  color:"#00d8ff" },
+  { id:"motion_comic",    label:"Motion Comic",     cat:"sketch",   color:"#111111" },
+
 ];
 
 function applyStyleFilter(srcCanvas, style, params) {
@@ -200,11 +215,212 @@ function applyStyleFilter(srcCanvas, style, params) {
       }
       break;
     }
+
+    case 'mythic_ink': {
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], g = d[i+1], b = d[i+2];
+        const lum = (0.299*r + 0.587*g + 0.114*b) / 255;
+        d[i]   = Math.min(255, r * 0.92 + 18);
+        d[i+1] = Math.min(255, g * 0.96 + 14);
+        d[i+2] = Math.min(255, b * 1.08 + 24);
+        if (lum > 0.72) d[i+2] = Math.min(255, d[i+2] + 18);
+      }
+      break;
+    }
+    case 'celestial_glow': {
+      for (let i = 0; i < d.length; i += 4) {
+        const lum = (0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]) / 255;
+        d[i]   = Math.min(255, d[i]   * 0.95 + 10);
+        d[i+1] = Math.min(255, d[i+1] * 1.02 + 18);
+        d[i+2] = Math.min(255, d[i+2] * 1.12 + 34);
+        if (lum > 0.65) {
+          d[i]   = Math.min(255, d[i] + 18);
+          d[i+1] = Math.min(255, d[i+1] + 22);
+          d[i+2] = Math.min(255, d[i+2] + 30);
+        }
+      }
+      break;
+    }
+    case 'silk_mist': {
+      for (let i = 0; i < d.length; i += 4) {
+        d[i]   = Math.min(255, d[i]   * 0.96 + 20);
+        d[i+1] = Math.min(255, d[i+1] * 0.98 + 24);
+        d[i+2] = Math.min(255, d[i+2] * 1.04 + 28);
+      }
+      break;
+    }
+    case 'spirit_flame': {
+      for (let i = 0; i < d.length; i += 4) {
+        const lum = (0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]) / 255;
+        d[i]   = Math.min(255, d[i]   * 1.15 + 22);
+        d[i+1] = Math.min(255, d[i+1] * 0.92 + 6);
+        d[i+2] = Math.max(0,   d[i+2] * 0.82);
+        if (lum > 0.6) d[i] = Math.min(255, d[i] + 30);
+      }
+      break;
+    }
+    case 'moonlit_legend': {
+      for (let i = 0; i < d.length; i += 4) {
+        d[i]   = Math.max(0,   d[i]   * 0.78);
+        d[i+1] = Math.min(255, d[i+1] * 0.88 + 8);
+        d[i+2] = Math.min(255, d[i+2] * 1.18 + 32);
+      }
+      break;
+    }
+    case 'heavy_ink': {
+      for (let i = 0; i < d.length; i += 4) {
+        const g = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+        const v = g > 120 ? 255 : 0;
+        d[i] = d[i+1] = d[i+2] = v;
+      }
+      break;
+    }
+    case 'halftone_action': {
+      for (let i = 0; i < d.length; i += 4) {
+        const g = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+        const band = g > 180 ? 255 : g > 110 ? 170 : g > 55 ? 85 : 0;
+        d[i] = d[i+1] = d[i+2] = band;
+      }
+      break;
+    }
+    case 'shadow_panel': {
+      for (let i = 0; i < d.length; i += 4) {
+        const g = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+        const v = g > 150 ? 240 : g > 70 ? 90 : 0;
+        d[i] = d[i+1] = d[i+2] = v;
+      }
+      break;
+    }
+    case 'crime_neon': {
+      for (let i = 0; i < d.length; i += 4) {
+        const g = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+        if (g > 160) {
+          d[i] = 0; d[i+1] = 240; d[i+2] = 255;
+        } else if (g > 90) {
+          d[i] = 255; d[i+1] = 40; d[i+2] = 160;
+        } else {
+          d[i] = 18; d[i+1] = 12; d[i+2] = 28;
+        }
+      }
+      break;
+    }
+    case 'motion_comic': {
+      for (let i = 0; i < d.length; i += 4) {
+        const g = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+        const v = g > 190 ? 255 : g > 120 ? 200 : g > 70 ? 120 : 20;
+        d[i] = d[i+1] = d[i+2] = v;
+      }
+      break;
+    }
+
     default: break;
   }
   ctx.putImageData(id, 0, 0);
   return dst;
 }
+
+
+function applyPaperTextureOverlay(canvas, amount = 0.08) {
+  const ctx = canvas.getContext('2d');
+  const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = id.data;
+
+  for (let i = 0; i < d.length; i += 4) {
+    const noise = (Math.random() - 0.5) * 255 * amount;
+    d[i]   = Math.max(0, Math.min(255, d[i]   + noise));
+    d[i+1] = Math.max(0, Math.min(255, d[i+1] + noise));
+    d[i+2] = Math.max(0, Math.min(255, d[i+2] + noise));
+  }
+
+  ctx.putImageData(id, 0, 0);
+  return canvas;
+}
+
+function applyHalftoneOverlay(canvas, amount = 0.12, step = 6) {
+  const ctx = canvas.getContext('2d');
+  const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = id.data;
+
+  for (let y = 0; y < canvas.height; y += step) {
+    for (let x = 0; x < canvas.width; x += step) {
+      const i = (y * canvas.width + x) * 4;
+      if (i < 0 || i >= d.length) continue;
+      const lum = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+      const darken = (1 - lum / 255) * amount * 255;
+      d[i]   = Math.max(0, d[i]   - darken);
+      d[i+1] = Math.max(0, d[i+1] - darken);
+      d[i+2] = Math.max(0, d[i+2] - darken);
+    }
+  }
+
+  ctx.putImageData(id, 0, 0);
+  return canvas;
+}
+
+function applyRimGlowFinish(canvas, color = [180, 210, 255], amount = 0.08) {
+  const ctx = canvas.getContext('2d');
+  const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = id.data;
+
+  for (let y = 1; y < canvas.height - 1; y++) {
+    for (let x = 1; x < canvas.width - 1; x++) {
+      const i = (y * canvas.width + x) * 4;
+      const lum = (0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]) / 255;
+      if (lum > 0.72) {
+        d[i]   = Math.min(255, d[i]   + color[0] * amount);
+        d[i+1] = Math.min(255, d[i+1] + color[1] * amount);
+        d[i+2] = Math.min(255, d[i+2] + color[2] * amount);
+      }
+    }
+  }
+
+  ctx.putImageData(id, 0, 0);
+  return canvas;
+}
+
+function applyBrushTaperEffect(canvas, amount = 0.08) {
+  const ctx = canvas.getContext('2d');
+  const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = id.data;
+
+  for (let y = 0; y < canvas.height; y++) {
+    const fade = 1 - Math.abs((y / canvas.height) - 0.5) * 2 * amount;
+    for (let x = 0; x < canvas.width; x++) {
+      const i = (y * canvas.width + x) * 4;
+      d[i]   = Math.max(0, Math.min(255, d[i]   * fade));
+      d[i+1] = Math.max(0, Math.min(255, d[i+1] * fade));
+      d[i+2] = Math.max(0, Math.min(255, d[i+2] * fade));
+    }
+  }
+
+  ctx.putImageData(id, 0, 0);
+  return canvas;
+}
+
+function applyPackFinish(canvas, style) {
+  const mythic = ["mythic_ink","celestial_glow","silk_mist","spirit_flame","moonlit_legend"];
+  const noir = ["heavy_ink","halftone_action","shadow_panel","crime_neon","motion_comic"];
+
+  if (mythic.includes(style)) {
+    applyBrushTaperEffect(canvas, 0.06);
+    applyPaperTextureOverlay(canvas, 0.05);
+    if (style === "celestial_glow") applyRimGlowFinish(canvas, [190,220,255], 0.09);
+    if (style === "spirit_flame") applyRimGlowFinish(canvas, [255,180,110], 0.08);
+    if (style === "moonlit_legend") applyRimGlowFinish(canvas, [120,160,255], 0.07);
+    return canvas;
+  }
+
+  if (noir.includes(style)) {
+    applyBrushTaperEffect(canvas, 0.03);
+    if (style === "halftone_action") applyHalftoneOverlay(canvas, 0.18, 5);
+    if (style === "motion_comic") applyHalftoneOverlay(canvas, 0.12, 7);
+    if (style === "crime_neon") applyRimGlowFinish(canvas, [0,240,255], 0.06);
+    return canvas;
+  }
+
+  return canvas;
+}
+
 
 const isElectron = typeof window !== 'undefined' && !!window.electronAPI;
 
@@ -356,7 +572,17 @@ function applyNPRIfNeeded(style, sceneRef){
     "anime",
     "manga",
     "comic",
-    "pixar"
+    "pixar",
+    "mythic_ink",
+    "celestial_glow",
+    "silk_mist",
+    "spirit_flame",
+    "moonlit_legend",
+    "heavy_ink",
+    "halftone_action",
+    "shadow_panel",
+    "crime_neon",
+    "motion_comic"
   ];
 
   if(!toonStyles.includes(style)) return;

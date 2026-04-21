@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // FilmCameraPanel.jsx
 // ═══════════════════════════════════════════════════════════════
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import * as THREE from 'three';
 import '../../styles/panel-components.css';
 import '../../styles/render-panels.css';
@@ -17,6 +17,7 @@ function Slider({ label, value, min, max, step=0.01, onChange, unit='' }) {
         className="spx-slider-input" onChange={e=>onChange(parseFloat(e.target.value))}/>
     </div>
   );
+
 }
 
 function Toggle({ label, value, onChange }) {
@@ -28,6 +29,7 @@ function Toggle({ label, value, onChange }) {
       </div>
     </div>
   );
+
 }
 
 function Section({ title, children, defaultOpen=true, accent }) {
@@ -41,12 +43,13 @@ function Section({ title, children, defaultOpen=true, accent }) {
       {open && <div className="spx-section__body">{children}</div>}
     </div>
   );
+
 }
 
 const FILM_GATES    = [{label:'Full Frame 35mm',w:36,h:24},{label:'Super 35',w:24.89,h:18.67},{label:'IMAX 70mm',w:70.41,h:52.63},{label:'Anamorphic 2x',w:36,h:24},{label:'16mm',w:12.52,h:7.41},{label:'2.39:1 Scope',w:36,h:15.05}];
 const FOCAL_PRESETS = [{label:'14mm',v:14},{label:'24mm',v:24},{label:'35mm',v:35},{label:'50mm',v:50},{label:'85mm',v:85},{label:'135mm',v:135},{label:'200mm',v:200}];
 
-export function FilmCameraPanel({ cameraRef, rendererRef, sceneRef, open=true, onClose }) {
+export function FilmCameraPanel({ cameraRef, rendererRef, sceneRef, open=true, onClose, setStatus = () => {} }) {
   const [fov,         setFov]         = useState(55);
   const [focalLength, setFocalLength] = useState(35);
   const [filmGate,    setFilmGate]    = useState(0);
@@ -58,6 +61,13 @@ export function FilmCameraPanel({ cameraRef, rendererRef, sceneRef, open=true, o
   const [dofMaxBlur,  setDofMaxBlur]  = useState(0.01);
   const [bookmarks,   setBookmarks]   = useState([]);
   const [exposure,    setExposure]    = useState(1.1);
+  const [focusDamping, setFocusDamping] = useState(0.18);
+  const [orbitDamping, setOrbitDamping] = useState(0.12);
+  const [focusTargetName, setFocusTargetName] = useState("None");
+  const [lensPreset, setLensPreset] = useState("35mm");
+  const [showFocusPlane, setShowFocusPlane] = useState(false);
+  const [focusPlaneSize, setFocusPlaneSize] = useState(3);
+  const [focusPlaneColor, setFocusPlaneColor] = useState("#44aaff");
 
   const cam = useCallback(() => cameraRef?.current, [cameraRef]);
 
@@ -86,10 +96,167 @@ export function FilmCameraPanel({ cameraRef, rendererRef, sceneRef, open=true, o
     setBookmarks(b => [...b, { id:Date.now(), name:`Cam ${b.length+1}`, pos:c.position.clone(), rot:c.rotation.clone(), fov:c.fov }]);
   }, [cam]);
 
+  
+  const focusSelectedObject = useCallback(() => {
+
+    const scene = sceneRef?.current
+    const camera = cameraRef?.current
+
+    if(!scene || !camera) return
+
+    let closest = null
+    let minDist = Infinity
+
+    scene.traverse(obj => {
+
+      if(!obj.isMesh) return
+
+      const dist = camera.position.distanceTo(obj.position)
+
+      if(dist < minDist){
+        minDist = dist
+        closest = obj
+      }
+
+    })
+
+    if(closest){
+
+      setDofFocus(minDist)
+
+      camera.userData.dofFocus = minDist
+
+      setStatus("Focus set from scene object")
+
+    }
+
+  }, [sceneRef, cameraRef])
+
+
+
+  const applyRigPreset = useCallback((preset) => {
+    const c = cam();
+    if (!c) return;
+
+    const target = new THREE.Vector3(0, 0, 0);
+
+    if (preset === "tripod") {
+      c.position.set(0, 1.6, 6);
+      c.lookAt(target);
+      setStatus("Camera rig: Tripod");
+      return;
+    }
+
+    if (preset === "dolly_left") {
+      c.position.set(-4, 1.5, 6);
+      c.lookAt(target);
+      setStatus("Camera rig: Dolly Left");
+      return;
+    }
+
+    if (preset === "dolly_right") {
+      c.position.set(4, 1.5, 6);
+      c.lookAt(target);
+      setStatus("Camera rig: Dolly Right");
+      return;
+    }
+
+    if (preset === "crane_high") {
+      c.position.set(0, 6, 8);
+      c.lookAt(target);
+      setStatus("Camera rig: Crane High");
+      return;
+    }
+
+    if (preset === "overhead") {
+      c.position.set(0, 10, 0.01);
+      c.lookAt(target);
+      setStatus("Camera rig: Overhead");
+      return;
+    }
+
+    if (preset === "closeup") {
+      c.position.set(0, 1.7, 2.2);
+      c.lookAt(target);
+      setStatus("Camera rig: Close-up");
+      return;
+    }
+
+    if (preset === "handheld") {
+      if (typeof window.applyCameraShake === "function") {
+        window.applyCameraShake(c, { intensity: 0.15, duration: 1.25 });
+      }
+      setStatus("Camera rig: Handheld shake");
+      return;
+    }
+  }, [cam, setStatus]);
+
   const restoreBookmark = useCallback((bm) => {
     const c = cam(); if (!c) return;
     c.position.copy(bm.pos); c.rotation.copy(bm.rot); c.fov=bm.fov; c.updateProjectionMatrix(); setFov(bm.fov);
   }, [cam]);
+
+
+  useEffect(() => {
+    const scene = sceneRef?.current;
+    const camera = cameraRef?.current;
+    if (!scene || !camera) return;
+
+    let plane = scene.getObjectByName("__SPX_FOCUS_PLANE__");
+
+    if (!showFocusPlane) {
+      if (plane) {
+        scene.remove(plane);
+        plane.geometry?.dispose?.();
+        plane.material?.dispose?.();
+      }
+      return;
+    }
+
+    if (!plane) {
+      const geo = new THREE.PlaneGeometry(1, 1, 1, 1);
+      const mat = new THREE.MeshBasicMaterial({
+        color: focusPlaneColor,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.55,
+        depthWrite: false,
+        toneMapped: false
+      });
+      plane = new THREE.Mesh(geo, mat);
+      plane.name = "__SPX_FOCUS_PLANE__";
+      plane.renderOrder = 999;
+      plane.userData.isHelper = true;
+      scene.add(plane);
+    }
+
+    const dist = Math.max(0.001, dofFocus || camera.userData?.dofFocus || 5);
+    const dir = new THREE.Vector3();
+    camera.getWorldDirection(dir);
+
+    plane.position.copy(camera.position).add(dir.multiplyScalar(dist));
+    plane.quaternion.copy(camera.quaternion);
+    plane.scale.set(focusPlaneSize, focusPlaneSize, 1);
+
+    if (plane.material?.color) plane.material.color.set(focusPlaneColor);
+
+    plane.updateMatrixWorld(true);
+
+    return () => {};
+  }, [sceneRef, cameraRef, showFocusPlane, dofFocus, focusPlaneSize, focusPlaneColor]);
+
+  useEffect(() => {
+    return () => {
+      const scene = sceneRef?.current;
+      const plane = scene?.getObjectByName?.("__SPX_FOCUS_PLANE__");
+      if (plane && scene) {
+        scene.remove(plane);
+        plane.geometry?.dispose?.();
+        plane.material?.dispose?.();
+      }
+    };
+  }, [sceneRef]);
+
 
   if (!open) return null;
 
@@ -124,15 +291,72 @@ export function FilmCameraPanel({ cameraRef, rendererRef, sceneRef, open=true, o
 
         <Section title="DEPTH OF FIELD" accent="pink">
           <Toggle label="ENABLE DOF" value={dofEnabled} onChange={setDofEnabled}/>
+          
+          <button
+            className="fcam-save-btn"
+            onClick={focusSelectedObject}
+          >
+            PICK FOCUS FROM SCENE
+          </button>
+
           <Slider label="FOCUS DISTANCE" value={dofFocus} min={0.1} max={100} step={0.1} onChange={setDofFocus} unit="m"/>
+          <Toggle label="SHOW FOCUS PLANE" value={showFocusPlane} onChange={setShowFocusPlane}/>
+          <Slider label="FOCUS PLANE SIZE" value={focusPlaneSize} min={0.5} max={20} step={0.1} onChange={setFocusPlaneSize} unit="m"/>
+          <div className="spx-slider-wrap">
+            <div className="spx-slider-header">
+              <span>FOCUS PLANE COLOR</span>
+              <span className="spx-slider-header__val">{focusPlaneColor}</span>
+            </div>
+            <input
+              type="color"
+              value={focusPlaneColor}
+              className="spx-slider-input"
+              onChange={e=>setFocusPlaneColor(e.target.value)}
+            />
+          </div>
           <Slider label="APERTURE (f/)" value={dofAperture} min={0.001} max={0.1} step={0.001} onChange={setDofAperture}/>
           <Slider label="MAX BLUR" value={dofMaxBlur} min={0.001} max={0.05} step={0.001} onChange={setDofMaxBlur}/>
+          <div className="spx-slider-wrap">
+            <div className="spx-slider-header">
+              <span>FOCUS TARGET</span>
+              <span className="spx-slider-header__val">{focusTargetName}</span>
+            </div>
+          </div>
+          <Slider label="FOCUS DAMPING" value={focusDamping} min={0.01} max={0.5} step={0.01} onChange={setFocusDamping}/>
+          <Slider label="ORBIT DAMPING" value={orbitDamping} min={0.01} max={0.5} step={0.01} onChange={setOrbitDamping}/>
         </Section>
 
         <Section title="EXPOSURE" accent="orange">
           <Slider label="EXPOSURE" value={exposure} min={0.1} max={4} step={0.05} onChange={setExposure}/>
           <Slider label="NEAR CLIP" value={near} min={0.001} max={1} step={0.001} onChange={setNear}/>
           <Slider label="FAR CLIP" value={far} min={10} max={10000} step={10} onChange={setFar}/>
+        </Section>
+
+
+        <Section title="CAMERA RIG PRESETS" defaultOpen={false} accent="blue">
+          <div className="fcam-focal-chips">
+            <button className="fcam-chip" onClick={()=>applyRigPreset("tripod")}>TRIPOD</button>
+            <button className="fcam-chip" onClick={()=>applyRigPreset("dolly_left")}>DOLLY L</button>
+            <button className="fcam-chip" onClick={()=>applyRigPreset("dolly_right")}>DOLLY R</button>
+            <button className="fcam-chip" onClick={()=>applyRigPreset("crane_high")}>CRANE</button>
+            <button className="fcam-chip" onClick={()=>applyRigPreset("overhead")}>OVERHEAD</button>
+            <button className="fcam-chip" onClick={()=>applyRigPreset("closeup")}>CLOSE-UP</button>
+            <button className="fcam-chip" onClick={()=>applyRigPreset("handheld")}>HANDHELD</button>
+          </div>
+        </Section>
+
+        <Section title="LENS PRESETS" defaultOpen={false} accent="gold">
+          <div className="fcam-focal-chips">
+            {["18mm","24mm","35mm","50mm","85mm","135mm"].map(p => (
+              <button
+                key={p}
+                className={`fcam-chip${lensPreset===p?' fcam-chip--active-gold':''}`}
+                onClick={()=>applyLensPreset(p)}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
         </Section>
 
         <Section title="CAMERA BOOKMARKS" defaultOpen={false}>
@@ -147,6 +371,7 @@ export function FilmCameraPanel({ cameraRef, rendererRef, sceneRef, open=true, o
       </div>
     </div>
   );
+
 }
 
 export default FilmCameraPanel;

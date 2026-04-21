@@ -1,0 +1,222 @@
+import React, { useEffect, useRef, useState, useCallback } from "react";
+
+function Slider({ label, value, min, max, step = 0.01, onChange }) {
+  return (
+    <div className="spx-slider-wrap">
+      <div className="spx-slider-header">
+        <span>{label}</span>
+        <span className="spx-slider-header__val">{typeof value === "number" ? value.toFixed(step < 0.1 ? 2 : 0) : value}</span>
+      </div>
+      <input className="spx-slider-input" type="range" min={min} max={max} step={step} value={value} onChange={(e)=>onChange(parseFloat(e.target.value))} />
+    </div>
+  );
+}
+
+export default function FilmParticlePanel({ open, onClose, sceneRef, setStatus }) {
+  const systemRef = useRef(null);
+  const animRef = useRef(0);
+
+  const [type, setType] = useState("dust");
+  const [count, setCount] = useState(800);
+  const [size, setSize] = useState(0.04);
+  const [spread, setSpread] = useState(8);
+  const [speed, setSpeed] = useState(0.01);
+  const [opacity, setOpacity] = useState(0.7);
+  const [color, setColor] = useState("#d8d2c8");
+  const [turbulence, setTurbulence] = useState(0.12);
+  const [lifetime, setLifetime] = useState(6);
+  const [emitterRadius, setEmitterRadius] = useState(3);
+  const [burstMode, setBurstMode] = useState(false);
+  const [loopParticles, setLoopParticles] = useState(true);
+  const [vortexForce, setVortexForce] = useState(0.0);
+  const [gravityForce, setGravityForce] = useState(0.02);
+  const [velocityRandom, setVelocityRandom] = useState(0.25);
+  const [scaleOverLife, setScaleOverLife] = useState(0.15);
+  const [colorOverLife, setColorOverLife] = useState(0.12);
+
+  const paletteForType = useCallback((t) => {
+    if (t === "smoke") return "#8a8a8a";
+    if (t === "sparks") return "#ffb347";
+    if (t === "embers") return "#ff6b3d";
+    if (t === "rain") return "#9ecbff";
+    if (t === "snow") return "#f5f8ff";
+    return "#d8d2c8";
+  }, []);
+
+  const removeSystem = useCallback(() => {
+    if (animRef.current) cancelAnimationFrame(animRef.current);
+    const scene = sceneRef?.current;
+    if (scene && systemRef.current) {
+      scene.remove(systemRef.current);
+      systemRef.current.geometry?.dispose?.();
+      systemRef.current.material?.dispose?.();
+      systemRef.current = null;
+    }
+  }, [sceneRef]);
+
+  const buildSystem = useCallback(() => {
+    const scene = sceneRef?.current;
+    if (!scene || !window.THREE) return;
+
+    removeSystem();
+
+    const THREE = window.THREE;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(count * 3);
+
+    for (let i = 0; i < count; i++) {
+      positions[i * 3 + 0] = (Math.random() - 0.5) * spread * 2;
+      positions[i * 3 + 1] = Math.random() * spread;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * spread * 2;
+    }
+
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+
+    const material = new THREE.PointsMaterial({
+      color,
+      size,
+      transparent: true,
+      opacity,
+      depthWrite: false
+    });
+
+    const points = new THREE.Points(geometry, material);
+    points.userData.fxType = type;
+
+    scene.add(points);
+    systemRef.current = points;
+
+    const start = performance.now();
+
+    points.userData.baseSize = size;
+    points.userData.startColor = color;
+
+    const tick = () => {
+      const pos = points.geometry.attributes.position.array;
+      for (let i = 0; i < count; i++) {
+        const iy = i * 3 + 1;
+
+        const t = performance.now() * 0.001;
+        const ix = i * 3 + 0;
+        const iz = i * 3 + 2;
+        const age = Math.min(1, ((performance.now() - start) / 1000) / Math.max(1, lifetime));
+
+        if (type === "rain") pos[iy] -= speed * 8;
+        else if (type === "snow") pos[iy] -= speed * 1.5;
+        else if (type === "sparks" || type === "embers") pos[iy] += speed * 3;
+        else if (burstMode) pos[iy] += speed * 4;
+        else pos[iy] += (Math.random() - 0.48) * speed * 2;
+
+        pos[ix] += Math.sin(t + i * 0.13) * turbulence * 0.02;
+        pos[iz] += Math.cos(t + i * 0.09) * turbulence * 0.02;
+
+        const swirlX = -pos[iz] * vortexForce * 0.002;
+        const swirlZ =  pos[ix] * vortexForce * 0.002;
+        pos[ix] += swirlX + (Math.random() - 0.5) * velocityRandom * 0.01;
+        pos[iz] += swirlZ + (Math.random() - 0.5) * velocityRandom * 0.01;
+        pos[iy] -= gravityForce * 0.2;
+
+        if (loopParticles) {
+          if (pos[iy] < -spread * 0.25) pos[iy] = spread;
+          if (pos[iy] > spread) pos[iy] = -spread * 0.15;
+        }
+      }
+
+      points.geometry.attributes.position.needsUpdate = true;
+
+      if (points.material) {
+        points.material.size = Math.max(0.001, points.userData.baseSize * (1 + scaleOverLife * (1 - Math.min(1, ((performance.now() - start) / 1000) / Math.max(1, lifetime)))));
+      }
+
+      if (!loopParticles && (performance.now() - start) / 1000 > lifetime) return;
+      animRef.current = requestAnimationFrame(tick);
+    };
+
+    animRef.current = requestAnimationFrame(tick);
+    setStatus?.(`Particles: ${type}`);
+  }, [sceneRef, removeSystem, type, count, size, spread, speed, opacity, color, turbulence, lifetime, emitterRadius, burstMode, loopParticles, vortexForce, gravityForce, velocityRandom, scaleOverLife, colorOverLife, setStatus]);
+
+  useEffect(() => {
+    if (!open) return;
+    setColor(paletteForType(type));
+  }, [type, open, paletteForType]);
+
+  useEffect(() => {
+    if (!open) return;
+    buildSystem();
+    return () => removeSystem();
+  }, [open, buildSystem, removeSystem]);
+
+  if (!open) return null;
+
+  return (
+    <div className="spx-float-panel fcam-panel" style={{ right: 20, top: 110, width: 360, zIndex: 37 }}>
+      <div className="spx-float-panel__header">
+        <div className="spx-float-panel__dot fcam-dot" />
+        <span className="spx-float-panel__title fcam-title">FILM PARTICLES</span>
+        {onClose && <button className="spx-float-panel__close" onClick={onClose}>×</button>}
+      </div>
+
+      <div className="spx-float-panel__body">
+        <div className="spx-slider-wrap">
+          <div className="spx-slider-header">
+            <span>TYPE</span>
+            <span className="spx-slider-header__val">{type}</span>
+          </div>
+          <select className="spx-slider-input" value={type} onChange={(e)=>setType(e.target.value)}>
+            <option value="dust">dust</option>
+            <option value="smoke">smoke</option>
+            <option value="sparks">sparks</option>
+            <option value="embers">embers</option>
+            <option value="rain">rain</option>
+            <option value="snow">snow</option>
+          </select>
+        </div>
+
+        <Slider label="COUNT" value={count} min={100} max={5000} step={50} onChange={setCount} />
+        <Slider label="SIZE" value={size} min={0.01} max={0.2} step={0.01} onChange={setSize} />
+        <Slider label="SPREAD" value={spread} min={2} max={30} step={0.5} onChange={setSpread} />
+        <Slider label="SPEED" value={speed} min={0.001} max={0.08} step={0.001} onChange={setSpeed} />
+        <Slider label="OPACITY" value={opacity} min={0.05} max={1} step={0.01} onChange={setOpacity} />
+        <Slider label="TURBULENCE" value={turbulence} min={0} max={1} step={0.01} onChange={setTurbulence} />
+        <Slider label="LIFETIME" value={lifetime} min={1} max={20} step={1} onChange={setLifetime} />
+        <Slider label="EMITTER RADIUS" value={emitterRadius} min={0.5} max={20} step={0.1} onChange={setEmitterRadius} />
+
+        <div className="spx-slider-wrap">
+          <div className="spx-slider-header">
+            <span>BURST MODE</span>
+            <span className="spx-slider-header__val">{burstMode ? "on" : "off"}</span>
+          </div>
+          <input type="checkbox" checked={burstMode} onChange={(e)=>setBurstMode(e.target.checked)} />
+        </div>
+
+        <div className="spx-slider-wrap">
+          <div className="spx-slider-header">
+            <span>LOOP</span>
+            <span className="spx-slider-header__val">{loopParticles ? "on" : "off"}</span>
+          </div>
+          <input type="checkbox" checked={loopParticles} onChange={(e)=>setLoopParticles(e.target.checked)} />
+        </div>
+
+        <Slider label="VORTEX" value={vortexForce} min={0} max={1} step={0.01} onChange={setVortexForce} />
+        <Slider label="GRAVITY" value={gravityForce} min={0} max={0.1} step={0.001} onChange={setGravityForce} />
+        <Slider label="VELOCITY RAND" value={velocityRandom} min={0} max={1} step={0.01} onChange={setVelocityRandom} />
+        <Slider label="SCALE OVER LIFE" value={scaleOverLife} min={0} max={1} step={0.01} onChange={setScaleOverLife} />
+        <Slider label="COLOR OVER LIFE" value={colorOverLife} min={0} max={1} step={0.01} onChange={setColorOverLife} />
+
+        <div className="spx-slider-wrap">
+          <div className="spx-slider-header">
+            <span>COLOR</span>
+            <span className="spx-slider-header__val">{color}</span>
+          </div>
+          <input className="spx-slider-input" type="color" value={color} onChange={(e)=>setColor(e.target.value)} />
+        </div>
+
+        <div className="fcam-focal-chips" style={{ marginTop: 12 }}>
+          <button className="fcam-chip fcam-chip--active-gold" onClick={buildSystem}>REBUILD</button>
+          <button className="fcam-chip" onClick={removeSystem}>CLEAR</button>
+        </div>
+      </div>
+    </div>
+  );
+}

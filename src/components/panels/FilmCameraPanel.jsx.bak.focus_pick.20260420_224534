@@ -1,0 +1,201 @@
+// ═══════════════════════════════════════════════════════════════
+// FilmCameraPanel.jsx
+// ═══════════════════════════════════════════════════════════════
+import React, { useState, useEffect, useCallback } from "react";
+import * as THREE from 'three';
+import '../../styles/panel-components.css';
+import '../../styles/render-panels.css';
+
+function Slider({ label, value, min, max, step=0.01, onChange, unit='' }) {
+  return (
+    <div className="spx-slider-wrap">
+      <div className="spx-slider-header">
+        <span>{label}</span>
+        <span className="spx-slider-header__val">{step<0.1?Number(value).toFixed(2):Math.round(value)}{unit}</span>
+      </div>
+      <input type="range" min={min} max={max} step={step} value={value}
+        className="spx-slider-input" onChange={e=>onChange(parseFloat(e.target.value))}/>
+    </div>
+  );
+
+}
+
+function Toggle({ label, value, onChange }) {
+  return (
+    <div className="rpnl-toggle-row">
+      <span className="rpnl-toggle-label">{label}</span>
+      <div className={`rpnl-toggle${value?' rpnl-toggle--on':' rpnl-toggle--off'}`} onClick={()=>onChange(!value)}>
+        <div className={`rpnl-toggle__dot${value?' rpnl-toggle__dot--on':' rpnl-toggle__dot--off'}`}/>
+      </div>
+    </div>
+  );
+
+}
+
+function Section({ title, children, defaultOpen=true, accent }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="spx-section">
+      <div className={`spx-section__hdr${accent?` spx-section__hdr--${accent}`:''}`} onClick={()=>setOpen(v=>!v)}>
+        <span className={`spx-section__arrow${accent?` spx-section__arrow--${accent}`:''}`}>{open?'▾':'▸'}</span>
+        <span className="spx-section__title">{title}</span>
+      </div>
+      {open && <div className="spx-section__body">{children}</div>}
+    </div>
+  );
+
+}
+
+const FILM_GATES    = [{label:'Full Frame 35mm',w:36,h:24},{label:'Super 35',w:24.89,h:18.67},{label:'IMAX 70mm',w:70.41,h:52.63},{label:'Anamorphic 2x',w:36,h:24},{label:'16mm',w:12.52,h:7.41},{label:'2.39:1 Scope',w:36,h:15.05}];
+const FOCAL_PRESETS = [{label:'14mm',v:14},{label:'24mm',v:24},{label:'35mm',v:35},{label:'50mm',v:50},{label:'85mm',v:85},{label:'135mm',v:135},{label:'200mm',v:200}];
+
+export function FilmCameraPanel({ cameraRef, rendererRef, sceneRef, open=true, onClose, setStatus = () => {} }) {
+  const [fov,         setFov]         = useState(55);
+  const [focalLength, setFocalLength] = useState(35);
+  const [filmGate,    setFilmGate]    = useState(0);
+  const [near,        setNear]        = useState(0.01);
+  const [far,         setFar]         = useState(1000);
+  const [dofEnabled,  setDofEnabled]  = useState(false);
+  const [dofFocus,    setDofFocus]    = useState(5.0);
+  const [dofAperture, setDofAperture] = useState(0.025);
+  const [dofMaxBlur,  setDofMaxBlur]  = useState(0.01);
+  const [bookmarks,   setBookmarks]   = useState([]);
+  const [exposure,    setExposure]    = useState(1.1);
+
+  const cam = useCallback(() => cameraRef?.current, [cameraRef]);
+
+  const focalToFov = useCallback((fl, gateIdx) => {
+    const gate = FILM_GATES[gateIdx] || FILM_GATES[0];
+    return 2 * Math.atan(gate.h / (2*fl)) * (180/Math.PI);
+  }, []);
+
+  useEffect(() => {
+    const c = cam(); if (!c) return;
+    const newFov = focalToFov(focalLength, filmGate);
+    setFov(newFov);
+    c.fov=newFov; c.near=near; c.far=far; c.updateProjectionMatrix();
+    c.userData.dofEnabled=dofEnabled; c.userData.dofFocus=dofFocus;
+    c.userData.dofAperture=dofAperture; c.userData.dofMaxBlur=dofMaxBlur;
+    const composer = rendererRef?.current?._composer;
+    if (composer) {
+      const bokeh = composer.passes?.find?.(p=>p.constructor?.name==='BokehPass');
+      if (bokeh) { bokeh.enabled=dofEnabled; bokeh.uniforms?.focus?.value&&(bokeh.uniforms.focus.value=dofFocus); bokeh.uniforms?.aperture?.value&&(bokeh.uniforms.aperture.value=dofAperture); bokeh.uniforms?.maxblur?.value&&(bokeh.uniforms.maxblur.value=dofMaxBlur); }
+    }
+    if (rendererRef?.current) rendererRef.current.toneMappingExposure = exposure;
+  }, [focalLength, filmGate, near, far, dofEnabled, dofFocus, dofAperture, dofMaxBlur, exposure]);
+
+  const saveBookmark = useCallback(() => {
+    const c = cam(); if (!c) return;
+    setBookmarks(b => [...b, { id:Date.now(), name:`Cam ${b.length+1}`, pos:c.position.clone(), rot:c.rotation.clone(), fov:c.fov }]);
+  }, [cam]);
+
+  
+  const focusSelectedObject = useCallback(() => {
+
+    const scene = sceneRef?.current
+    const camera = cameraRef?.current
+
+    if(!scene || !camera) return
+
+    let closest = null
+    let minDist = Infinity
+
+    scene.traverse(obj => {
+
+      if(!obj.isMesh) return
+
+      const dist = camera.position.distanceTo(obj.position)
+
+      if(dist < minDist){
+        minDist = dist
+        closest = obj
+      }
+
+    })
+
+    if(closest){
+
+      setDofFocus(minDist)
+
+      camera.userData.dofFocus = minDist
+
+      setStatus("Focus set from scene object")
+
+    }
+
+  }, [sceneRef, cameraRef])
+
+
+  const restoreBookmark = useCallback((bm) => {
+    const c = cam(); if (!c) return;
+    c.position.copy(bm.pos); c.rotation.copy(bm.rot); c.fov=bm.fov; c.updateProjectionMatrix(); setFov(bm.fov);
+  }, [cam]);
+
+  if (!open) return null;
+
+  return (
+    <div className="spx-float-panel fcam-panel">
+      <div className="spx-float-panel__header">
+        <div className="spx-float-panel__dot fcam-dot"/>
+        <span className="spx-float-panel__title fcam-title">FILM CAMERA</span>
+        {onClose && <button className="spx-float-panel__close" onClick={onClose}>×</button>}
+      </div>
+      <div className="spx-float-panel__body">
+        <Section title="FOCAL LENGTH" accent="gold">
+          <div className="fcam-focal-chips">
+            {FOCAL_PRESETS.map(p => (
+              <button key={p.v} className={`fcam-chip${focalLength===p.v?' fcam-chip--active-gold':''}`} onClick={()=>setFocalLength(p.v)}>{p.label}</button>
+            ))}
+          </div>
+          <Slider label="FOCAL LENGTH" value={focalLength} min={8} max={500} step={1} onChange={setFocalLength} unit="mm"/>
+          <Slider label="FOV" value={fov} min={5} max={120} step={0.1} onChange={v=>{setFov(v);const c=cam();if(c){c.fov=v;c.updateProjectionMatrix();}}}/>
+        </Section>
+
+        <Section title="FILM GATE" accent="purple">
+          <div className="fcam-gate-list">
+            {FILM_GATES.map((g,i) => (
+              <button key={i} className={`fcam-gate-item${filmGate===i?' fcam-gate-item--active':''}`} onClick={()=>setFilmGate(i)}>
+                <span>{g.label}</span>
+                <span className="fcam-gate-size">{g.w}×{g.h}mm</span>
+              </button>
+            ))}
+          </div>
+        </Section>
+
+        <Section title="DEPTH OF FIELD" accent="pink">
+          <Toggle label="ENABLE DOF" value={dofEnabled} onChange={setDofEnabled}/>
+          
+          <button
+            className="fcam-save-btn"
+            onClick={focusSelectedObject}
+          >
+            PICK FOCUS FROM SCENE
+          </button>
+
+          <Slider label="FOCUS DISTANCE" value={dofFocus} min={0.1} max={100} step={0.1} onChange={setDofFocus} unit="m"/>
+          <Slider label="APERTURE (f/)" value={dofAperture} min={0.001} max={0.1} step={0.001} onChange={setDofAperture}/>
+          <Slider label="MAX BLUR" value={dofMaxBlur} min={0.001} max={0.05} step={0.001} onChange={setDofMaxBlur}/>
+        </Section>
+
+        <Section title="EXPOSURE" accent="orange">
+          <Slider label="EXPOSURE" value={exposure} min={0.1} max={4} step={0.05} onChange={setExposure}/>
+          <Slider label="NEAR CLIP" value={near} min={0.001} max={1} step={0.001} onChange={setNear}/>
+          <Slider label="FAR CLIP" value={far} min={10} max={10000} step={10} onChange={setFar}/>
+        </Section>
+
+        <Section title="CAMERA BOOKMARKS" defaultOpen={false}>
+          <button className="fcam-save-btn" onClick={saveBookmark}>+ SAVE POSITION</button>
+          {bookmarks.map(bm => (
+            <button key={bm.id} className="fcam-bookmark" onClick={()=>restoreBookmark(bm)}>
+              <span>{bm.name}</span>
+              <span>FOV {Math.round(bm.fov)}°</span>
+            </button>
+          ))}
+        </Section>
+      </div>
+    </div>
+  );
+
+}
+
+export default FilmCameraPanel;

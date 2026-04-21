@@ -1,18 +1,77 @@
-import React, { useRef, useCallback, useEffect } from "react";
+import { clampFrame, getFrameFromClientX, getNextKeyframe, getPreviousKeyframe, hasKeyframeAtFrame } from "../animation/timelineUtils.js";
+import { getAutoKeyLabel } from "../animation/animationKeyUtils.js";
+import React, { useRef, useCallback, useEffect, useState } from "react";
 
 export function AnimationTimeline({
   currentFrame, setCurrentFrame,
   isPlaying, setIsPlaying,
-  isAutoKey, setAutoKey,
+  isAutoKey, setAutoKey, autoKeyMode,
   videoStartFrame, videoEndFrame,
   setVideoStartFrame, setVideoEndFrame,
   videoFps, setVideoFps,
   sceneObjects = [],
   animKeys = {},
   onAddKeyframe,
+  handleApplyFunction,
 }) {
+  const tlTrackRef = useRef(null);
+  const [isScrubbing, setIsScrubbing] = useState(false);
+
+  const jumpToFrame = (frame) => {
+    setCurrentFrame?.(clampFrame(frame, videoStartFrame, videoEndFrame));
+  };
+
+  const handleTimelinePointer = (clientX) => {
+    if (!tlTrackRef.current) return;
+    const rect = tlTrackRef.current.getBoundingClientRect();
+    const frame = getFrameFromClientX(clientX, rect, videoStartFrame, videoEndFrame);
+    jumpToFrame(frame);
+  };
+
+  useEffect(() => {
+    if (!isScrubbing) return;
+
+    const onMove = (e) => handleTimelinePointer(e.clientX);
+    const onUp = () => setIsScrubbing(false);
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, [isScrubbing, videoStartFrame, videoEndFrame]);
+
   const trackRef = useRef(null);
+  const [draggedKeyFrame, setDraggedKeyFrame] = useState(null);
   const totalFrames = videoEndFrame - videoStartFrame || 250;
+
+  const keyPositions = new Set();
+  Object.values(animKeys).forEach(keys => {
+    Object.values(keys).forEach(frames => {
+      if (Array.isArray(frames)) frames.forEach(f => keyPositions.add(f));
+      else if (typeof frames === "object") Object.keys(frames).forEach(f => keyPositions.add(Number(f)));
+    });
+  });
+
+  const frameFromClientX = (clientX) => {
+    const track = trackRef.current;
+    if (!track) return currentFrame;
+    const rect = track.getBoundingClientRect();
+    return clampFrame(
+      getFrameFromClientX(clientX, rect, videoStartFrame, videoEndFrame),
+      videoStartFrame,
+      videoEndFrame
+    );
+  };
+
+  const beginKeyDrag = (e, frame) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setDraggedKeyFrame(Number(frame));
+    setCurrentFrame(Number(frame));
+  };
 
   const scrub = useCallback((e) => {
     const track = trackRef.current;
@@ -32,26 +91,92 @@ export function AnimationTimeline({
 
   useEffect(() => {
     const h = (e) => {
-      if (e.target.tagName === "INPUT") return;
-      if (e.key === " ") { e.preventDefault(); setIsPlaying(v => !v); }
-      if (e.key === "ArrowLeft")  setCurrentFrame(f => Math.max(videoStartFrame, f - 1));
-      if (e.key === "ArrowRight") setCurrentFrame(f => Math.min(videoEndFrame, f + 1));
-      if (e.key === "ArrowLeft" && e.shiftKey)  setCurrentFrame(videoStartFrame);
-      if (e.key === "ArrowRight" && e.shiftKey) setCurrentFrame(videoEndFrame);
+      const tag = e.target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+      if (e.key === " ") {
+        e.preventDefault();
+        setIsPlaying(v => !v);
+      }
+
+      if (e.key === "ArrowLeft" && !e.shiftKey) {
+        e.preventDefault();
+        setCurrentFrame(f => Math.max(videoStartFrame, f - 1));
+      }
+
+      if (e.key === "ArrowRight" && !e.shiftKey) {
+        e.preventDefault();
+        setCurrentFrame(f => Math.min(videoEndFrame, f + 1));
+      }
+
+      if (e.key === "ArrowLeft" && e.shiftKey) {
+        e.preventDefault();
+        setCurrentFrame(videoStartFrame);
+      }
+
+      if (e.key === "ArrowRight" && e.shiftKey) {
+        e.preventDefault();
+        setCurrentFrame(videoEndFrame);
+      }
+
+      if (e.key === ",") {
+        e.preventDefault();
+        setCurrentFrame(f => getPreviousKeyframe([...keyPositions], f));
+      }
+
+      if (e.key === ".") {
+        e.preventDefault();
+        setCurrentFrame(f => getNextKeyframe([...keyPositions], f));
+      }
+
+      if (e.key === "Delete" || e.key === "Backspace") {
+        if (hasKeyframeAtFrame([...keyPositions], currentFrame)) {
+          e.preventDefault();
+          handleApplyFunction?.("delete_keyframe");
+        }
+      }
+
+      if (e.key.toLowerCase() === "i") {
+        e.preventDefault();
+        onAddKeyframe?.();
+      }
     };
+
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
-  }, [setIsPlaying, setCurrentFrame, videoStartFrame, videoEndFrame]);
+  }, [setIsPlaying, setCurrentFrame, videoStartFrame, videoEndFrame, currentFrame, onAddKeyframe, handleApplyFunction, keyPositions]);
+
+
+  useEffect(() => {
+    if (draggedKeyFrame == null) return;
+
+    const onMove = (e) => {
+      const nextFrame = frameFromClientX(e.clientX);
+      setCurrentFrame(nextFrame);
+    };
+
+    const onUp = (e) => {
+      const toFrame = frameFromClientX(e.clientX);
+      if (toFrame !== draggedKeyFrame) {
+        window.__spxMoveKeyFromFrame = draggedKeyFrame;
+        window.__spxMoveKeyToFrame = toFrame;
+        handleApplyFunction?.("move_keyframe");
+      } else {
+        setCurrentFrame(toFrame);
+      }
+      setDraggedKeyFrame(null);
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, [draggedKeyFrame, videoStartFrame, videoEndFrame, currentFrame, handleApplyFunction, setCurrentFrame]);
 
   const pct = totalFrames > 0 ? ((currentFrame - videoStartFrame) / totalFrames) * 100 : 0;
-
-  const keyPositions = new Set();
-  Object.values(animKeys).forEach(keys => {
-    Object.values(keys).forEach(frames => {
-      if (Array.isArray(frames)) frames.forEach(f => keyPositions.add(f));
-      else if (typeof frames === "object") Object.keys(frames).forEach(f => keyPositions.add(Number(f)));
-    });
-  });
 
   const tickInterval = totalFrames <= 50 ? 5 : totalFrames <= 120 ? 10 : totalFrames <= 250 ? 25 : 50;
   const ticks = [];
@@ -93,9 +218,16 @@ export function AnimationTimeline({
         </div>
 
         <button className={`tl-btn tl-btn--autokey${isAutoKey ? " tl-btn--autokey-on" : ""}`}
-          title="Auto Keyframe" onClick={() => setAutoKey(v => !v)}>⬤ AUTO</button>
+          title="Auto Keyframe" onClick={() => handleApplyFunction?.("auto_key")}>⬤ {typeof autoKeyMode === "string" ? getAutoKeyLabel(autoKeyMode) : "AUTO"}</button>
 
+        <button className="tl-btn" title="Previous Frame" onClick={() => jumpToFrame((currentFrame ?? 0) - 1)}>◀</button>
+        <button className="tl-btn" title="Next Frame" onClick={() => jumpToFrame((currentFrame ?? 0) + 1)}>▶</button>
+        <button className="tl-btn" title="Previous Key" onClick={() => jumpToFrame(getPreviousKeyframe(keyframes, currentFrame ?? 0))}>◁◆</button>
+        <button className="tl-btn" title="Next Key" onClick={() => jumpToFrame(getNextKeyframe(keyframes, currentFrame ?? 0))}>◆▷</button>
+        <button className="tl-btn" title="Previous Key (,)" onClick={() => setCurrentFrame(f => getPreviousKeyframe([...keyPositions], f))}>◁◆</button>
+        <button className="tl-btn" title="Next Key (.)" onClick={() => setCurrentFrame(f => getNextKeyframe([...keyPositions], f))}>◆▷</button>
         <button className="tl-btn tl-btn--addkey" title="Insert keyframe (I)" onClick={onAddKeyframe}>◆ KEY</button>
+        <button className="tl-btn" title="Delete key at current frame" onClick={() => handleApplyFunction?.("delete_keyframe")}>⌫ KEY</button>
       </div>
 
       <div className="tl-track-area" ref={trackRef} onMouseDown={onTrackMouseDown}>
@@ -107,11 +239,16 @@ export function AnimationTimeline({
           ))}
         </div>
 
-        <div className="tl-keyframes">
+        <div className="tl-keyframes" ref={tlTrackRef} onPointerDown={(e) => { setIsScrubbing(true); handleTimelinePointer(e.clientX); }}>
           {[...keyPositions].map(f => (
-            <div key={f} className="tl-keyframe-dot"
+            <div
+              key={f}
+              className={`tl-keyframe-dot${Number(f) === Number(currentFrame) ? " tl-keyframe-dot--selected" : ""}${Number(f) === Number(draggedKeyFrame) ? " tl-keyframe-dot--dragging" : ""}`}
               style={{ left: `${((f - videoStartFrame) / totalFrames) * 100}%` }}
-              title={`Frame ${f}`} />
+              title={`Frame ${f}`}
+              onClick={(e) => { e.stopPropagation(); setCurrentFrame(Number(f)); }}
+              onPointerDown={(e) => beginKeyDrag(e, f)}
+            />
           ))}
         </div>
 

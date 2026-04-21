@@ -1,3 +1,4 @@
+import { getAutoKeyLabel } from "../animation/animationKeyUtils.js";
 import React, { useState } from "react";
 import MotionLibraryPanel from "./animation/MotionLibraryPanel";
 
@@ -77,8 +78,8 @@ export function AnimationPanel({ onApplyFunction,
             <div className="spnl-row spnl-row--checks">
               <label className="spnl-check">
                 <input type="checkbox" checked={isAutoKey}
-                  onChange={e => { setAutoKey(e.target.checked); onApplyFunction("auto_key"); }} />
-                <span className={isAutoKey ? "spnl-autokey-on" : ""}>Auto Keyframe</span>
+                  onChange={() => onApplyFunction("auto_key")} />
+                <span className={isAutoKey ? "spnl-autokey-on" : ""}>{typeof autoKeyMode === "string" ? getAutoKeyLabel(autoKeyMode) : "Auto Keyframe"}</span>
               </label>
             </div>
           </Section>

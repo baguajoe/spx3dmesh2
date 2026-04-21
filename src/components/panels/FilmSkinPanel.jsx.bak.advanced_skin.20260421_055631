@@ -1,0 +1,143 @@
+import React, { useEffect, useState, useCallback } from "react";
+
+function Slider({ label, value, min, max, step = 0.01, onChange }) {
+  return (
+    <div className="spx-slider-wrap">
+      <div className="spx-slider-header">
+        <span>{label}</span>
+        <span className="spx-slider-header__val">{typeof value === "number" ? value.toFixed(step < 0.1 ? 2 : 0) : value}</span>
+      </div>
+      <input
+        className="spx-slider-input"
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+      />
+    </div>
+  );
+}
+
+export default function FilmSkinPanel({ open, onClose, meshRef, setStatus }) {
+  const [preset, setPreset] = useState("cinematic_medium");
+  const [color, setColor] = useState("#9f6f56");
+  const [roughness, setRoughness] = useState(0.64);
+  const [sheen, setSheen] = useState(0.16);
+  const [specularIntensity, setSpecularIntensity] = useState(0.4);
+  const [thickness, setThickness] = useState(0.48);
+  const [normalScale, setNormalScale] = useState(0.22);
+  const [bumpScale, setBumpScale] = useState(0.015);
+
+  const presetMap = {
+    cinematic_light: {
+      color: "#d9b19c", roughness: 0.62, sheen: 0.18, specularIntensity: 0.42, thickness: 0.45, normalScale: 0.22, bumpScale: 0.015
+    },
+    cinematic_medium: {
+      color: "#9f6f56", roughness: 0.64, sheen: 0.16, specularIntensity: 0.4, thickness: 0.48, normalScale: 0.22, bumpScale: 0.015
+    },
+    cinematic_dark: {
+      color: "#5f3f31", roughness: 0.66, sheen: 0.15, specularIntensity: 0.38, thickness: 0.5, normalScale: 0.22, bumpScale: 0.015
+    },
+    anime_skin: {
+      color: "#f2c8b8", roughness: 0.78, sheen: 0.05, specularIntensity: 0.2, thickness: 0.18, normalScale: 0.04, bumpScale: 0.003
+    }
+  };
+
+  const loadPreset = useCallback((name) => {
+    const p = presetMap[name];
+    if (!p) return;
+    setPreset(name);
+    setColor(p.color);
+    setRoughness(p.roughness);
+    setSheen(p.sheen);
+    setSpecularIntensity(p.specularIntensity);
+    setThickness(p.thickness);
+    setNormalScale(p.normalScale);
+    setBumpScale(p.bumpScale);
+  }, []);
+
+  const applyToMesh = useCallback(() => {
+    const mesh = meshRef?.current;
+    if (!mesh || typeof window.applyFilmSkin !== "function") return;
+
+    window.applyFilmSkin(mesh, {
+      preset,
+      color,
+      roughness,
+      sheen,
+      specularIntensity,
+      thickness,
+      normalScale,
+      bumpScale
+    });
+
+    setStatus?.(`Film skin applied: ${preset}`);
+  }, [meshRef, setStatus, preset, color, roughness, sheen, specularIntensity, thickness, normalScale, bumpScale]);
+
+  useEffect(() => {
+    if (!open) return;
+    applyToMesh();
+  }, [open, applyToMesh]);
+
+  useEffect(() => {
+    if (!open) return;
+    applyToMesh();
+  }, [color, roughness, sheen, specularIntensity, thickness, normalScale, bumpScale, preset, open, applyToMesh]);
+
+  if (!open) return null;
+
+  return (
+    <div className="spx-float-panel fcam-panel" style={{ right: 20, top: 110, width: 360, zIndex: 35 }}>
+      <div className="spx-float-panel__header">
+        <div className="spx-float-panel__dot fcam-dot" />
+        <span className="spx-float-panel__title fcam-title">FILM SKIN</span>
+        {onClose && <button className="spx-float-panel__close" onClick={onClose}>×</button>}
+      </div>
+
+      <div className="spx-float-panel__body">
+        <div className="fcam-focal-chips" style={{ marginBottom: 12 }}>
+          {[
+            ["cinematic_light", "LIGHT"],
+            ["cinematic_medium", "MEDIUM"],
+            ["cinematic_dark", "DARK"],
+            ["anime_skin", "ANIME"]
+          ].map(([id, label]) => (
+            <button
+              key={id}
+              className={`fcam-chip${preset === id ? " fcam-chip--active-gold" : ""}`}
+              onClick={() => loadPreset(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="spx-slider-wrap">
+          <div className="spx-slider-header">
+            <span>TONE COLOR</span>
+            <span className="spx-slider-header__val">{color}</span>
+          </div>
+          <input
+            className="spx-slider-input"
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+          />
+        </div>
+
+        <Slider label="ROUGHNESS" value={roughness} min={0.2} max={1} step={0.01} onChange={setRoughness} />
+        <Slider label="SHEEN" value={sheen} min={0} max={1} step={0.01} onChange={setSheen} />
+        <Slider label="SPECULAR" value={specularIntensity} min={0} max={1} step={0.01} onChange={setSpecularIntensity} />
+        <Slider label="THICKNESS" value={thickness} min={0} max={1} step={0.01} onChange={setThickness} />
+        <Slider label="PORE DETAIL" value={normalScale} min={0} max={0.5} step={0.01} onChange={setNormalScale} />
+        <Slider label="WRINKLE / BUMP" value={bumpScale} min={0} max={0.05} step={0.001} onChange={setBumpScale} />
+
+        <div className="fcam-focal-chips" style={{ marginTop: 12 }}>
+          <button className="fcam-chip fcam-chip--active-gold" onClick={applyToMesh}>APPLY</button>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,82 @@
+import React, { useEffect, useState, useCallback } from "react";
+
+export default function AssetBrowserPanel({ open, onClose, setStatus }) {
+  const [assets, setAssets] = useState([]);
+  const [name, setName] = useState("");
+  const [tag, setTag] = useState("model");
+
+  useEffect(() => {
+    if (!open) return;
+    const raw = localStorage.getItem("__SPX_ASSET_BROWSER__");
+    if (raw) {
+      try { setAssets(JSON.parse(raw)); } catch {}
+    }
+  }, [open]);
+
+  const persist = useCallback((next) => {
+    setAssets(next);
+    localStorage.setItem("__SPX_ASSET_BROWSER__", JSON.stringify(next));
+  }, []);
+
+  const addAsset = useCallback(() => {
+    if (!name.trim()) return;
+    const next = [
+      ...assets,
+      { id: Date.now(), name: name.trim(), tag, favorite: false }
+    ];
+    persist(next);
+    setName("");
+    setStatus?.("Asset saved");
+  }, [assets, name, tag, persist, setStatus]);
+
+  const removeAsset = useCallback((id) => {
+    persist(assets.filter(a => a.id !== id));
+    setStatus?.("Asset removed");
+  }, [assets, persist, setStatus]);
+
+  const toggleFavorite = useCallback((id) => {
+    persist(assets.map(a => a.id === id ? { ...a, favorite: !a.favorite } : a));
+  }, [assets, persist]);
+
+  if (!open) return null;
+
+  return (
+    <div className="spx-float-panel fcam-panel" style={{ right: 20, top: 110, width: 360, zIndex: 48 }}>
+      <div className="spx-float-panel__header">
+        <div className="spx-float-panel__dot fcam-dot" />
+        <span className="spx-float-panel__title fcam-title">ASSET BROWSER</span>
+        {onClose && <button className="spx-float-panel__close" onClick={onClose}>×</button>}
+      </div>
+
+      <div className="spx-float-panel__body">
+        <input className="spx-slider-input" placeholder="asset name" value={name} onChange={(e)=>setName(e.target.value)} />
+        <select className="spx-slider-input" value={tag} onChange={(e)=>setTag(e.target.value)} style={{ marginTop: 8 }}>
+          <option value="model">model</option>
+          <option value="material">material</option>
+          <option value="hair">hair</option>
+          <option value="fx">fx</option>
+          <option value="preset">preset</option>
+        </select>
+
+        <div className="fcam-focal-chips" style={{ marginTop: 10, marginBottom: 12 }}>
+          <button className="fcam-chip fcam-chip--active-gold" onClick={addAsset}>SAVE</button>
+        </div>
+
+        <div style={{ display: "grid", gap: 8, maxHeight: 320, overflow: "auto" }}>
+          {assets.map(a => (
+            <div key={a.id} className="spx-slider-wrap" style={{ padding: 8 }}>
+              <div className="spx-slider-header">
+                <span>{a.name}</span>
+                <span className="spx-slider-header__val">{a.tag}</span>
+              </div>
+              <div className="fcam-focal-chips" style={{ marginTop: 6 }}>
+                <button className="fcam-chip" onClick={()=>toggleFavorite(a.id)}>{a.favorite ? "★" : "☆"}</button>
+                <button className="fcam-chip" onClick={()=>removeAsset(a.id)}>REMOVE</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
