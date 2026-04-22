@@ -1,0 +1,48 @@
+.spx-panel-host {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  z-index: 9999;
+  min-width: 360px;
+  max-width: 420px;
+  background: #111;
+  border: 1px solid #333;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.spx-panel-host__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: #181818;
+  border-bottom: 1px solid #2b2b2b;
+}
+
+.spx-panel-host__title {
+  color: #ddd;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.spx-panel-host__close {
+  background: #252525;
+  border: 1px solid #3a3a3a;
+  color: #ddd;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+}
+
+.spx-panel-host__close:hover {
+  background: #333;
+}
+
+.spx-panel-host__body {
+  padding: 12px;
+}

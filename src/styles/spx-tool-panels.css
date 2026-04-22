@@ -1,0 +1,75 @@
+.spx-tool-panel {
+  width: 340px;
+  color: #ddd;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.spx-tool-panel--compact {
+  width: 320px;
+}
+
+.spx-tool-panel__section {
+  margin-top: 8px;
+}
+
+.spx-tool-panel__heading {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #f1f1f1;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.spx-tool-panel__row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.spx-tool-panel__rowhead {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #ddd;
+}
+
+.spx-tool-panel__input {
+  width: 100%;
+}
+
+.spx-tool-panel__select {
+  width: 100%;
+  background: #0f0f0f;
+  color: #ddd;
+  border: 1px solid #333;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.spx-tool-panel__meta {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.spx-tool-panel__button {
+  background: #252525;
+  border: 1px solid #3a3a3a;
+  color: #ddd;
+  border-radius: 6px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.spx-tool-panel__button:hover {
+  background: #333;
+}
+
+.spx-tool-panel__buttonrow {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}

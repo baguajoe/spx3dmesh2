@@ -21,8 +21,7 @@ import { Outliner } from "./components/Outliner";
 import ProMeshPanelNew from "./components/mesh/ProMeshPanel.jsx";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import DockPanelHost from "./ui/DockPanelHost";
-import { SPXEditorProvider } from "./state/SPXEditorStore";
-import DockSplitterHost from "./ui/DockSplitterHost";
+import { SPXEditorProvider, useSPXEditor } from "./state/SPXEditorStore";
 import PanelHost from "./panels/PanelHost";
 import { registerAllPanels } from "./panels/registerPanels";
 import Draggable from 'react-draggable'; // (SPX: Draggable Window System)
@@ -301,7 +300,8 @@ function SpxTabGroup({ label, color, tabs }) {
       }
     };
     document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
+    return (
+    <SPXEditorProvider>) => document.removeEventListener("mousedown", h);
   }, []);
 
   return (
@@ -340,6 +340,7 @@ function SpxTabGroup({ label, color, tabs }) {
         </div>
       )}
     </div>
+    </SPXEditorProvider>
   );
 }
 
@@ -4826,16 +4827,13 @@ export default function App() {
           <HairFXPanel open={hairFXOpen} onClose={() => setHairFXOpen(false)} meshRef={meshRef} sceneRef={sceneRef} setStatus={setStatus} />
         </FloatPanel>}
       </>
-      <DockSplitterHost />
-      <SPXEditorProvider>
       <DockPanelHost
-        meshRef={meshRef}
-        sceneRef={sceneRef}
-        rendererRef={rendererRef}
-        setStatus={setStatus}
-      />
-      </SPXEditorProvider>
-      <PanelHost
+    meshRef={meshRef}
+    sceneRef={sceneRef}
+    rendererRef={rendererRef}
+    setStatus={setStatus}
+  />
+  <PanelHost
         meshRef={meshRef}
         sceneRef={sceneRef}
         rendererRef={rendererRef}

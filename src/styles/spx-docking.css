@@ -1,0 +1,109 @@
+.spx-dock {
+  position: fixed;
+  background: #101010;
+  border: 1px solid #2d2d2d;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  z-index: 6000;
+  overflow: hidden;
+}
+
+.spx-dock--left {
+  left: 10px;
+  top: 110px;
+  width: 300px;
+  height: 520px;
+}
+
+.spx-dock--right {
+  right: 10px;
+  top: 110px;
+  width: 360px;
+  height: 520px;
+}
+
+.spx-dock--bottom {
+  left: 320px;
+  right: 380px;
+  bottom: 44px;
+  height: 220px;
+}
+
+.spx-dock__tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-bottom: 1px solid #2a2a2a;
+  background: #171717;
+}
+
+.spx-dock__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9aa0a6;
+  text-transform: uppercase;
+  margin-right: 6px;
+}
+
+.spx-dock__tab {
+  padding: 6px 8px;
+  font-size: 11px;
+  color: #cfcfcf;
+  background: #222;
+  border-radius: 6px;
+}
+
+.spx-dock__tab.is-active {
+  background: #2f4054;
+  color: #fff;
+}
+
+.spx-dock__close {
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #3a3a3a;
+  background: #252525;
+  color: #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.spx-dock__body {
+  height: calc(100% - 46px);
+  overflow: auto;
+  padding: 10px;
+}
+
+.spx-dock-splitter {
+  position: fixed;
+  z-index: 6100;
+  background: rgba(100,140,220,0.14);
+}
+
+.spx-dock-splitter:hover {
+  background: rgba(100,140,220,0.35);
+}
+
+.spx-dock-splitter--left,
+.spx-dock-splitter--right {
+  top: 110px;
+  bottom: 44px;
+  width: 6px;
+  cursor: col-resize;
+}
+
+.spx-dock-splitter--left { margin-left: -3px; }
+.spx-dock-splitter--right { margin-right: -3px; }
+
+.spx-dock-splitter--bottom {
+  left: 320px;
+  right: 380px;
+  height: 6px;
+  margin-bottom: -3px;
+  cursor: row-resize;
+}
+
+.spx-dragging * {
+  user-select: none !important;
+}
