@@ -1,71 +1,83 @@
-import React from "react";
-import { useSPXEditor } from "../state/SPXEditorStore";
-import "../styles/spx-docking.css";
+import React, { useEffect, useState } from "react";
+import { getPanel } from "../panels/registry/panelRegistry";
 
-function prettyTitle(panelId) {
-  return String(panelId || "")
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (m) => m.toUpperCase());
-}
+export default function DockPanelHost({ meshRef, sceneRef, rendererRef, setStatus }) {
+  const [panels, setPanels] = useState({
+    left: [],
+    right: [],
+    bottom: []
+  });
 
-function DockZone({ zone, title, meshRef, sceneRef, rendererRef, setStatus }) {
-  const { dockLayout, activeDockedPanels, closeDockedPanel, openDockedPanel } = useSPXEditor();
-  const panelIds = dockLayout[zone] || [];
-  const activePanel = activeDockedPanels[zone];
-  const Panel = activePanel ? window.SPXPanels?.[activePanel] : null;
+  // ✅ RESET PANELS ON LOAD (fix ghost panels)
+  useEffect(() => {
+    setPanels({
+      left: [],
+      right: [],
+      bottom: []
+    });
+  }, []);
 
-  if (!panelIds.length) return null;
+  // ✅ OPEN PANEL (prevent duplicates)
+  const openDockedPanel = (panelId, zone = "right") => {
+    setPanels((prev) => {
+      if (prev[zone].includes(panelId)) return prev;
+      return {
+        ...prev,
+        [zone]: [...prev[zone], panelId]
+      };
+    });
+  };
 
-  return (
-    <div className={`spx-dock spx-dock--${zone}`}>
-      <div className="spx-dock__tabs">
-        <div className="spx-dock__label">{title}</div>
-        {panelIds.map((id) => (
-          <div
-            key={id}
-            className={`spx-dock__tab ${activePanel === id ? "is-active" : ""}`}
-            onClick={() => openDockedPanel(id, zone)}
-          >
-            {prettyTitle(id)}
+  // ✅ CLOSE PANEL (fully remove)
+  const closePanel = (panelId, zone) => {
+    setPanels((prev) => ({
+      ...prev,
+      [zone]: prev[zone].filter((p) => p !== panelId)
+    }));
+  };
+
+  // ✅ GLOBAL EVENT LISTENER
+  useEffect(() => {
+    const handler = (e) => {
+      const { panelId, zone } = e.detail || {};
+      if (!panelId) return;
+      openDockedPanel(panelId, zone || "right");
+    };
+
+    window.addEventListener("spx-open-panel", handler);
+    return () => window.removeEventListener("spx-open-panel", handler);
+  }, []);
+
+  const renderZone = (zone) => {
+    return panels[zone].map((panelId) => {
+      const entry = getPanel(panelId);
+      if (!entry) return null;
+
+      const PanelComponent = entry.component;
+
+      return (
+        <div key={panelId} className={`spx-dock-panel spx-dock-${zone}`}>
+          <div className="spx-dock-header">
+            <span>{panelId}</span>
+            <button onClick={() => closePanel(panelId, zone)}>X</button>
           </div>
-        ))}
-        {activePanel && (
-          <button className="spx-dock__close" onClick={() => closeDockedPanel(activePanel, zone)}>×</button>
-        )}
-      </div>
 
-      <div className="spx-dock__body">
-        {Panel ? (
-          <Panel
+          <PanelComponent
             meshRef={meshRef}
             sceneRef={sceneRef}
             rendererRef={rendererRef}
             setStatus={setStatus}
           />
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-export default function DockPanelHost({ meshRef, sceneRef, rendererRef, setStatus }) {
-  const { openDockedPanel } = useSPXEditor();
-
-  React.useEffect(() => {
-    const handler = (e) => {
-      if (e.detail?.mode !== "dock") return;
-      openDockedPanel(e.detail.panelId, e.detail.zone || "right");
-    };
-
-    window.addEventListener("spx-open-panel", handler);
-    return () => window.removeEventListener("spx-open-panel", handler);
-  }, [openDockedPanel]);
+        </div>
+      );
+    });
+  };
 
   return (
     <>
-      <DockZone zone="left" title="Tools" meshRef={meshRef} sceneRef={sceneRef} rendererRef={rendererRef} setStatus={setStatus} />
-      <DockZone zone="right" title="Inspector" meshRef={meshRef} sceneRef={sceneRef} rendererRef={rendererRef} setStatus={setStatus} />
-      <DockZone zone="bottom" title="Pipeline" meshRef={meshRef} sceneRef={sceneRef} rendererRef={rendererRef} setStatus={setStatus} />
+      <div className="spx-dock-left">{renderZone("left")}</div>
+      <div className="spx-dock-right">{renderZone("right")}</div>
+      <div className="spx-dock-bottom">{renderZone("bottom")}</div>
     </>
   );
 }

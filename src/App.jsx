@@ -1385,7 +1385,7 @@ export default function App() {
 
   const fileInputRef = useRef(null);
   const gizmoRef = useRef(null);
-  const [gizmoMode, setGizmoMode] = useState("move"); // move|rotate|scale
+  const [gizmoMode, setGizmoMode] = useState("select"); // move|rotate|scale
   const [gizmoActive, setGizmoActive] = useState(false);
 
   const gizmoDragging = useRef(false);

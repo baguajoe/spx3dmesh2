@@ -50,19 +50,22 @@ export default function BraidGeneratorPanel({ sceneRef, setStatus }) {
   const [turns, setTurns] = useState(7);
   const [radius, setRadius] = useState(0.22);
   const [strandRadius, setStrandRadius] = useState(0.04);
+  const [count, setCount] = useState(1);
 
   const generate = () => {
     const scene = sceneRef?.current;
     if (!scene) return;
 
-    const braid = buildBraidTube({ segments, length, turns, radius, strandRadius });
-    braid.name = "SPX_Braid";
-    braid.position.set((Math.random() - 0.5) * 3, 0, (Math.random() - 0.5) * 3);
-    braid.castShadow = true;
-    braid.receiveShadow = true;
-    scene.add(braid);
+    for (let i = 0; i < count; i++) {
+      const braid = buildBraidTube({ segments, length, turns, radius, strandRadius });
+      braid.name = `SPX_Braid_${i + 1}`;
+      braid.position.set((Math.random() - 0.5) * 3, 0, (Math.random() - 0.5) * 3);
+      braid.castShadow = true;
+      braid.receiveShadow = true;
+      scene.add(braid);
+    }
 
-    setStatus?.("Braid generated into scene");
+    setStatus?.(`Generated ${count} braid${count > 1 ? "s" : ""} into scene`);
   };
 
   return (
@@ -73,6 +76,7 @@ export default function BraidGeneratorPanel({ sceneRef, setStatus }) {
       <Slider label="TURNS" value={turns} min={1} max={20} step={1} onChange={setTurns} />
       <Slider label="RADIUS" value={radius} min={0.05} max={1} step={0.01} onChange={setRadius} />
       <Slider label="STRAND RADIUS" value={strandRadius} min={0.01} max={0.2} step={0.005} onChange={setStrandRadius} />
+      <Slider label="COUNT" value={count} min={1} max={8} step={1} onChange={setCount} />
       <div className="spx-tool-panel__buttonrow">
         <button className="spx-tool-panel__button" onClick={generate}>Generate Braid</button>
       </div>

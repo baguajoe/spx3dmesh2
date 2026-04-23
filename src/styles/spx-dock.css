@@ -1,0 +1,16 @@
+
+/* Hide empty dock zones */
+.spx-dock-left:empty,
+.spx-dock-right:empty,
+.spx-dock-bottom:empty {
+  display: none;
+}
+
+/* Remove debug lines */
+.spx-dock-left,
+.spx-dock-right,
+.spx-dock-bottom {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+}

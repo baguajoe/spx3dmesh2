@@ -26,6 +26,7 @@ export default function HairCardLODPanel({ meshRef, sceneRef, setStatus }) {
   const [lod0, setLod0] = useState(10);
   const [lod1, setLod1] = useState(30);
   const [lod2, setLod2] = useState(60);
+  const [opacityStep, setOpacityStep] = useState(0.1);
 
   const applyLOD = () => {
     const scene = sceneRef?.current;
@@ -47,11 +48,11 @@ export default function HairCardLODPanel({ meshRef, sceneRef, setStatus }) {
     if (clone2.material?.clone) clone2.material = clone2.material.clone();
 
     if (clone1.material) {
-      clone1.material.opacity = 0.92;
+      clone1.material.opacity = Math.max(0.1, 1 - opacityStep);
       clone1.material.transparent = true;
     }
     if (clone2.material) {
-      clone2.material.opacity = 0.82;
+      clone2.material.opacity = Math.max(0.1, 1 - opacityStep * 2);
       clone2.material.transparent = true;
     }
 
@@ -74,6 +75,8 @@ export default function HairCardLODPanel({ meshRef, sceneRef, setStatus }) {
       <Slider label="LOD0 DISTANCE" value={lod0} min={1} max={50} step={1} onChange={setLod0} />
       <Slider label="LOD1 DISTANCE" value={lod1} min={5} max={100} step={1} onChange={setLod1} />
       <Slider label="LOD2 DISTANCE" value={lod2} min={10} max={200} step={1} onChange={setLod2} />
+      <Slider label="OPACITY STEP" value={opacityStep} min={0.05} max={0.4} step={0.01} onChange={setOpacityStep} />
+
       <div className="spx-tool-panel__buttonrow">
         <button className="spx-tool-panel__button" onClick={applyLOD}>Build LOD</button>
       </div>

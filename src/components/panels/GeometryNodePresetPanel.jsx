@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import * as THREE from "three";
 import "../../styles/spx-tool-panels.css";
+import { useSPXEditor } from "../../state/SPXEditorStore";
 
 const PRESETS = [
   { id: "scatter_rocks", label: "Scatter Rocks" },
@@ -57,6 +58,7 @@ function applyPresetToScene(scene, presetId) {
 }
 
 export default function GeometryNodePresetPanel({ sceneRef, setStatus }) {
+  const { pushHistory } = useSPXEditor();
   const [selected, setSelected] = useState("scatter_rocks");
 
   const applyPreset = () => {
@@ -67,6 +69,13 @@ export default function GeometryNodePresetPanel({ sceneRef, setStatus }) {
     }
 
     const obj = applyPresetToScene(scene, selected);
+
+    pushHistory({
+      label: `Apply preset ${selected}`,
+      undo: () => { try { scene.remove(obj); } catch {} },
+      redo: () => { try { scene.add(obj); } catch {} }
+    });
+
     setStatus?.(`Geometry preset applied: ${obj.name}`);
   };
 

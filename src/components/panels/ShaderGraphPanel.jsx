@@ -49,6 +49,11 @@ export default function ShaderGraphPanel({ meshRef, setStatus }) {
     setStatus?.(`Connected ${a.type} → ${b.type}`);
   };
 
+  const removeLastConnection = () => {
+    setConnections((prev) => prev.slice(0, -1));
+    setStatus?.("Removed last connection");
+  };
+
   const applyGraph = () => {
     const mesh = meshRef?.current;
     if (!mesh?.material) {
@@ -141,6 +146,7 @@ export default function ShaderGraphPanel({ meshRef, setStatus }) {
 
       <div className="spx-tool-panel__buttonrow">
         <button className="spx-tool-panel__button" onClick={connectLastTwo}>Connect Last Two</button>
+        <button className="spx-tool-panel__button" onClick={removeLastConnection}>Remove Last Wire</button>
         <button className="spx-tool-panel__button" onClick={applyGraph}>Apply Graph</button>
       </div>
     </div>

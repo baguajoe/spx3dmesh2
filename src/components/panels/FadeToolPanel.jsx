@@ -26,6 +26,7 @@ export default function FadeToolPanel({ meshRef, setStatus }) {
   const [fadeStrength, setFadeStrength] = useState(0.5);
   const [blend, setBlend] = useState(0.4);
   const [lineSharpness, setLineSharpness] = useState(0.7);
+  const [axis, setAxis] = useState("y");
 
   const applyFade = () => {
     const mesh = meshRef?.current;
@@ -37,14 +38,19 @@ export default function FadeToolPanel({ meshRef, setStatus }) {
     const geo = mesh.geometry;
     const pos = geo.attributes.position;
     const colors = [];
+
     geo.computeBoundingBox();
-    const minY = geo.boundingBox.min.y;
-    const maxY = geo.boundingBox.max.y;
-    const height = Math.max(0.0001, maxY - minY);
+    const min = geo.boundingBox.min[axis];
+    const max = geo.boundingBox.max[axis];
+    const span = Math.max(0.0001, max - min);
 
     for (let i = 0; i < pos.count; i++) {
-      const y = pos.getY(i);
-      const t = (y - minY) / height;
+      const value =
+        axis === "x" ? pos.getX(i) :
+        axis === "y" ? pos.getY(i) :
+        pos.getZ(i);
+
+      const t = (value - min) / span;
       const fade = Math.max(
         0,
         Math.min(1, Math.pow(t, Math.max(0.05, lineSharpness)) * fadeStrength + (1 - fadeStrength) * blend)
@@ -63,10 +69,10 @@ export default function FadeToolPanel({ meshRef, setStatus }) {
       mesh.material.vertexColors = true;
       mesh.material.needsUpdate = true;
       mesh.material.userData = mesh.material.userData || {};
-      mesh.material.userData.hairFade = { fadeStrength, blend, lineSharpness };
+      mesh.material.userData.hairFade = { fadeStrength, blend, lineSharpness, axis };
     }
 
-    setStatus?.("Fade gradient applied to selected mesh");
+    setStatus?.(`Fade gradient applied on ${axis.toUpperCase()} axis`);
   };
 
   return (
@@ -75,6 +81,13 @@ export default function FadeToolPanel({ meshRef, setStatus }) {
       <Slider label="FADE STRENGTH" value={fadeStrength} min={0} max={1} step={0.01} onChange={setFadeStrength} />
       <Slider label="BLEND" value={blend} min={0} max={1} step={0.01} onChange={setBlend} />
       <Slider label="LINE SHARPNESS" value={lineSharpness} min={0.05} max={2} step={0.01} onChange={setLineSharpness} />
+
+      <select className="spx-tool-panel__select" value={axis} onChange={(e) => setAxis(e.target.value)}>
+        <option value="x">X Axis</option>
+        <option value="y">Y Axis</option>
+        <option value="z">Z Axis</option>
+      </select>
+
       <div className="spx-tool-panel__buttonrow">
         <button className="spx-tool-panel__button" onClick={applyFade}>Apply Fade</button>
       </div>

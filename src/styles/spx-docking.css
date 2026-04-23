@@ -107,3 +107,13 @@
 .spx-dragging * {
   user-select: none !important;
 }
+
+/* TEMP beta cleanup: hide splitter overlays */
+.spx-dock-splitter,
+.spx-dock-splitter--left,
+.spx-dock-splitter--right,
+.spx-dock-splitter--bottom {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

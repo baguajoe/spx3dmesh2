@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from "react";
 import "../../styles/spx-tool-panels.css";
 import { listParametricAssets, buildParametricAsset } from "../../mesh/generators/ParametricAssets";
+import { useSPXEditor } from "../../state/SPXEditorStore";
 
 export default function ParametricGeneratorPanel({ sceneRef, setStatus }) {
+  const { pushHistory } = useSPXEditor();
   const assets = useMemo(() => listParametricAssets(), []);
   const [assetId, setAssetId] = useState(assets[0]?.id || "stairs");
   const active = assets.find((a) => a.id === assetId);
@@ -25,6 +27,12 @@ export default function ParametricGeneratorPanel({ sceneRef, setStatus }) {
         child.receiveShadow = true;
         child.geometry.computeVertexNormals?.();
       }
+    });
+
+    pushHistory({
+      label: `Generate ${active.label}`,
+      undo: () => { try { scene.remove(obj); } catch {} },
+      redo: () => { try { scene.add(obj); } catch {} }
     });
 
     setStatus?.(`Generated parametric asset: ${active.label}`);
