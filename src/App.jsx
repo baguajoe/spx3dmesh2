@@ -904,43 +904,14 @@ export default function App() {
   const selectSceneObject = (id) => {
     const obj = sceneObjectsRef.current.find((o) => o.id === id);
     if (!obj) return;
-    // Deselect all
-    sceneObjectsRef.current.forEach(o => {
-      if (!o.mesh) return;
-      o.mesh.traverse(m => {
-        if (m.isMesh) {
-          const oldMat = m.material;
-          m.material = new THREE.MeshStandardMaterial({
-            color: oldMat.color || new THREE.Color(0x888888),
-            roughness: oldMat.roughness ?? 0.5,
-            metalness: oldMat.metalness ?? 0.1,
-            wireframe: oldMat.wireframe ?? false,
-          });
-          m.material.needsUpdate = true;
-          if (oldMat.dispose) oldMat.dispose();
-        }
-      });
-    });
+
+    // Selection is now DATA-ONLY. No material swapping — that destroys film-physical
+    // upgrades, PBR maps, and shader customization. Visual selection indication is
+    // handled by OutlinePass in the composer (wired separately).
     setActiveObjId(id);
     meshRef.current = obj.mesh;
-    if (obj.mesh) {
 
-      // Force orange highlight by replacing material
-      obj.mesh.traverse(m => {
-        if (m.isMesh) {
-          const oldMat = m.material;
-          m.material = new THREE.MeshStandardMaterial({
-            color: oldMat.color || new THREE.Color(0x888888),
-            emissive: new THREE.Color(0xff6600),
-            emissiveIntensity: 0.4,
-            roughness: oldMat.roughness ?? 0.5,
-            metalness: oldMat.metalness ?? 0.1,
-            wireframe: oldMat.wireframe ?? false,
-          });
-          m.material.needsUpdate = true;
-          if (oldMat.dispose) oldMat.dispose();
-        }
-      });
+    if (obj.mesh) {
       const box = new THREE.Box3().setFromObject(obj.mesh);
       orbitState.current.radius = Math.max(box.getSize(new THREE.Vector3()).length() * 2, 3);
       // Attach gizmo only if a transform tool is currently armed
@@ -2227,7 +2198,8 @@ export default function App() {
       heMesh.vertices.forEach((v) => {
         positions.push(v.x, v.y, v.z);
         const sel = selVerts.has(v.id);
-        colors.push(sel ? 1 : 0.8, sel ? 0.4 : 0.8, sel ? 0 : 0.8);
+        // Blender-style: dim gray unselected, bright SPX orange selected
+        colors.push(sel ? 1.0 : 0.2, sel ? 0.5 : 0.2, sel ? 0.1 : 0.2);
       });
 
       const geo = new THREE.BufferGeometry();
@@ -2237,13 +2209,15 @@ export default function App() {
       );
       geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
       const mat = new THREE.PointsMaterial({
-        size: 0.08,
+        size: 0.02,
         vertexColors: true,
-        depthTest: false,
+        depthTest: true,
+        sizeAttenuation: true,
       });
 
       const pts = new THREE.Points(geo, mat);
       pts.position.copy(parent.position);
+      pts.renderOrder = 2;
       scene.add(pts);
       vertDotsRef.current = pts;
     },
@@ -2270,13 +2244,14 @@ export default function App() {
           b = e.twin.vertex;
         positions.push(a.x, a.y, a.z, b.x, b.y, b.z);
         const sel = selEdges.has(e.id) || selEdges.has(e.twin?.id);
+        // Blender-style: dim near-black unselected, SPX orange selected
         colors.push(
-          sel ? 1 : 0.2,
-          sel ? 0.4 : 0.4,
-          sel ? 0 : 1,
-          sel ? 1 : 0.2,
-          sel ? 0.4 : 0.4,
-          sel ? 0 : 1
+          sel ? 1.0 : 0.1,
+          sel ? 0.5 : 0.1,
+          sel ? 0.1 : 0.1,
+          sel ? 1.0 : 0.1,
+          sel ? 0.5 : 0.1,
+          sel ? 0.1 : 0.1
         );
       });
 
@@ -2288,12 +2263,13 @@ export default function App() {
       geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
       const mat = new THREE.LineBasicMaterial({
         vertexColors: true,
-        depthTest: false,
+        depthTest: true,
         linewidth: 2,
       });
 
       const lines = new THREE.LineSegments(geo, mat);
       lines.position.copy(parent.position);
+      lines.renderOrder = 2;
       scene.add(lines);
       edgeLinesRef.current = lines;
     },
@@ -2875,9 +2851,36 @@ export default function App() {
   const toggleEditMode = useCallback(() => {
     setEditMode((m) => {
       const next = m === "object" ? "edit" : "object";
+      const mesh = meshRef.current;
       if (next === "edit") {
+        // Dim mesh so overlays stand out (Blender-style)
+        if (mesh && mesh.material) {
+          const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+          mats.forEach((mm) => {
+            if (!mm) return;
+            if (mm.userData._spxOrigOpacity === undefined) mm.userData._spxOrigOpacity = mm.opacity ?? 1;
+            if (mm.userData._spxOrigTransparent === undefined) mm.userData._spxOrigTransparent = mm.transparent;
+            mm.transparent = true;
+            mm.opacity = 0.55;
+            mm.needsUpdate = true;
+          });
+        }
         setTimeout(() => buildVertexOverlay(), 50);
       } else {
+        // Restore mesh opacity
+        if (mesh && mesh.material) {
+          const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+          mats.forEach((mm) => {
+            if (!mm) return;
+            if (mm.userData._spxOrigOpacity !== undefined) {
+              mm.opacity = mm.userData._spxOrigOpacity;
+              mm.transparent = mm.userData._spxOrigTransparent;
+              delete mm.userData._spxOrigOpacity;
+              delete mm.userData._spxOrigTransparent;
+              mm.needsUpdate = true;
+            }
+          });
+        }
         clearOverlays();
       }
       return next;
