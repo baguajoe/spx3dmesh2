@@ -284,9 +284,9 @@ export default function ProfessionalShell({
         <div className="spx-tool-strip">
           {[
             { icon: "cursor", label: "Select (S)", fn: "select", svg: <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 2 L4 18 L8 14 L11 21 L13 20 L10 13 L15 13 Z"/></svg> },
-            { icon: "move",   label: "Move (G)",   fn: "grab",   svg: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 4 L12 20 M4 12 L20 12 M12 4 L10 7 M12 4 L14 7 M12 20 L10 17 M12 20 L14 17 M4 12 L7 10 M4 12 L7 14 M20 12 L17 10 M20 12 L17 14"/></svg> },
-            { icon: "rotate", label: "Rotate (R)", fn: "rotate", svg: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 12 A8 8 0 1 1 14 4.5"/><polyline points="14,2 14,5 17,5"/></svg> },
-            { icon: "scale",  label: "Scale (S)",  fn: "scale",  svg: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 12 L20 4 M20 4 L16 4 M20 4 L20 8 M12 12 L4 20 M4 20 L8 20 M4 20 L4 16"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg> },
+            { icon: "move",   label: "Move (G)",   fn: "gizmo_move",   svg: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 4 L12 20 M4 12 L20 12 M12 4 L10 7 M12 4 L14 7 M12 20 L10 17 M12 20 L14 17 M4 12 L7 10 M4 12 L7 14 M20 12 L17 10 M20 12 L17 14"/></svg> },
+            { icon: "rotate", label: "Rotate (R)", fn: "gizmo_rotate", svg: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 12 A8 8 0 1 1 14 4.5"/><polyline points="14,2 14,5 17,5"/></svg> },
+            { icon: "scale",  label: "Scale (S)",  fn: "gizmo_scale",  svg: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 12 L20 4 M20 4 L16 4 M20 4 L20 8 M12 12 L4 20 M4 20 L8 20 M4 20 L4 16"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg> },
             { divider: true },
             { icon: "extrude",   label: "Extrude (E)",    fn: "extrude",   svg: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="6" y="13" width="12" height="7" rx="1"/><path d="M12 13 L12 4 M9 7 L12 4 L15 7"/></svg> },
             { icon: "loop_cut",  label: "Loop Cut (Ctrl+R)", fn: "loop_cut", svg: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="4" y="6" width="16" height="12" rx="1"/><line x1="12" y1="6" x2="12" y2="18" stroke="currentColor" strokeWidth="2"/></svg> },

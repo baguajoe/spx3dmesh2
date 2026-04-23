@@ -943,10 +943,13 @@ export default function App() {
       });
       const box = new THREE.Box3().setFromObject(obj.mesh);
       orbitState.current.radius = Math.max(box.getSize(new THREE.Vector3()).length() * 2, 3);
-      // Attach gizmo to selected mesh
+      // Attach gizmo only if a transform tool is currently armed
       if (gizmoRef.current) {
-        gizmoRef.current.attach(obj.mesh);
-        gizmoRef.current.group.visible = true;
+        const isXformTool = gizmoMode === "move" || gizmoMode === "rotate" || gizmoMode === "scale";
+        if (isXformTool) {
+          gizmoRef.current.setMode(gizmoMode);
+          gizmoRef.current.attach(obj.mesh);
+        }
       }
       // Force immediate render
       if (rendererRef.current && sceneRef.current && cameraRef.current) {
@@ -1203,8 +1206,8 @@ export default function App() {
         setSelectedVerts(new Set());
         setSelectedEdges(new Set());
         setSelectedFaces(new Set());
-        if (gizmoRef.current) gizmoRef.current.attach(mesh);
-        setGizmoActive(true);
+        // No auto-attach — gizmo only shows when a transform tool is picked.
+        setGizmoActive(false);
       }, 50);
     },
     [wireframe]
@@ -1613,6 +1616,11 @@ export default function App() {
       // This prevents the canvas from blinking through React overlays
       if (typeof window.__spxFullscreenOpen !== 'undefined' && window.__spxFullscreenOpen) {
         return;
+      }
+
+      // Keep gizmo at constant screen-space size
+      if (gizmoRef.current && canvas) {
+        gizmoRef.current.updateScale(camera, canvas.clientHeight);
       }
 
       const _composer = rendererRef.current?._composer;
@@ -3297,9 +3305,27 @@ export default function App() {
 
     if (fn === "_bevel_legacy") { setStatus("Bevel — Ctrl+B in viewport"); return; }
     if (fn === "_inset_legacy") { setStatus("Inset — I in viewport"); return; }
-    if (fn === "gizmo_move") { setGizmoMode("move"); setStatus("Gizmo: Move"); return; }
-    if (fn === "gizmo_rotate") { setGizmoMode("rotate"); setStatus("Gizmo: Rotate"); return; }
-    if (fn === "gizmo_scale") { setGizmoMode("scale"); setStatus("Gizmo: Scale"); return; }
+    if (fn === "gizmo_move" || fn === "gizmo_rotate" || fn === "gizmo_scale") {
+      const newMode = fn.replace("gizmo_", "");
+      setGizmoMode(newMode);
+      setActiveTool(fn);
+      if (gizmoRef.current) {
+        // Force rebuild even if mode matches (handles edge cases)
+        gizmoRef.current.mode = "_pending_";
+        gizmoRef.current.setMode(newMode);
+        const activeMesh = meshRef.current;
+        if (activeMesh) {
+          gizmoRef.current.attach(activeMesh);
+          console.log("[SPX gizmo]", newMode, "attached to", activeMesh.name || activeMesh.type, "scale:", gizmoRef.current.group.scale.toArray());
+        } else {
+          gizmoRef.current.detach();
+          setStatus(`Gizmo: ${newMode} armed — click an object to transform`);
+          return;
+        }
+      }
+      setStatus("Gizmo: " + newMode.charAt(0).toUpperCase() + newMode.slice(1));
+      return;
+    }
 
     // ── Select mode ───────────────────────────────────────────────────────────
     if (fn === "selectMode_vert") { setSelectMode("vert"); buildVertexOverlay(); setStatus("Vertex select"); return; }
