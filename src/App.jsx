@@ -1306,17 +1306,9 @@ export default function App() {
         setCurrentFrame((prev) => (prev >= 250 ? 0 : prev + 1));
       }, 1000 / 24);
     }
-
-    const snapViewToAxis = (axis) => {
-      const cam = getActiveViewportCamera(
-        quadCamerasRef.current || { persp: cameraRef.current },
-        activeViewportRef.current
-      ) || cameraRef.current;
-      snapCameraToAxis(cam, axis);
+    return () => {
+      if (interval) clearInterval(interval);
     };
-
-
-    return () => { };
   }, [isPlaying]);
 
   useEffect(() => {
