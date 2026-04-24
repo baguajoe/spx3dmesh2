@@ -1414,22 +1414,31 @@ export default function App() {
       return framesObj[frames[frames.length - 1]];
     };
 
-    // Apply every animated channel to its target mesh
+    // Apply every animated channel to its target mesh.
+    // Skip object currently being dragged by gizmo (user is editing it).
+    const draggingUUID = (gizmoDragging.current && (selectedObject?.uuid || meshRef.current?.uuid)) || null;
+
     for (const uuid of uuids) {
+      if (uuid === draggingUUID) continue;
+
       const mesh = meshByUUID.get(uuid);
       if (!mesh) continue;
       const channels = data[uuid];
       for (const channel in channels) {
-        const val = evalChannel(channels[channel], currentFrame);
+        const framesObj = channels[channel];
+        // <2 keyframes = remembered pose, not animation. Leave mesh alone
+        // so user can move it freely without the evaluator clamping it.
+        if (!framesObj || Object.keys(framesObj).length < 2) continue;
+
+        const val = evalChannel(framesObj, currentFrame);
         if (val == null) continue;
-        // channel is "position.x" / "rotation.y" / "scale.z" / etc.
         const [prop, axis] = channel.split(".");
         if (mesh[prop] && axis in mesh[prop]) {
           mesh[prop][axis] = val;
         }
       }
     }
-  }, [currentFrame, keyframeVersion, sceneObjects]);
+  }, [currentFrame, keyframeVersion, sceneObjects, selectedObject]);
 
 
   useEffect(() => {
