@@ -1298,6 +1298,70 @@ export default function App() {
   }, [activeWorkspace]);
   useEffect(() => { selectModeRef.current = selectMode; }, [selectMode]);
 
+  // ── Keyframe store (window.animationData) ────────────────────────────────
+  // Shape: { [uuid]: { "position.x": {frame: value, ...}, "position.y": {...},
+  //                    "rotation.x": {...}, "scale.x": {...}, ... 9 channels } }
+  // Matches AnimationUpgrade.js / WalkCycleGenerator.js pattern so those
+  // systems can later bake into the same store.
+  const [keyframeVersion, setKeyframeVersion] = useState(0);
+  const bumpKeyframeVersion = () => setKeyframeVersion(v => v + 1);
+
+  useEffect(() => {
+    if (!window.animationData) window.animationData = {};
+
+    // addKeyframe(uuid, key, val, frame)
+    //   key = "position" | "rotation" | "scale"  -> splits Vector3/Euler into .x/.y/.z
+    //   key = "position.x" (etc.)                 -> writes scalar directly
+    window.addKeyframe = function(uuid, key, val, frame) {
+      if (!uuid || frame == null) return;
+      const f = Math.round(Number(frame));
+      if (!window.animationData[uuid]) window.animationData[uuid] = {};
+      const store = window.animationData[uuid];
+
+      const writeScalar = (chan, v) => {
+        if (!store[chan]) store[chan] = {};
+        store[chan][f] = Number(v);
+      };
+
+      if (key === "position" || key === "rotation" || key === "scale") {
+        if (val && typeof val.x === "number") {
+          writeScalar(`${key}.x`, val.x);
+          writeScalar(`${key}.y`, val.y);
+          writeScalar(`${key}.z`, val.z);
+        }
+      } else if (typeof key === "string" && key.includes(".")) {
+        writeScalar(key, val);
+      }
+      bumpKeyframeVersion();
+    };
+
+    // deleteKeyframe(uuid, frame, channel?)
+    //   channel omitted -> delete all 9 channels at that frame for that object
+    //   channel given   -> delete just that channel
+    window.deleteKeyframe = function(uuid, frame, channel) {
+      if (!uuid || frame == null) return;
+      const f = Math.round(Number(frame));
+      const store = window.animationData[uuid];
+      if (!store) return;
+
+      if (channel) {
+        if (store[channel]) delete store[channel][f];
+      } else {
+        Object.keys(store).forEach(ch => { delete store[ch][f]; });
+      }
+      bumpKeyframeVersion();
+    };
+
+    // Convenience: key all 9 transform channels for an object at current frame.
+    // Used by KEY button, I/K shortcut, and "add_keyframe" handler.
+    window.keyAllTransform = function(obj, frame) {
+      if (!obj) return;
+      window.addKeyframe(obj.uuid, "position", obj.position, frame);
+      window.addKeyframe(obj.uuid, "rotation", obj.rotation, frame);
+      window.addKeyframe(obj.uuid, "scale",    obj.scale,    frame);
+    };
+  }, []);
+
   // ── Playback loop ─────────────────────────────────────────────────────────
   useEffect(() => {
     let interval;
@@ -3690,7 +3754,22 @@ export default function App() {
     if (fn === "ai_pose_match") { setStatus("AI Pose Matching — select source clip"); return; }
 
     // ── Animation ─────────────────────────────────────────────────────────────
-    if (fn === "add_keyframe") { if (meshRef.current) { recordKeyframe(meshRef.current, "position", meshRef.current.position.clone()); setStatus("Keyframe at frame " + currentFrame); } return; }
+    if (fn === "add_keyframe") {
+      const target = selectedObject || meshRef.current;
+      if (target && window.keyAllTransform) {
+        window.keyAllTransform(target, currentFrame);
+        setStatus(`◆ Keyframe set on ${target.name || "object"} at frame ${currentFrame}`);
+      }
+      return;
+    }
+    if (fn === "delete_keyframe") {
+      const target = selectedObject || meshRef.current;
+      if (target && window.deleteKeyframe) {
+        window.deleteKeyframe(target.uuid, currentFrame);
+        setStatus(`⌫ Keyframe cleared on ${target.name || "object"} at frame ${currentFrame}`);
+      }
+      return;
+    }
     if (fn === "auto_key") { setAutoKey(v => !v); setStatus(isAutoKey ? "Auto key OFF" : "Auto key ON"); return; }
     if (fn === "push_action") { const a = createAction("Action_" + Date.now()); setNlaActions(p => [...p, a]); setStatus("Action pushed"); return; }
     if (fn === "collaborate") { setCollaboratePanelOpen(true); return; }
