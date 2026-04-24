@@ -203,6 +203,16 @@ export function AnimationTimeline({
   const ticks = [];
   for (let f = videoStartFrame; f <= videoEndFrame; f += tickInterval) ticks.push(f);
 
+  // Minor ticks — one per frame, skipping positions covered by major ticks.
+  // Disabled when too dense (>250 frames in range) to avoid visual clutter.
+  const minorTicks = [];
+  if (totalFrames <= 250) {
+    const majorSet = new Set(ticks);
+    for (let f = videoStartFrame; f <= videoEndFrame; f++) {
+      if (!majorSet.has(f)) minorTicks.push(f);
+    }
+  }
+
   return (
     <div className="tl-root">
       <div className="tl-controls">
@@ -253,6 +263,10 @@ export function AnimationTimeline({
 
       <div className="tl-track-area" ref={trackRef} onMouseDown={onTrackMouseDown}>
         <div className="tl-ruler">
+          {minorTicks.map(f => (
+            <div key={`m${f}`} className="tl-tick tl-tick--minor"
+                 style={{ left: `${((f - videoStartFrame) / totalFrames) * 100}%` }} />
+          ))}
           {ticks.map(f => (
             <div key={f} className="tl-tick" style={{ left: `${((f - videoStartFrame) / totalFrames) * 100}%` }}>
               <span className="tl-tick-label">{f}</span>

@@ -533,6 +533,10 @@ input, select { font-family: inherit; }
   position: absolute; top: 0; left: 0; right: 0; height: 18px;
   background: var(--d2); border-bottom: 1px solid var(--b2);
 }
+.tl-tick--minor {
+  position: absolute; top: 8px; height: 6px; width: 1px;
+  background: rgba(255, 255, 255, 0.12); pointer-events: none;
+}
 .tl-tick {
   position: absolute; top: 0; height: 100%;
   border-left: 1px solid var(--b2);
