@@ -530,7 +530,7 @@ input, select { font-family: inherit; }
 }
 
 .tl-ruler {
-  position: absolute; top: 0; left: 0; right: 0; height: 18px;
+  position: absolute; top: 0; left: 4px; right: 4px; height: 18px;
   background: var(--d2); border-bottom: 1px solid var(--b2);
 }
 .tl-tick--minor {
@@ -548,7 +548,7 @@ input, select { font-family: inherit; }
   pointer-events: none; white-space: nowrap;
 }
 
-.tl-keyframes { position: absolute; top: 18px; left: 0; right: 0; bottom: 0; }
+.tl-keyframes { position: absolute; top: 18px; left: 4px; right: 4px; bottom: 0; }
 .tl-keyframe-dot {
   position: absolute; top: 50%; transform: translate(-50%, -50%);
   width: 7px; height: 7px; background: var(--orange);
