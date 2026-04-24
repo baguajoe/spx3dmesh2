@@ -1381,9 +1381,6 @@ export default function App() {
       const inInput = tag === 'INPUT' || tag === 'TEXTAREA';
       if (inInput) return;
 
-      // Keyframe shortcuts — bare I or K (no modifiers) inserts a keyframe
-      // on the selected object's 9 transform channels at the current frame.
-      // Matches Blender (I) and gives a convenient second binding (K).
       if (!e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
         if (e.key === 'i' || e.key === 'I' || e.key === 'k' || e.key === 'K') {
           e.preventDefault();
@@ -1392,14 +1389,14 @@ export default function App() {
         }
       }
 
-      // Existing delete-selected-object behavior
       if (e.key === 'Delete' || e.key === 'Backspace') {
         window.deleteSelected();
       }
     };
-    window.addEventListener("keydown", handleGlobalKeys);
-    return () => window.removeEventListener("keydown", handleGlobalKeys);
-  }, [selectedObject, sceneObjects, handleApplyFunction]);
+    // Capture phase ensures we win over upstream canvas handlers.
+    window.addEventListener("keydown", handleGlobalKeys, { capture: true });
+    return () => window.removeEventListener("keydown", handleGlobalKeys, { capture: true });
+  }, [selectedObject, sceneObjects]);
 
   useEffect(() => {
     window.deleteSelected = () => {
