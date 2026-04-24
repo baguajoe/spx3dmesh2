@@ -4412,6 +4412,12 @@ export default function App() {
               if (gizmoDragging.current) {
                 gizmoDragging.current = false;
                 if (gizmoRef.current) gizmoRef.current.endDrag?.();
+                // Auto-Key: snapshot the new transform when the user releases the gizmo.
+                // Uses window.keyAllTransform so all 9 channels are captured at once.
+                if (isAutoKey && selectedObject && window.keyAllTransform) {
+                  window.keyAllTransform(selectedObject, currentFrame);
+                  setStatus(`◆ Auto-keyed ${selectedObject.name || "object"} at frame ${currentFrame}`);
+                }
                 return;
               }
               const wasDragging = orbitDragging.current;
