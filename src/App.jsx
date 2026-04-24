@@ -1375,6 +1375,63 @@ export default function App() {
     };
   }, [isPlaying]);
 
+  // ── Blender-style keyframe evaluator ─────────────────────────────────────
+  // Runs on every frame change (play OR scrub). For each animated object,
+  // walks its 9 channels, finds bracketing keyframes, linearly interpolates,
+  // writes the result directly to mesh.position/rotation/scale.
+  //
+  // Linear only for now; store shape supports bezier tangents as non-breaking upgrade.
+  useEffect(() => {
+    if (!window.animationData) return;
+    const data = window.animationData;
+    const uuids = Object.keys(data);
+    if (uuids.length === 0) return;
+
+    // Build uuid -> mesh lookup from sceneObjects (wrappers with .mesh)
+    const meshByUUID = new Map();
+    for (const so of sceneObjects) {
+      if (so?.mesh?.uuid) meshByUUID.set(so.mesh.uuid, so.mesh);
+    }
+    // Also check meshRef.current (primary mesh may not be in sceneObjects)
+    if (meshRef.current?.uuid && !meshByUUID.has(meshRef.current.uuid)) {
+      meshByUUID.set(meshRef.current.uuid, meshRef.current);
+    }
+
+    // Evaluate one channel's value at currentFrame. Linear interp, hold at edges.
+    const evalChannel = (framesObj, frame) => {
+      const frames = Object.keys(framesObj).map(Number).sort((a, b) => a - b);
+      if (frames.length === 0) return null;
+      if (frame <= frames[0]) return framesObj[frames[0]];
+      if (frame >= frames[frames.length - 1]) return framesObj[frames[frames.length - 1]];
+      // Find bracketing pair
+      for (let i = 0; i < frames.length - 1; i++) {
+        const a = frames[i], b = frames[i + 1];
+        if (frame >= a && frame <= b) {
+          const t = (frame - a) / (b - a);
+          return framesObj[a] + (framesObj[b] - framesObj[a]) * t;
+        }
+      }
+      return framesObj[frames[frames.length - 1]];
+    };
+
+    // Apply every animated channel to its target mesh
+    for (const uuid of uuids) {
+      const mesh = meshByUUID.get(uuid);
+      if (!mesh) continue;
+      const channels = data[uuid];
+      for (const channel in channels) {
+        const val = evalChannel(channels[channel], currentFrame);
+        if (val == null) continue;
+        // channel is "position.x" / "rotation.y" / "scale.z" / etc.
+        const [prop, axis] = channel.split(".");
+        if (mesh[prop] && axis in mesh[prop]) {
+          mesh[prop][axis] = val;
+        }
+      }
+    }
+  }, [currentFrame, keyframeVersion, sceneObjects]);
+
+
   useEffect(() => {
     const handleGlobalKeys = (e) => {
       const tag = document.activeElement?.tagName;
