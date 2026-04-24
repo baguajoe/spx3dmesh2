@@ -50,13 +50,31 @@ export function AnimationTimeline({
   const [draggedKeyFrame, setDraggedKeyFrame] = useState(null);
   const totalFrames = videoEndFrame - videoStartFrame || 250;
 
-  const keyPositions = new Set();
-  Object.values(animKeys).forEach(keys => {
-    Object.values(keys).forEach(frames => {
-      if (Array.isArray(frames)) frames.forEach(f => keyPositions.add(f));
-      else if (typeof frames === "object") Object.keys(frames).forEach(f => keyPositions.add(Number(f)));
+  // Collect frame numbers from legacy animKeys AND window.animationData.
+  // useMemo watches keyframeVersion (bumped by addKeyframe/deleteKeyframe) so
+  // dots refresh when I/K/right-click fires, without a full component re-render.
+  const keyPositions = React.useMemo(() => {
+    const set = new Set();
+    // Legacy: animKeys prop (structure: {obj: {channel: frames}})
+    Object.values(animKeys || {}).forEach(keys => {
+      Object.values(keys || {}).forEach(frames => {
+        if (Array.isArray(frames)) frames.forEach(f => set.add(Number(f)));
+        else if (frames && typeof frames === "object") Object.keys(frames).forEach(f => set.add(Number(f)));
+      });
     });
-  });
+    // Current: window.animationData[activeObjUUID] (structure: {channel: {frame: value}})
+    if (activeObjUUID && typeof window !== "undefined" && window.animationData) {
+      const store = window.animationData[activeObjUUID];
+      if (store) {
+        Object.values(store).forEach(frames => {
+          if (frames && typeof frames === "object") {
+            Object.keys(frames).forEach(f => set.add(Number(f)));
+          }
+        });
+      }
+    }
+    return set;
+  }, [animKeys, activeObjUUID, keyframeVersion]);
 
   const frameFromClientX = (clientX) => {
     const track = trackRef.current;
@@ -253,7 +271,6 @@ export function AnimationTimeline({
               }}
               title={`Frame ${f} — right-click to delete`}
               style={{ left: `${((f - videoStartFrame) / totalFrames) * 100}%` }}
-              title={`Frame ${f}`}
               onClick={(e) => { e.stopPropagation(); setCurrentFrame(Number(f)); }}
               onPointerDown={(e) => beginKeyDrag(e, f)}
             />
