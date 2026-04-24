@@ -288,23 +288,11 @@ export class TransformGizmo {
       while (angle >  Math.PI) angle -= 2 * Math.PI;
       while (angle < -Math.PI) angle += 2 * Math.PI;
 
-      // Slight damping so rings feel less twitchy at small distances
-      const ROTATE_SENSITIVITY = 0.85;
-      angle *= ROTATE_SENSITIVITY;
-
       if (axis === "x")      this.target.rotation.set(startRot.x + angle, startRot.y,         startRot.z);
       else if (axis === "y") this.target.rotation.set(startRot.x,         startRot.y + angle, startRot.z);
       else if (axis === "z") this.target.rotation.set(startRot.x,         startRot.y,         startRot.z + angle);
     } else if (this.mode === "scale") {
-      // Project delta onto the axis direction and damp it.
-      // Previous code summed delta components which gave wildly different
-      // magnitudes depending on camera angle. This gives a consistent feel.
-      const SCALE_SENSITIVITY = 0.5;
-      let amt = 0;
-      if (axis === "x")      amt = delta.x * SCALE_SENSITIVITY;
-      else if (axis === "y") amt = delta.y * SCALE_SENSITIVITY;
-      else if (axis === "z") amt = delta.z * SCALE_SENSITIVITY;
-      else /* xyz */         amt = (delta.x + delta.y + delta.z) * SCALE_SENSITIVITY / 3;
+      const amt    = delta.x + delta.y + delta.z;
       const factor = Math.max(0.05, 1 + amt);
       if (axis === "x")      this.target.scale.set(Math.max(0.01, startScale.x * factor), startScale.y,                          startScale.z);
       else if (axis === "y") this.target.scale.set(startScale.x,                          Math.max(0.01, startScale.y * factor), startScale.z);

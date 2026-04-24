@@ -482,7 +482,6 @@ export default function App() {
   const [sceneObjects, setSceneObjects] = useState([]);
   const [selectedObject, setSelectedObject] = useState(null);
   const [activeObjId, setActiveObjId] = useState(null);
-  const [transformVersion, setTransformVersion] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentFrame, setCurrentFrame] = useState(0);
   const canvasRef = useRef(null);
@@ -1942,14 +1941,6 @@ export default function App() {
     window.selectSceneObject = selectSceneObject;
     window.deleteSceneObject = deleteSceneObject;
 
-    // Live transform sync: TransformGizmo calls this during drag so the
-    // React sidebar (SCENE > TRANSFORM) updates while the user is dragging.
-    window.updateSceneObjectTransform = (target, position, rotation, scale) => {
-      if (!target) return;
-      // Bump the global transform version — causes PropertiesPanel to re-read mesh.position
-      setTransformVersion(v => v + 1);
-    };
-
     window.runBenchmark = () => {
       console.log("🏗️ Building Mechanical Benchmark...");
       addPrimitive("Gear", { teeth: 24, radius: 2, height: 0.5 });
@@ -3319,17 +3310,6 @@ export default function App() {
     if (fn === "_inset_legacy") { setStatus("Inset — I in viewport"); return; }
     if (fn === "gizmo_move" || fn === "gizmo_rotate" || fn === "gizmo_scale") {
       const newMode = fn.replace("gizmo_", "");
-
-      // Toggle OFF: clicking already-active tool detaches gizmo, back to select
-      console.log("[TOGGLE-OFF CHECK]", "activeTool=", activeTool, "fn=", fn, "match=", activeTool === fn);
-      if (activeTool === fn) {
-        setActiveTool("select");
-        setGizmoMode("select");
-        if (gizmoRef.current) gizmoRef.current.detach();
-        setStatus("Select mode");
-        return;
-      }
-
       setGizmoMode(newMode);
       setActiveTool(fn);
       if (gizmoRef.current) {
@@ -4202,37 +4182,22 @@ export default function App() {
                 const ray = new THREE.Raycaster();
                 ray.setFromCamera(new THREE.Vector2(mx, my), cameraRef.current);
                 const axis = gizmoRef.current.dragging?.axis;
-                const mode = gizmoRef.current.mode;
-                const gizmoPos = gizmoRef.current.group.position;
-
-                // Plane selection for smooth drag:
-                //  - Rotate: plane perpendicular to rotation axis (never edge-on)
-                //  - Scale:  plane facing camera (avoids axis-parallel collapse)
-                //  - Move:   plane perpendicular to the non-moving axes
+                // Choose plane normal based on axis being dragged
                 let planeNormal;
-                if (mode === "rotate") {
-                  if (axis === "x") planeNormal = new THREE.Vector3(1, 0, 0);
-                  else if (axis === "y") planeNormal = new THREE.Vector3(0, 1, 0);
-                  else planeNormal = new THREE.Vector3(0, 0, 1);
-                } else if (mode === "scale") {
-                  // Always use camera-facing plane for stable pixel->scale mapping
-                  planeNormal = cameraRef.current.position.clone().sub(gizmoPos).normalize();
+                if (axis === "y") {
+                  // For Y axis, use a plane facing the camera projected onto XZ
+                  const camDir = cameraRef.current.position.clone().normalize();
+                  planeNormal = new THREE.Vector3(camDir.x, 0, camDir.z).normalize();
+                } else if (axis === "x") {
+                  planeNormal = new THREE.Vector3(0, 0, 1);
                 } else {
-                  // Move — existing logic
-                  if (axis === "y") {
-                    const camDir = cameraRef.current.position.clone().normalize();
-                    planeNormal = new THREE.Vector3(camDir.x, 0, camDir.z).normalize();
-                  } else if (axis === "x") {
-                    planeNormal = new THREE.Vector3(0, 0, 1);
-                  } else {
-                    planeNormal = new THREE.Vector3(1, 0, 0);
-                  }
+                  planeNormal = new THREE.Vector3(1, 0, 0);
                 }
-
+                const gizmoPos = gizmoRef.current.group.position;
                 const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(planeNormal, gizmoPos);
                 const pt = new THREE.Vector3();
-                const hit = ray.ray.intersectPlane(plane, pt);
-                if (hit) gizmoRef.current.drag(pt);
+                ray.ray.intersectPlane(plane, pt);
+                if (pt) gizmoRef.current.drag(pt);
                 return;
               }
               if (activeWorkspace === "Sculpt" && sculptingRef.current && meshRef.current) {
@@ -4431,7 +4396,6 @@ export default function App() {
                 />
               ) : (
                 <PropertiesPanel
-                  key={`props-${activeObjId}-${transformVersion}`}
                   stats={stats}
                   activeObj={meshRef.current}
                 />

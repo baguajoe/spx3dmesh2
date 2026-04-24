@@ -482,7 +482,6 @@ export default function App() {
   const [sceneObjects, setSceneObjects] = useState([]);
   const [selectedObject, setSelectedObject] = useState(null);
   const [activeObjId, setActiveObjId] = useState(null);
-  const [transformVersion, setTransformVersion] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentFrame, setCurrentFrame] = useState(0);
   const canvasRef = useRef(null);
@@ -1941,14 +1940,6 @@ export default function App() {
     window.addPrimitive = addPrimitive;
     window.selectSceneObject = selectSceneObject;
     window.deleteSceneObject = deleteSceneObject;
-
-    // Live transform sync: TransformGizmo calls this during drag so the
-    // React sidebar (SCENE > TRANSFORM) updates while the user is dragging.
-    window.updateSceneObjectTransform = (target, position, rotation, scale) => {
-      if (!target) return;
-      // Bump the global transform version — causes PropertiesPanel to re-read mesh.position
-      setTransformVersion(v => v + 1);
-    };
 
     window.runBenchmark = () => {
       console.log("🏗️ Building Mechanical Benchmark...");
@@ -4431,7 +4422,6 @@ export default function App() {
                 />
               ) : (
                 <PropertiesPanel
-                  key={`props-${activeObjId}-${transformVersion}`}
                   stats={stats}
                   activeObj={meshRef.current}
                 />
