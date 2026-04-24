@@ -1377,13 +1377,29 @@ export default function App() {
 
   useEffect(() => {
     const handleGlobalKeys = (e) => {
+      const tag = document.activeElement?.tagName;
+      const inInput = tag === 'INPUT' || tag === 'TEXTAREA';
+      if (inInput) return;
+
+      // Keyframe shortcuts — bare I or K (no modifiers) inserts a keyframe
+      // on the selected object's 9 transform channels at the current frame.
+      // Matches Blender (I) and gives a convenient second binding (K).
+      if (!e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (e.key === 'i' || e.key === 'I' || e.key === 'k' || e.key === 'K') {
+          e.preventDefault();
+          handleApplyFunction?.('add_keyframe');
+          return;
+        }
+      }
+
+      // Existing delete-selected-object behavior
       if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (document.activeElement.tagName !== 'INPUT') window.deleteSelected();
+        window.deleteSelected();
       }
     };
     window.addEventListener("keydown", handleGlobalKeys);
     return () => window.removeEventListener("keydown", handleGlobalKeys);
-  }, [selectedObject, sceneObjects]);
+  }, [selectedObject, sceneObjects, handleApplyFunction]);
 
   useEffect(() => {
     window.deleteSelected = () => {
@@ -2083,8 +2099,8 @@ export default function App() {
       if (key === "g" || key === "G") window.SPX?.toggleViewport("grid");
       if (key === "w" || key === "W") window.SPX?.toggleViewport("wireframe");
       if (key === "r" || key === "R") window.takeSnapshot?.();
-      // Delete selected object
-      if (key === "Delete" || key === "Backspace" || key === "x" || key === "X") {
+      // Delete selected object (x/X only here; Delete/Backspace handled by handleGlobalKeys)
+      if (key === "x" || key === "X") {
         if (activeObjId) deleteSceneObject(activeObjId);
       }
       // Undo
@@ -2103,7 +2119,7 @@ export default function App() {
       }
     };
     window.addEventListener("keydown", onKey);
-    return () => { };
+    return () => window.removeEventListener("keydown", onKey);
   }, [activeObjId]);
 
   const redo = useCallback(() => {
@@ -4599,7 +4615,15 @@ export default function App() {
             setVideoFps={setVideoFps}
             sceneObjects={sceneObjects}
             animKeys={animKeys}
+            activeObjUUID={selectedObject?.uuid || meshRef.current?.uuid}
+            keyframeVersion={keyframeVersion}
             onAddKeyframe={() => handleApplyFunction("add_keyframe")}
+            onDeleteKeyframe={(frame) => {
+              const target = selectedObject || meshRef.current;
+              if (target && window.deleteKeyframe) {
+                window.deleteKeyframe(target.uuid, frame);
+              }
+            }}
           />
         }
       />

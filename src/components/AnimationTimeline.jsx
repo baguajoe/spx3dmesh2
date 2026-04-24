@@ -11,7 +11,10 @@ export function AnimationTimeline({
   videoFps, setVideoFps,
   sceneObjects = [],
   animKeys = {},
+  activeObjUUID,
+  keyframeVersion,
   onAddKeyframe,
+  onDeleteKeyframe,
   handleApplyFunction,
 }) {
   const tlTrackRef = useRef(null);
@@ -244,6 +247,11 @@ export function AnimationTimeline({
             <div
               key={f}
               className={`tl-keyframe-dot${Number(f) === Number(currentFrame) ? " tl-keyframe-dot--selected" : ""}${Number(f) === Number(draggedKeyFrame) ? " tl-keyframe-dot--dragging" : ""}`}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                if (onDeleteKeyframe) onDeleteKeyframe(Number(f));
+              }}
+              title={`Frame ${f} — right-click to delete`}
               style={{ left: `${((f - videoStartFrame) / totalFrames) * 100}%` }}
               title={`Frame ${f}`}
               onClick={(e) => { e.stopPropagation(); setCurrentFrame(Number(f)); }}
