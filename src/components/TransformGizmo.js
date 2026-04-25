@@ -313,7 +313,7 @@ export class TransformGizmo {
 
       if (axis === "x")      this.target.rotation.set(startRot.x + angle, startRot.y,         startRot.z);
       else if (axis === "y") this.target.rotation.set(startRot.x,         startRot.y + angle, startRot.z);
-      else if (axis === "z") this.target.rotation.set(startRot.x,         startRot.y,         startRot.z + angle);
+      else if (axis === "z") this.target.rotation.set(startRot.x,         startRot.y,         startRot.z - angle);
     } else if (this.mode === "scale") {
       // Project delta onto the axis direction and damp it.
       // Previous code summed delta components which gave wildly different
