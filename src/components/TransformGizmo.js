@@ -267,26 +267,41 @@ export class TransformGizmo {
       else if (axis === "z") this.target.position.set(startPos.x,           startPos.y,           startPos.z + delta.z);
       else /* xyz */         this.target.position.set(startPos.x + delta.x, startPos.y,           startPos.z + delta.z);
     } else if (this.mode === "rotate") {
-      // Angle swept around the rotation axis on the plane perpendicular to it.
-      const origin   = startPos;
+      // Ring-plane projection: project startPoint and worldPoint onto the
+      // plane perpendicular to the rotation axis (passing through origin),
+      // then compute signed angle between them using the axis as reference.
+      // Camera-independent — no sign flips when orbiting past an axis.
+      const origin = startPos;
       const startVec = startPoint.clone().sub(origin);
       const curVec   = worldPoint.clone().sub(origin);
+
+      let nx = 0, ny = 0, nz = 0;
+      if (axis === "x") nx = 1;
+      else if (axis === "y") ny = 1;
+      else if (axis === "z") nz = 1;
+
+      const projDot0 = startVec.x * nx + startVec.y * ny + startVec.z * nz;
+      const v0x = startVec.x - projDot0 * nx;
+      const v0y = startVec.y - projDot0 * ny;
+      const v0z = startVec.z - projDot0 * nz;
+
+      const projDot1 = curVec.x * nx + curVec.y * ny + curVec.z * nz;
+      const v1x = curVec.x - projDot1 * nx;
+      const v1y = curVec.y - projDot1 * ny;
+      const v1z = curVec.z - projDot1 * nz;
+
+      const len0 = Math.hypot(v0x, v0y, v0z);
+      const len1 = Math.hypot(v1x, v1y, v1z);
+
       let angle = 0;
-      if (axis === "x") {
-        const a0 = Math.atan2(startVec.y, startVec.z);
-        const a1 = Math.atan2(curVec.y,   curVec.z);
-        angle = a1 - a0;
-      } else if (axis === "y") {
-        const a0 = Math.atan2(startVec.x, startVec.z);
-        const a1 = Math.atan2(curVec.x,   curVec.z);
-        angle = a1 - a0;
-      } else if (axis === "z") {
-        const a0 = Math.atan2(startVec.y, startVec.x);
-        const a1 = Math.atan2(curVec.y,   curVec.x);
-        angle = a1 - a0;
+      if (len0 > 1e-4 && len1 > 1e-4) {
+        const cosA = (v0x * v1x + v0y * v1y + v0z * v1z) / (len0 * len1);
+        const cx = v0y * v1z - v0z * v1y;
+        const cy = v0z * v1x - v0x * v1z;
+        const cz = v0x * v1y - v0y * v1x;
+        const sinA = (cx * nx + cy * ny + cz * nz) / (len0 * len1);
+        angle = Math.atan2(sinA, Math.max(-1, Math.min(1, cosA)));
       }
-      while (angle >  Math.PI) angle -= 2 * Math.PI;
-      while (angle < -Math.PI) angle += 2 * Math.PI;
 
       // Slight damping so rings feel less twitchy at small distances
       const ROTATE_SENSITIVITY = 0.85;
