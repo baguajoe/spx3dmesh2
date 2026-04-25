@@ -140,8 +140,12 @@ export class TransformGizmo {
       });
       const geo = new THREE.TorusGeometry(0.9, 0.02, 8, 48);
       const ring = new THREE.Mesh(geo, mat);
+      // Default TorusGeometry lies in XY plane (normal = Z).
+      // X-ring: rotate 90 around Y so torus lies in YZ plane (normal = X).
+      // Y-ring: rotate 90 around X so torus lies in XZ plane (normal = Y).
+      // Z-ring: leave at default (normal = Z).
       if (axis === "x") ring.rotation.y = Math.PI / 2;
-      if (axis === "z") ring.rotation.x = Math.PI / 2;
+      else if (axis === "y") ring.rotation.x = Math.PI / 2;
       ring.userData.axis = axis;
       this.group.add(ring);
       this.handles[axis] = [ring];
