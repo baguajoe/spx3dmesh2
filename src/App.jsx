@@ -1414,6 +1414,10 @@ export default function App() {
       return framesObj[frames[frames.length - 1]];
     };
 
+    // Skip evaluation if we just wrote a keyframe — the user just captured
+    // the live position, we don't want to immediately overwrite it.
+    if (justKeyframed.current) return;
+
     // Apply every animated channel to its target mesh.
     // Skip object currently being dragged by gizmo (user is editing it).
     const draggingUUID = (gizmoDragging.current && (selectedObject?.uuid || meshRef.current?.uuid)) || null;
@@ -1438,7 +1442,7 @@ export default function App() {
         }
       }
     }
-  }, [currentFrame, keyframeVersion, sceneObjects, selectedObject]);
+  }, [currentFrame, keyframeVersion, sceneObjects]);
 
 
   useEffect(() => {
@@ -1462,7 +1466,7 @@ export default function App() {
     // Capture phase ensures we win over upstream canvas handlers.
     window.addEventListener("keydown", handleGlobalKeys, { capture: true });
     return () => window.removeEventListener("keydown", handleGlobalKeys, { capture: true });
-  }, [selectedObject, sceneObjects]);
+  }, [selectedObject, sceneObjects, currentFrame]);
 
   useEffect(() => {
     window.deleteSelected = () => {
@@ -1499,6 +1503,7 @@ export default function App() {
   const [gizmoActive, setGizmoActive] = useState(false);
 
   const gizmoDragging = useRef(false);
+  const justKeyframed = useRef(false);
   const [bevelAmt, setBevelAmt] = useState(0.1);
   const [insetAmt, setInsetAmt] = useState(0.15);
   const [mirrorAxis, setMirrorAxis] = useState("x");
@@ -1543,11 +1548,7 @@ export default function App() {
 
   const addSceneObject = (type) => {
     const mesh = buildPrimitiveMesh(type);
-    mesh.position.set(
-      (Math.random() - 0.5) * 2,
-      0,
-      (Math.random() - 0.5) * 2
-    );
+    mesh.position.set(0, 0, 0);
     sceneRef.current?.add(mesh);
     const objCount = sceneObjects.length;
     const obj = createSceneObject(type, type.charAt(0).toUpperCase() + type.slice(1) + "." + String(objCount + 1).padStart(3, "0"), mesh);
@@ -3837,6 +3838,8 @@ export default function App() {
       const target = selectedObject || meshRef.current;
       if (target && window.keyAllTransform) {
         window.keyAllTransform(target, currentFrame);
+        justKeyframed.current = true;
+        setTimeout(() => { justKeyframed.current = false; }, 100);
         setStatus(`◆ Keyframe set on ${target.name || "object"} at frame ${currentFrame}`);
       }
       return;
@@ -4410,8 +4413,8 @@ export default function App() {
             }}
             onMouseUp={(e) => {
               if (gizmoDragging.current) {
-                gizmoDragging.current = false;
                 if (gizmoRef.current) gizmoRef.current.endDrag?.();
+                setTimeout(() => { gizmoDragging.current = false; }, 200);
                 return;
               }
               const wasDragging = orbitDragging.current;
