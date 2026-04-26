@@ -1297,6 +1297,7 @@ export default function App() {
     }, 100);
   }, [activeWorkspace]);
   useEffect(() => { selectModeRef.current = selectMode; }, [selectMode]);
+  useEffect(() => { currentFrameRef.current = currentFrame; }, [currentFrame]);
 
   // ── Keyframe store (window.animationData) ────────────────────────────────
   // Shape: { [uuid]: { "position.x": {frame: value, ...}, "position.y": {...},
@@ -1504,6 +1505,7 @@ export default function App() {
 
   const gizmoDragging = useRef(false);
   const justKeyframed = useRef(false);
+  const currentFrameRef = useRef(0);
   const [bevelAmt, setBevelAmt] = useState(0.1);
   const [insetAmt, setInsetAmt] = useState(0.15);
   const [mirrorAxis, setMirrorAxis] = useState("x");
@@ -4414,6 +4416,13 @@ export default function App() {
             onMouseUp={(e) => {
               if (gizmoDragging.current) {
                 if (gizmoRef.current) gizmoRef.current.endDrag?.();
+                // Auto-key: capture transform at drag-end if AUTO toggle is on.
+                // Use currentFrameRef (not currentFrame from closure) to avoid stale-closure bug.
+                if (isAutoKey && gizmoRef.current?.target && typeof window.keyAllTransform === "function") {
+                  window.keyAllTransform(gizmoRef.current.target, currentFrameRef.current);
+                  justKeyframed.current = true;
+                  setTimeout(() => { justKeyframed.current = false; }, 100);
+                }
                 setTimeout(() => { gizmoDragging.current = false; }, 200);
                 return;
               }
@@ -4532,6 +4541,28 @@ export default function App() {
             <div className={`spx-fps-counter${fps < 30 ? ' spx-fps-counter--low' : ''}`}>
               FPS: {fps} | Δ: {polyCount.toLocaleString()}
             </div>
+            {isAutoKey && (
+              <div style={{
+                position: "absolute",
+                top: 8,
+                left: "50%",
+                transform: "translateX(-50%)",
+                background: "#cc0000",
+                color: "#fff",
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "1.5px",
+                padding: "4px 12px",
+                borderRadius: 3,
+                fontFamily: "monospace",
+                boxShadow: "0 0 12px rgba(204, 0, 0, 0.6)",
+                animation: "spx-auto-pulse 1.5s ease-in-out infinite",
+                zIndex: 10,
+                pointerEvents: "none"
+              }}>
+                ● AUTO KEY ON
+              </div>
+            )}
 
             {/* XYZ orientation gizmo — top right corner */}
             <div className="spx-xyz-gizmo" style={{ position: "absolute", top: 8, right: 8, left: "auto", zIndex: 10, pointerEvents: "none" }}>
@@ -4673,6 +4704,7 @@ export default function App() {
             setIsPlaying={setIsPlaying}
             isAutoKey={isAutoKey}
             setAutoKey={setAutoKey}
+            handleApplyFunction={handleApplyFunction}
             videoStartFrame={videoStartFrame}
             videoEndFrame={videoEndFrame}
             setVideoStartFrame={setVideoStartFrame}
