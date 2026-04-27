@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import * as THREE from "three";
+import JSZip from "jszip";
 
 const CATEGORIES = [
   { id:"all",      label:"All 41" },
@@ -533,6 +534,7 @@ const [highlightClamp, setHighlightClamp] = useState(0.85);
   const [rendering,    setRendering]    = useState(false);
   const [exporting,    setExporting]    = useState(false);
   const [exportFormat, setExportFormat] = useState('png');
+  const [exportingSequence, setExportingSequence] = useState(false);
   const [exportMode, setExportMode] = useState('final');
 const [temporalBlend, setTemporalBlend] = useState(0.35);
   const [status,       setStatus]       = useState('Select a style and click Render');
@@ -728,6 +730,74 @@ const out = captureAndProcess(1);
     setExporting(false);
   }, [captureAndProcess, activeStyle, rendererRef]);
 
+  const handlePngSequenceExport = useCallback(async () => {
+    if (!rendererRef?.current) { setStatus('No renderer'); return; }
+    setExportingSequence(true);
+    const FRAMES = 60;
+    const FPS = 24;
+    const zip = new JSZip();
+    const framesFolder = zip.folder('frames');
+    const manifestFrames = [];
+    let firstWidth = 0;
+    let firstHeight = 0;
+
+    setStatus('Capturing ' + FRAMES + ' PNG frames...');
+    try {
+      for (let i = 0; i < FRAMES; i++) {
+        applyNPRIfNeeded(activeStyle, sceneRef);
+        const out = captureAndProcess(1);
+        if (!out) continue;
+        if (i === 0) { firstWidth = out.width; firstHeight = out.height; }
+
+        const blob = await new Promise((resolve) => out.toBlob(resolve, 'image/png'));
+        if (!blob) continue;
+
+        const filename = 'frame_' + String(i + 1).padStart(4, '0') + '.png';
+        framesFolder.file(filename, blob);
+        manifestFrames.push({
+          filename: 'frames/' + filename,
+          frame: i,
+          time_seconds: Number((i / FPS).toFixed(4)),
+        });
+
+        if (i % 10 === 0) setStatus('Captured frame ' + i + '/' + FRAMES + '...');
+        await new Promise((r) => setTimeout(r, 16));
+      }
+
+      const manifest = {
+        version: '1.0',
+        source: 'SPX 3D Mesh — 3D->2D Style',
+        fps: FPS,
+        frame_count: manifestFrames.length,
+        width: firstWidth,
+        height: firstHeight,
+        style: activeStyle,
+        frames: manifestFrames,
+        metadata: {
+          exported_at: new Date().toISOString(),
+          exporter_version: '1.0',
+        },
+      };
+      zip.file('manifest.json', JSON.stringify(manifest, null, 2));
+
+      setStatus('Building zip...');
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'spx_' + activeStyle + '_pngseq_' + firstWidth + 'x' + firstHeight + '.zip';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+      setStatus('Done: ' + manifestFrames.length + ' PNG frames + manifest exported');
+    } catch (e) {
+      setStatus('Error: ' + e.message);
+    }
+    setExportingSequence(false);
+  }, [captureAndProcess, activeStyle, sceneRef, rendererRef]);
+
   if (!open) return null;
 
   return (
@@ -816,6 +886,14 @@ const out = captureAndProcess(1);
             onClick={handleVideoExport} disabled={exporting}>
             <span>🎬 EXPORT VIDEO</span>
             <span className="s2d-native-label">60 frames → MP4</span>
+          </button>
+          <button
+            className="s2d-btn s2d-btn--export"
+            onClick={handlePngSequenceExport}
+            disabled={exportingSequence}
+            title="Export 60-frame PNG sequence + manifest.json (for SPX Puppet)"
+          >
+            {exportingSequence ? 'EXPORTING...' : 'PNG SEQUENCE'}
           </button>
         </div>
       </div>
