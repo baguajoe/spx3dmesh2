@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef} from 'react';
 import * as THREE from 'three';
 import '../../styles/panel-components.css';
 
@@ -179,12 +179,26 @@ export default function DisplacementPanel({ meshRef, open=true, onClose }) {
             <input
               type="file" accept="image/*"
               className="spx-file-input-hidden"
-              onChange={e => { const f=e.target.files[0]; if(f) setImageUrl(URL.createObjectURL(f)); }}
+              onChange={e => {
+                const f = e.target.files[0];
+                if (!f) return;
+                // Revoke previous blob URL to prevent memory leak
+                if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current);
+                const url = URL.createObjectURL(f);
+                imageUrlRef.current = url;
+                setImageUrl(url);
+              }}
             />
             {imageUrl ? '✓ Image loaded' : '📁 Load Height Map'}
           </label>
           {imageUrl && (
-            <button className="spx-upload-clear" onClick={() => setImageUrl(null)}>CLEAR IMAGE</button>
+            <button className="spx-upload-clear" onClick={() => {
+              if (imageUrlRef.current) {
+                URL.revokeObjectURL(imageUrlRef.current);
+                imageUrlRef.current = null;
+              }
+              setImageUrl(null);
+            }}>CLEAR IMAGE</button>
           )}
         </Section>
 

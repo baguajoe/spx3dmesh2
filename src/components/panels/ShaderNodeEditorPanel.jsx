@@ -22,11 +22,14 @@ export default function ShaderNodeEditorPanel({ open, onClose, meshRef, setStatu
     setNodes(next);
     const mesh = meshRef?.current;
     if (mesh?.material) {
+      // Save the node graph to material userData so it persists with the mesh.
+      // Note: this saves the GRAPH structure only — actual GLSL shader compilation
+      // is a v1.1 task (would require building a node-graph-to-GLSL transpiler).
+      // For now this is a "save graph" operation, not a "compile shader" operation.
       mesh.material.userData.shaderNodeEditor = next;
       mesh.material.needsUpdate = true;
     }
-    window.__SPX_SHADER_NODE_EDITOR__ = next;
-    setStatus?.("Shader node editor updated");
+    setStatus?.("Shader node graph saved (compile pending v1.1)");
   }, [meshRef, setStatus]);
 
   const addNode = useCallback(() => {

@@ -146,6 +146,12 @@ export default function ClothingPanel({ open = false, onClose, sceneRef = null, 
     setStatus?.("Cloth offset applied");
   };
 
+  // BATCH 3D-2.4 — Hold the latest stepSimulationOnce in a ref so the RAF tick
+  // always invokes the most recent closure (which captures latest state values).
+  // Without this, the closure captured at effect-mount time uses stale params.
+  const stepSimRef = useRef(stepSimulationOnce);
+  useEffect(() => { stepSimRef.current = stepSimulationOnce; });
+
   useEffect(() => {
     if (!simRunning) {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -154,7 +160,8 @@ export default function ClothingPanel({ open = false, onClose, sceneRef = null, 
     }
 
     const tick = () => {
-      stepSimulationOnce();
+      // Always call the LATEST step function via ref, not the captured closure.
+      stepSimRef.current?.();
       rafRef.current = requestAnimationFrame(tick);
     };
 
@@ -163,7 +170,7 @@ export default function ClothingPanel({ open = false, onClose, sceneRef = null, 
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     };
-  }, [simRunning, simGravity, simDamping, simIterations, collisionOffset]);
+  }, [simRunning]);
 
   const addGarmentToScene = () => {
     const mesh = createGarmentMesh(garmentType, { width, height });

@@ -190,6 +190,26 @@ export function FilmCameraPanel({ cameraRef, rendererRef, sceneRef, open=true, o
       return;
     }
   }, [cam, setStatus]);
+  // BATCH 3D-2.2 — applyLensPreset: convert a focal-length string ("18mm" etc.)
+  // to a vertical FOV using current filmGate sensor height. Updates camera and
+  // local fov/focalLength state so sliders reflect the change.
+  const applyLensPreset = useCallback((preset) => {
+    const focalMm = parseFloat(String(preset).replace(/[^\d.]/g, "")) || 35;
+    const gate = FILM_GATES[filmGate] || FILM_GATES[0];
+    const sensorH = gate.h; // mm
+    const fovRad = 2 * Math.atan((sensorH / 2) / focalMm);
+    const fovDeg = fovRad * (180 / Math.PI);
+    setFocalLength(focalMm);
+    setFov(fovDeg);
+    setLensPreset(String(preset));
+    if (cameraRef?.current) {
+      cameraRef.current.fov = fovDeg;
+      cameraRef.current.updateProjectionMatrix();
+    }
+    setStatus("Lens: " + preset);
+  }, [filmGate, cameraRef, setStatus]);
+
+
 
   const restoreBookmark = useCallback((bm) => {
     const c = cam(); if (!c) return;

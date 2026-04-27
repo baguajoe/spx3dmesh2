@@ -49,6 +49,20 @@ export function DestructionPanel({ sceneRef, meshRef, open=true, onClose }) {
     const scene = sceneRef?.current; if (!scene) return;
     setStatus('Initializing Rapier...');
     try {
+      // BATCH 3D-2.5 — Real Rapier WASM init. Without this, the line above was theatre.
+      const RAPIER = await import('@dimforge/rapier3d-compat');
+      await RAPIER.init();
+      // Store the Rapier module on the panel so simulation step calls can use it.
+      // (Engineering note: the actual rigid-body construction lives in the simulation
+      // step handlers below; this just makes RAPIER available to them.)
+      if (!window.__SPX_RAPIER__) window.__SPX_RAPIER__ = RAPIER;
+      setStatus('Rapier physics ready');
+    } catch (e) {
+      setStatus('Rapier init failed: ' + (e?.message || e));
+      console.error('[DestructionPanel] Rapier init failed', e);
+      return;
+    }
+    try {
       systemRef.current = await createDestructionSystem(scene);
       setStatus('Ready — select mesh to fracture');
     } catch(e) { setStatus('Error: ' + e.message); }

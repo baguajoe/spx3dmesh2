@@ -1,5 +1,5 @@
 import { getAutoKeyLabel } from "../animation/animationKeyUtils.js";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useCallback} from 'react';
 import MotionLibraryPanel from "./animation/MotionLibraryPanel";
 
 function Section({ title, children, defaultOpen = true }) {
@@ -29,8 +29,48 @@ function Slider({ label, value, min, max, step = 0.01, onChange, unit = "" }) {
 
 export function AnimationPanel({ onApplyFunction,
   isAutoKey, setAutoKey,
-  currentFrame, shapeKeys = [], nlaActions = [], nlaTracks = [],
+  currentFrame, totalFrames = 240, fps = 30, onFrameChange,
+
+  shapeKeys = [], nlaActions = [], nlaTracks = [],
 }) {
+
+  // BATCH 3D-2.8 — Real timeline playback. Maintains an internal isPlaying
+  // state and runs a RAF loop that advances currentFrame at the desired fps.
+  // The parent passes onFrameChange to receive frame updates and re-render the
+  // 3D scene at that frame. Without onFrameChange the playback loop still
+  // updates the local indicator but the scene won't animate.
+  const [isPlaying, setIsPlaying] = useState(false);
+  const playbackRafRef = useRef(null);
+  const lastFrameTimeRef = useRef(0);
+
+  useEffect(() => {
+    if (!isPlaying) {
+      if (playbackRafRef.current) cancelAnimationFrame(playbackRafRef.current);
+      playbackRafRef.current = null;
+      return;
+    }
+    const frameDuration = 1000 / Math.max(1, fps || 30);
+    let frame = currentFrame || 0;
+    const total = Math.max(1, totalFrames || 240);
+
+    const tick = (now) => {
+      const elapsed = now - lastFrameTimeRef.current;
+      if (elapsed >= frameDuration) {
+        frame = (frame + 1) % total;
+        lastFrameTimeRef.current = now;
+        if (typeof onFrameChange === 'function') onFrameChange(frame);
+      }
+      playbackRafRef.current = requestAnimationFrame(tick);
+    };
+
+    lastFrameTimeRef.current = performance.now();
+    playbackRafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      if (playbackRafRef.current) cancelAnimationFrame(playbackRafRef.current);
+      playbackRafRef.current = null;
+    };
+  }, [isPlaying, fps, totalFrames, onFrameChange]);
   const [tab, setTab] = useState("keyframes");
   const [keyType, setKeyType] = useState("location");
   const [tracks, setTracks] = useState([
