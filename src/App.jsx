@@ -1040,6 +1040,7 @@ export default function App() {
   const vertDotsRef = useRef(null);   // THREE.Points
   const edgeLinesRef = useRef(null);  // THREE.LineSegments
   const faceMeshRef = useRef(null);   // THREE.Mesh (transparent)
+  const faceOverlayRef = useRef(null); // THREE.Mesh — selection highlight overlay
   const previewLineRef = useRef(null); // loop cut preview line
 
   // Knife state
