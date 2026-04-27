@@ -4,7 +4,9 @@
 
 import * as THREE from 'three';
 
-const MIDAS_MODEL_URL = 'https://huggingface.co/onnx-community/midas-v2.1-small/resolve/main/onnx/model.onnx';
+const MIDAS_MODEL_URL =
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_MIDAS_MODEL_URL) ||
+  'https://huggingface.co/onnx-community/midas-v2.1-small/resolve/main/onnx/model.onnx';
 const INPUT_SIZE = 256;
 
 export class DepthEstimator {

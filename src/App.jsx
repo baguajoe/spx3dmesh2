@@ -14,7 +14,6 @@ import EnvironmentGeneratorPanel from './components/panels/EnvironmentGeneratorP
 import BuildingSimulatorPanel from './components/panels/BuildingSimulatorPanel';
 import PhysicsSimulationPanel from './components/panels/PhysicsSimulationPanel';
 import TerrainSculptingPanel from './components/panels/TerrainSculptingPanel';
-import LightingStudioPanel from './components/panels/LightingStudioPanel';
 import MaterialTexturePanel from './components/panels/MaterialTexturePanel';
 import { ViewportHeader } from "./components/ViewportHeader";
 import { PropertyInspector } from "./components/PropertyInspector";
@@ -3103,12 +3102,14 @@ export default function App() {
 
     if (fn === "sss_skin") {
       if (meshRef.current) {
-        import("./mesh/RenderSystem.js").then(({ applySSSMaterial }) => {
-          if (applySSSMaterial) {
-            applySSSMaterial(meshRef.current, "skin");
-            setStatus("SSS skin material applied");
-          }
-        });
+        try {
+          const sssMat = createSSSMaterial("skin");
+          meshRef.current.material = sssMat;
+          if (meshRef.current.material) meshRef.current.material.needsUpdate = true;
+          setStatus("SSS skin material applied");
+        } catch (e) {
+          setStatus("SSS skin failed: " + e.message);
+        }
       }
       return;
     }
@@ -3246,9 +3247,7 @@ export default function App() {
       return;
     }
     if (fn === "graph_editor") {
-      import("./mesh/DriverSystem.js").then(({ createDriver }) => {
-        setStatus("Graph editor — use Animation workspace → F-Curve panel");
-      });
+      setStatus("Graph editor — use Animation workspace → F-Curve panel");
       return;
     }
     if (fn === "particle_emit") {
