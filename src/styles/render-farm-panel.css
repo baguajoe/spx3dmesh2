@@ -1,0 +1,100 @@
+/* render-farm-panel.css — styles for RenderFarmPanel */
+.rfp-panel { width: 380px; max-height: 80vh; overflow-y: auto; }
+
+.rfp-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.rfp-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px;
+  background: #16161e;
+  border-radius: 4px;
+}
+.rfp-stat__label { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.1em; }
+.rfp-stat__val { font-size: 18px; color: #00ffc8; font-weight: 700; margin-top: 2px; }
+
+.rfp-progress-wrap { margin-top: 8px; }
+.rfp-progress-label { font-size: 10px; color: #00ffc8; margin-bottom: 4px; }
+.rfp-progress-bar { height: 6px; background: #1a1a22; border-radius: 3px; overflow: hidden; }
+.rfp-progress-bar__fill { height: 100%; background: linear-gradient(90deg, #00ffc8, #44ff88); transition: width 0.3s ease; }
+
+.rfp-form-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.rfp-form-label { font-size: 10px; color: #aaa; min-width: 70px; text-transform: uppercase; letter-spacing: 0.05em; }
+.rfp-form-input {
+  flex: 1;
+  background: #1a1a22;
+  border: 1px solid #2a2a32;
+  color: #eee;
+  padding: 4px 8px;
+  font-size: 11px;
+  border-radius: 3px;
+}
+.rfp-form-input:focus { outline: none; border-color: #00ffc8; }
+
+.rfp-btn {
+  background: #1a1a22;
+  border: 1px solid #2a2a32;
+  color: #ccc;
+  padding: 6px 12px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  border-radius: 3px;
+  font-weight: 600;
+}
+.rfp-btn:hover { border-color: #00ffc8; color: #00ffc8; }
+.rfp-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.rfp-btn--primary { background: #00ffc8; color: #06060f; border-color: #00ffc8; }
+.rfp-btn--primary:hover { background: #44ffdd; color: #06060f; }
+.rfp-btn--cancel { border-color: #ff4444; color: #ff4444; }
+.rfp-btn--cancel:hover { background: #ff4444; color: #fff; }
+.rfp-btn--small { padding: 3px 8px; font-size: 9px; }
+.rfp-btn--large { width: 100%; padding: 10px; font-size: 12px; }
+
+.rfp-empty {
+  padding: 16px;
+  text-align: center;
+  color: #666;
+  font-size: 10px;
+  background: #16161e;
+  border-radius: 4px;
+}
+
+.rfp-jobs-list { display: flex; flex-direction: column; gap: 6px; }
+.rfp-job-card {
+  background: #16161e;
+  border: 1px solid #1f1f28;
+  border-radius: 4px;
+  padding: 8px;
+}
+.rfp-job-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.rfp-job-name { font-size: 11px; color: #eee; font-weight: 600; }
+.rfp-job-meta { font-size: 9px; color: #888; margin-bottom: 6px; }
+.rfp-job-actions { display: flex; gap: 6px; }
+
+.rfp-status-badge {
+  font-size: 8px;
+  padding: 2px 6px;
+  border: 1px solid;
+  border-radius: 2px;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+}
+
+.rfp-controls-row { display: flex; gap: 8px; }

@@ -4,6 +4,7 @@ import FadeToolPanel from "./components/panels/FadeToolPanel.jsx";
 import HairCardLODPanel from "./components/panels/HairCardLODPanel.jsx";
 import NodeCompositorPanel from './components/mesh/NodeCompositorPanel';
 import CustomSkinBuilderPanel from './components/panels/CustomSkinBuilderPanel';
+import RenderFarmPanel from './components/panels/RenderFarmPanel.jsx';
 import SPX3DTo2DPanel from './components/pipeline/SPX3DTo2DPanel';
 import { WORKSPACES, DEFAULT_WORKSPACE } from "./pro-ui/workspaceMap";
 import CityGeneratorPanel from './components/panels/CityGeneratorPanel';
@@ -70,7 +71,7 @@ import { createAction, createTrack, createStrip, evaluateNLA, pushDownAction, ba
 import { createStroke, createLayer } from "./mesh/GreasePencil.js";
 import { NODE_TYPES, createNode, createGraph, addNode, connectNodes, evaluateGraph } from "./mesh/GeometryNodes.js";
 import { createSpline } from "./mesh/CurveSystem.js";
-import { applyPreset, applyEdgeWear, applyCavityDirt, MATERIAL_PRESETS, DEFAULT_CUSTOM_SKIN } from "./mesh/SmartMaterials.js";
+import { applyPreset, applyEdgeWear, applyCavityDirt, MATERIAL_PRESETS, DEFAULT_CUSTOM_SKIN, generateFullSkinTextures} from "./mesh/SmartMaterials.js";
 import { createPaintTexture, createPaintCanvas, applyPaintTexture, paintAtUV, fillCanvas, createLayerStack, addLayer, flattenLayers } from "./mesh/TexturePainter.js";
 import { bakeAO, bakeNormalMap, bakeCurvature, bakeAllMaps, downloadBakedMap } from "./mesh/TextureBaker.js";
 import { createLight, createThreePointLighting, applyTemperature, createVolumericFog, removeFog, applyHDRI, addLightHelper, HDRI_PRESETS } from "./mesh/LightSystem.js";
@@ -4656,7 +4657,7 @@ export default function App() {
               <SpxTabGroup label="RIG" color="#ff88ff" tabs={[
                 { label: "Rigging", fn: () => { closeAllWorkspacePanels(); setAutoRigOpen(true); } },
                 { label: "MoCap", fn: () => openWorkspaceTool("mocap") },
-                { label: "Retarget", fn: () => { closeAllWorkspacePanels(); setMocapWorkspaceOpen(true); } },
+                { label: "Retarget", fn: () => { closeAllWorkspacePanels(); setMocapRetargetOpen(true); } },
                 { label: "Gamepad", fn: () => openWorkspaceTool("gamepad") },
               ]} />
               <SpxTabGroup label="RENDER" color="#ffdd44" tabs={[
@@ -4674,7 +4675,7 @@ export default function App() {
                 { label: "Weather", fn: () => { closeAllWorkspacePanels(); setWeatherPanelOpen(true); } },
                 { label: "Destruction", fn: () => { closeAllWorkspacePanels(); setDestructionPanelOpen(true); } },
                 { label: "Physics", fn: () => { closeAllWorkspacePanels(); setPhysicsOpen(true); } },
-                { label: "Particles", fn: () => { closeAllWorkspacePanels(); setPhysicsOpen(true); } },
+                { label: "Particles", fn: () => { closeAllWorkspacePanels(); setFilmParticlePanelOpen(true); } },
               ]} />
               <SpxTabGroup label="WORLD" color="#44aaff" tabs={[
                 { label: "Environment", fn: () => { closeAllWorkspacePanels(); setEnvGenOpen(true); } },
@@ -4848,6 +4849,24 @@ export default function App() {
           const [fadeToolPanelOpen, setFadeToolPanelOpen] = useState(false);
           const [hairCardLODPanelOpen, setHairCardLODPanelOpen] = useState(false);
           <FilmParticlePanel open={filmParticlePanelOpen} onClose={() => setFilmParticlePanelOpen(false)} sceneRef={sceneRef} setStatus={setStatus} />
+          {mocapRetargetOpen && (
+            <MocapRetargetPanel
+              open={mocapRetargetOpen}
+              onClose={() => setMocapRetargetOpen(false)}
+              armatures={armatures}
+              setStatus={setStatus}
+            />
+          )}
+          {renderFarmOpen && (
+            <RenderFarmPanel
+              open={renderFarmOpen}
+              onClose={() => setRenderFarmOpen(false)}
+              rendererRef={rendererRef}
+              sceneRef={sceneRef}
+              cameraRef={cameraRef}
+              setStatus={setStatus}
+            />
+          )}
           <FilmWeatherPanel open={filmWeatherPanelOpen} onClose={() => setFilmWeatherPanelOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} setStatus={setStatus} /></FloatPanel>}
         {filmVolOpen && <FloatPanel title="VOLUMETRICS" onClose={() => setFilmVolOpen(false)} width={420}><FilmVolumetricsPanel sceneRef={sceneRef} open={filmVolOpen} onClose={() => setFilmVolOpen(false)} /></FloatPanel>}
         {filmPTOpen && <FloatPanel title="PATH TRACER" onClose={() => setFilmPTOpen(false)} width={420}><FilmPathTracerPanel rendererRef={rendererRef} sceneRef={sceneRef} cameraRef={cameraRef} open={filmPTOpen} onClose={() => setFilmPTOpen(false)} /></FloatPanel>}

@@ -1,4 +1,14 @@
 // ── Theme system ──────────────────────────────────────────────────────────────
+// Backend URL resolver — prefer env var, fall back to production URL.
+// Set VITE_BACKEND_URL in your .env to point at staging / dev backend.
+function resolveApiBase(override) {
+  if (override) return override;
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BACKEND_URL) {
+    return import.meta.env.VITE_BACKEND_URL.replace(/\/$/, '') + '/api';
+  }
+  return 'https://streampirex.com/api';
+}
+
 export const THEMES = {
   dark: {
     label:      "Dark",
@@ -281,7 +291,8 @@ export function buildSPXExportPayload(scene, options = {}) {
   };
 }
 
-export async function exportToStreamPireX(payload, apiBase="https://streampirex.com/api") {
+export async function exportToStreamPireX(payload, apiBase) {
+  apiBase = resolveApiBase(apiBase);
   try {
     const res = await fetch(`${apiBase}/mesh-editor/import`, {
       method:  "POST",

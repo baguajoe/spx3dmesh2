@@ -8,6 +8,17 @@
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- MediaPipe runtime scripts (Face Mesh, Pose, Hands).
+         Required for: RIG > MoCap, RIG > Retarget, GEN > Multi MoCap, Performance > MoCap timeline,
+         hooks/useFaceMocap, hooks/useHandMocap, MultiPersonMocap.js.
+         Without these, runtime loadScript() calls would race-fail in production. -->
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

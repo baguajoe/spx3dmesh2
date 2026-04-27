@@ -118,20 +118,44 @@ Current context: ${JSON.stringify(context)}
 Respond with specific, actionable advice. If suggesting keyframe changes, provide exact frame numbers and values.
 Keep responses concise and practical.`;
 
+  // BATCH 3D-1.7 — Direct browser-to-Anthropic calls are disabled. CORS will block them
+  // unless anthropic-dangerous-direct-browser-access is set, and putting an API key in the
+  // browser bundle would expose it. The proper path is via the StreamPireX backend proxy
+  // route /api/spx-mesh/anthropic-proxy (queued for a future SpectraSphere batch).
+  // For now this returns a graceful unavailable response so callers don't crash.
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const proxyUrl = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BACKEND_URL)
+      ? import.meta.env.VITE_BACKEND_URL.replace(/\/$/, '') + '/api/spx-mesh/anthropic-proxy'
+      : null;
+
+    if (!proxyUrl) {
+      return {
+        success: false,
+        error: 'AI assistant unavailable — no backend proxy configured. Set VITE_BACKEND_URL.',
+        suggestions: [],
+      };
+    }
+
+    const token = (typeof localStorage !== 'undefined' && localStorage.getItem('jwt-token')) || '';
+    const res = await fetch(proxyUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(apiKey ? { 'x-api-key': apiKey } : {}),
+        ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
         system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }],
+        user: userPrompt,
+        context,
       }),
     });
+    if (!res.ok) {
+      return {
+        success: false,
+        error: 'AI proxy returned ' + res.status,
+        suggestions: [],
+      };
+    }
     const data = await res.json();
     return data.content?.[0]?.text || 'No response from assistant.';
   } catch (err) {

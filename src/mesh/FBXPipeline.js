@@ -1,6 +1,16 @@
 import * as THREE from "three";
 
 // ── OBJ exporter (browser-side, no deps) ─────────────────────────────────────
+// Backend URL resolver — prefer env var, fall back to production URL.
+// Set VITE_BACKEND_URL in your .env to point at staging / dev backend.
+function resolveApiBase(override) {
+  if (override) return override;
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BACKEND_URL) {
+    return import.meta.env.VITE_BACKEND_URL.replace(/\/$/, '') + '/api';
+  }
+  return 'https://streampirex.com/api';
+}
+
 export function exportOBJ(scene, options = {}) {
   const { filename="export.obj", includeNormals=true, includeUVs=true } = options;
   const lines = ["# SPX Mesh Editor OBJ Export", `# ${new Date().toISOString()}`, ""];
@@ -146,7 +156,8 @@ export function parseOBJ(text) {
 }
 
 // ── FBX via Railway backend ───────────────────────────────────────────────────
-export async function importFBXFromBackend(file, apiBase="https://streampirex.com/api") {
+export async function importFBXFromBackend(file, apiBase) {
+  apiBase = resolveApiBase(apiBase);
   const formData = new FormData();
   formData.append("file", file);
   formData.append("format", "fbx");
@@ -167,7 +178,8 @@ export async function importFBXFromBackend(file, apiBase="https://streampirex.co
   }
 }
 
-export async function exportFBXToBackend(scene, filename="export.fbx", apiBase="https://streampirex.com/api") {
+export async function exportFBXToBackend(scene, filename="export.fbx", apiBase) {
+  apiBase = resolveApiBase(apiBase);
   // Export as GLB first, then convert server-side
   const { GLTFExporter } = await import("three/addons/exporters/GLTFExporter.js").catch(()=>({}));
   if (!GLTFExporter) return { success:false, error:"GLTFExporter not available" };
@@ -201,12 +213,14 @@ export async function exportFBXToBackend(scene, filename="export.fbx", apiBase="
 }
 
 // ── Alembic stub (requires backend) ──────────────────────────────────────────
-export async function exportAlembic(scene, filename="export.abc", apiBase="https://streampirex.com/api") {
+export async function exportAlembic(scene, filename="export.abc", apiBase) {
+  apiBase = resolveApiBase(apiBase);
   return { success:false, error:"Alembic export requires Railway backend — coming soon", pending:true };
 }
 
 // ── USD stub ──────────────────────────────────────────────────────────────────
-export async function exportUSD(scene, filename="export.usd", apiBase="https://streampirex.com/api") {
+export async function exportUSD(scene, filename="export.usd", apiBase) {
+  apiBase = resolveApiBase(apiBase);
   return { success:false, error:"USD export requires Railway backend — coming soon", pending:true };
 }
 
