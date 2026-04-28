@@ -142,7 +142,7 @@ const AvatarRig = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnabled = tr
   const filtersRef = useRef({});
 
   const gltf = useLoader(GLTFLoader, avatarUrl || '/models/ybot.glb');
-  const clonedScene = useMemo(() => skeletonClone(gltf.scene), [gltf]);
+  const clonedScene = gltf.scene; // was skeletonClone(gltf.scene) — broke AssimpFbx pre-rotation hierarchy on Mixamo rigs
 
   // ── Setup: find skeleton & cache bone references ──
   useEffect(() => {
@@ -421,7 +421,7 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
   const frameRef = useRef(null);
   const mixerRef = useRef(null);
   const avatarRef = useRef(null);
-  const clockRef = useRef(new THREE.Clock());
+  const clockRef = useRef(null); if (!clockRef.current) clockRef.current = new THREE.Clock();
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -447,7 +447,7 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
     renderer.shadowMap.enabled = true;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     mount.appendChild(renderer.domElement);
-    rendererRef.current = renderer;
+    rendererRef.current = renderer; window.__mocapScene = scene; // dev hook
 
     // Lights
     scene.add(new THREE.AmbientLight(0xffffff, 0.8));
