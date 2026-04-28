@@ -141,7 +141,7 @@ const AvatarRig = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnabled = tr
   const skeletonRef = useRef(null);
   const filtersRef = useRef({});
 
-  const gltf = useLoader(GLTFLoader, avatarUrl);
+  const gltf = useLoader(GLTFLoader, avatarUrl || '/models/ybot.glb');
   const clonedScene = useMemo(() => skeletonClone(gltf.scene), [gltf]);
 
   // ── Setup: find skeleton & cache bone references ──
@@ -459,7 +459,7 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
 
     // Load avatar
     const loader = new GLTFLoader();
-    loader.load(avatarUrl || '/ybot.glb', (gltf) => {
+    loader.load(avatarUrl || '/models/ybot.glb', (gltf) => {
       const model = gltf.scene;
       // Disable frustum culling FIRST before any bounding box calc
       model.traverse(child => {

@@ -157,7 +157,7 @@ function LiveCaptureTab({ onExportGlb }) {
   const [trackFace,       setTrackFace]       = useState(true);
   const [trackHands,      setTrackHands]      = useState(true);
   const [showOverlay,     setShowOverlay]     = useState(true);
-  const [avatarUrl,       setAvatarUrl]       = useState('/ybot.glb');
+  const [avatarUrl,       setAvatarUrl]       = useState('/models/ybot.glb');
   const [error,           setError]           = useState(null);
 
   // New systems
@@ -521,7 +521,7 @@ function LiveCaptureTab({ onExportGlb }) {
         {/* Avatar */}
         <SectionLabel className="mw-section-mt">Avatar</SectionLabel>
         <div className="mw-avatar-row">
-          {[{label:'Y Bot', url:'/ybot.glb'}].map(p => (
+          {[{label:'Y Bot', url:'/models/ybot.glb'}].map(p => (
             <button key={p.label}
               className={`mw-avatar-btn${avatarUrl===p.url?' mw-avatar-btn--active':''}`} style={{background:avatarUrl===p.url?'#00ffc822':'#0a1628',
                 border:`1px solid ${avatarUrl===p.url?'#00ffc8':'#1a2a3a'}`,
@@ -620,7 +620,7 @@ function PlaybackTab({ onExportGlb }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playIdx,   setPlayIdx]   = useState(0);
   const [speed,     setSpeed]     = useState(1);
-  const [avatarUrl, setAvatarUrl] = useState('/ybot.glb');
+  const [avatarUrl, setAvatarUrl] = useState('/models/ybot.glb');
   const intervalRef = useRef(null);
 
   useEffect(() => {
