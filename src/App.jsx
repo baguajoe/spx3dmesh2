@@ -1679,6 +1679,7 @@ export default function App() {
     scene.add(centerGuides);
 
     sceneRef.current = scene;
+    window.__spxScene = scene; // dev: bone keyframing inspection
 
     const camera = new THREE.PerspectiveCamera(
       55,
