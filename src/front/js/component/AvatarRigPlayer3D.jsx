@@ -485,6 +485,28 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
       const box2 = new THREE.Box3().setFromObject(model);
       model.position.set(-center.x * scale, -box2.min.y, -center.z * scale);
       avatarRef.current = model;
+
+      // Cache bone references for live retargeting
+      let skeleton = null;
+      model.traverse((child) => {
+        if (child.isSkinnedMesh && child.skeleton) {
+          skeleton = child.skeleton;
+        }
+      });
+
+      const bones = {};
+      if (skeleton) {
+        for (const key of Object.keys(BONE_NAME_VARIANTS)) {
+          bones[key] = findBone(skeleton, key);
+        }
+        avatarRef.current.bones = bones; // Cache on avatar for animate() loop
+        avatarRef.current.skeleton = skeleton;
+        console.log('[AvatarRigPlayer3D] Cached bones:',
+          Object.entries(bones)
+            .filter(([, b]) => b !== null)
+            .map(([k, b]) => `${k}→${b.name}`)
+        );
+      }
       // Don't auto-play GLB embedded animations on MoCap avatars.
       // The avatar should remain in T-pose so MediaPipe data drives the bones.
       // Auto-playing was causing arms-back/leg-up corruption from baked Mixamo idle clip.
@@ -495,6 +517,117 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
     function animate() {
       frameRef.current = requestAnimationFrame(animate);
       const delta = clockRef.current.getDelta();
+
+      // Live frame retargeting - gate with liveFrame check
+      if (liveFrame && avatarRef.current?.bones) {
+        const bones = avatarRef.current.bones;
+        const lm = liveFrame.landmarks || liveFrame;
+
+        if (lm && lm.length >= 33) {
+          const landmarkToVec3 = (landmark) => new THREE.Vector3(
+            (landmark.x - 0.5) * 2,
+            -(landmark.y - 0.5) * 2,
+            -landmark.z * 2
+          );
+
+          const computeLimbRotation = (parentLm, childLm, restDir) => {
+            const currentDir = new THREE.Vector3().subVectors(
+              landmarkToVec3(childLm),
+              landmarkToVec3(parentLm)
+            ).normalize();
+            return new THREE.Quaternion().setFromUnitVectors(restDir, currentDir);
+          };
+
+          const isVisible = (landmark) => landmark && (landmark.visibility === undefined || landmark.visibility > 0.01);
+
+          const REST_DIRS = {
+            leftArm: new THREE.Vector3(-1, 0, 0),
+            leftForeArm: new THREE.Vector3(-1, 0, 0),
+            rightArm: new THREE.Vector3(1, 0, 0),
+            rightForeArm: new THREE.Vector3(1, 0, 0),
+            leftUpLeg: new THREE.Vector3(0, -1, 0),
+            leftLeg: new THREE.Vector3(0, -1, 0),
+            rightUpLeg: new THREE.Vector3(0, -1, 0),
+            rightLeg: new THREE.Vector3(0, -1, 0),
+          };
+
+          const LERP_SPEED = 0.4;
+
+          if (bones.leftArm && isVisible(lm[11]) && isVisible(lm[13])) {
+            const q = computeLimbRotation(lm[11], lm[13], REST_DIRS.leftArm);
+            const euler = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+            bones.leftArm.rotation.x = THREE.MathUtils.lerp(bones.leftArm.rotation.x, euler.x, LERP_SPEED);
+            bones.leftArm.rotation.y = THREE.MathUtils.lerp(bones.leftArm.rotation.y, euler.y, LERP_SPEED);
+            bones.leftArm.rotation.z = THREE.MathUtils.lerp(bones.leftArm.rotation.z, euler.z, LERP_SPEED);
+          }
+
+          if (bones.leftForeArm && isVisible(lm[13]) && isVisible(lm[15])) {
+            const q = computeLimbRotation(lm[13], lm[15], REST_DIRS.leftForeArm);
+            const euler = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+            bones.leftForeArm.rotation.x = THREE.MathUtils.lerp(bones.leftForeArm.rotation.x, euler.x, LERP_SPEED);
+            bones.leftForeArm.rotation.y = THREE.MathUtils.lerp(bones.leftForeArm.rotation.y, euler.y, LERP_SPEED);
+            bones.leftForeArm.rotation.z = THREE.MathUtils.lerp(bones.leftForeArm.rotation.z, euler.z, LERP_SPEED);
+          }
+
+          if (bones.rightArm && isVisible(lm[12]) && isVisible(lm[14])) {
+            const q = computeLimbRotation(lm[12], lm[14], REST_DIRS.rightArm);
+            const euler = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+            bones.rightArm.rotation.x = THREE.MathUtils.lerp(bones.rightArm.rotation.x, euler.x, LERP_SPEED);
+            bones.rightArm.rotation.y = THREE.MathUtils.lerp(bones.rightArm.rotation.y, euler.y, LERP_SPEED);
+            bones.rightArm.rotation.z = THREE.MathUtils.lerp(bones.rightArm.rotation.z, euler.z, LERP_SPEED);
+          }
+
+          if (bones.rightForeArm && isVisible(lm[14]) && isVisible(lm[16])) {
+            const q = computeLimbRotation(lm[14], lm[16], REST_DIRS.rightForeArm);
+            const euler = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+            bones.rightForeArm.rotation.x = THREE.MathUtils.lerp(bones.rightForeArm.rotation.x, euler.x, LERP_SPEED);
+            bones.rightForeArm.rotation.y = THREE.MathUtils.lerp(bones.rightForeArm.rotation.y, euler.y, LERP_SPEED);
+            bones.rightForeArm.rotation.z = THREE.MathUtils.lerp(bones.rightForeArm.rotation.z, euler.z, LERP_SPEED);
+          }
+
+          if (bones.leftUpLeg && isVisible(lm[23]) && isVisible(lm[25])) {
+            const q = computeLimbRotation(lm[23], lm[25], REST_DIRS.leftUpLeg);
+            const euler = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+            bones.leftUpLeg.rotation.x = THREE.MathUtils.lerp(bones.leftUpLeg.rotation.x, euler.x, LERP_SPEED);
+            bones.leftUpLeg.rotation.y = THREE.MathUtils.lerp(bones.leftUpLeg.rotation.y, euler.y, LERP_SPEED);
+            bones.leftUpLeg.rotation.z = THREE.MathUtils.lerp(bones.leftUpLeg.rotation.z, euler.z, LERP_SPEED);
+          }
+
+          if (bones.leftLeg && isVisible(lm[25]) && isVisible(lm[27])) {
+            const q = computeLimbRotation(lm[25], lm[27], REST_DIRS.leftLeg);
+            const euler = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+            bones.leftLeg.rotation.x = THREE.MathUtils.lerp(bones.leftLeg.rotation.x, euler.x, LERP_SPEED);
+            bones.leftLeg.rotation.y = THREE.MathUtils.lerp(bones.leftLeg.rotation.y, euler.y, LERP_SPEED);
+            bones.leftLeg.rotation.z = THREE.MathUtils.lerp(bones.leftLeg.rotation.z, euler.z, LERP_SPEED);
+          }
+
+          if (bones.rightUpLeg && isVisible(lm[24]) && isVisible(lm[26])) {
+            const q = computeLimbRotation(lm[24], lm[26], REST_DIRS.rightUpLeg);
+            const euler = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+            bones.rightUpLeg.rotation.x = THREE.MathUtils.lerp(bones.rightUpLeg.rotation.x, euler.x, LERP_SPEED);
+            bones.rightUpLeg.rotation.y = THREE.MathUtils.lerp(bones.rightUpLeg.rotation.y, euler.y, LERP_SPEED);
+            bones.rightUpLeg.rotation.z = THREE.MathUtils.lerp(bones.rightUpLeg.rotation.z, euler.z, LERP_SPEED);
+          }
+
+          if (bones.rightLeg && isVisible(lm[26]) && isVisible(lm[28])) {
+            const q = computeLimbRotation(lm[26], lm[28], REST_DIRS.rightLeg);
+            const euler = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+            bones.rightLeg.rotation.x = THREE.MathUtils.lerp(bones.rightLeg.rotation.x, euler.x, LERP_SPEED);
+            bones.rightLeg.rotation.y = THREE.MathUtils.lerp(bones.rightLeg.rotation.y, euler.y, LERP_SPEED);
+            bones.rightLeg.rotation.z = THREE.MathUtils.lerp(bones.rightLeg.rotation.z, euler.z, LERP_SPEED);
+          }
+
+          if (bones.hips && isVisible(lm[23]) && isVisible(lm[24])) {
+            const midHip = {
+              x: (lm[23].x + lm[24].x) / 2,
+              y: (lm[23].y + lm[24].y) / 2,
+              z: (lm[23].z + lm[24].z) / 2,
+            };
+            const hipY = -(midHip.y - 0.5) * 0.5;
+            bones.hips.position.y = THREE.MathUtils.lerp(bones.hips.position.y, hipY * 0.1, LERP_SPEED);
+          }
+        }
+      }
       mixerRef.current?.update(delta);
       renderer.render(scene, camera);
     }
