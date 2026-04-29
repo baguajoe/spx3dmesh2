@@ -49,6 +49,7 @@ import FilmVolumetricsPanel from "./components/panels/FilmVolumetricsPanel.jsx";
 import FilmPathTracerPanel from "./components/panels/FilmPathTracerPanel.jsx";
 import RotoscopePanel from "./components/panels/RotoscopePanel.jsx";
 import ModifierStackPanel from "./components/panels/ModifierStackPanel.jsx";
+import ConstraintsPanel from "./components/panels/ConstraintsPanel.jsx";
 import FilmSubdivPanel from "./components/panels/FilmSubdivPanel.jsx";
 import FilmRenderPipeline from "./components/panels/FilmRenderPipeline.jsx";
 import ProfessionalShell from "./pro-ui/ProfessionalShell";
@@ -698,6 +699,7 @@ export default function App() {
   const [gamepadOpen, setGamepadOpen] = useState(false);
   const [proMeshOpen, setProMeshOpen] = useState(false);
   const [modifierStackOpen, setModifierStackOpen] = useState(false);
+  const [constraintsPanelOpen, setConstraintsPanelOpen] = useState(false);
   // ── VFX panels ──
   const [fluidPanelOpen, setFluidPanelOpen] = useState(false);
   const [weatherPanelOpen, setWeatherPanelOpen] = useState(false);
@@ -4822,6 +4824,7 @@ export default function App() {
               <SpxTabGroup label="GEN" color="#FF6600" tabs={[
                 { label: "Pro Mesh", fn: () => { closeAllWorkspacePanels(); setProMeshOpen(true); } },
                 { label: "Modifiers", fn: () => { closeAllWorkspacePanels(); setModifierStackOpen(true); } },
+                { label: "Constraints", fn: () => { closeAllWorkspacePanels(); setConstraintsPanelOpen(true); } },
                 { label: "Skin Gen", fn: () => { closeAllWorkspacePanels(); setCustomSkinPanelOpen(true); } },
                 { label: "3D→2D Style", fn: () => { closeAllWorkspacePanels(); setStyle3DTo2DOpen(true); } },
                 { label: "Anim Graph", fn: () => { closeAllWorkspacePanels(); setAnimGraphOpen(true); } },
@@ -5084,6 +5087,11 @@ export default function App() {
         {modifierStackOpen && (
           <FloatPanel title="MODIFIER STACK" onClose={() => setModifierStackOpen(false)} width={340}>
             <ModifierStackPanel meshRef={meshRef} setStatus={setStatus} onClose={() => setModifierStackOpen(false)} />
+          </FloatPanel>
+        )}
+        {constraintsPanelOpen && (
+          <FloatPanel title="CONSTRAINTS" onClose={() => setConstraintsPanelOpen(false)} width={360}>
+            <ConstraintsPanel meshRef={meshRef} sceneObjects={sceneObjects} setStatus={setStatus} onClose={() => setConstraintsPanelOpen(false)} />
           </FloatPanel>
         )}
         {showPerformancePanel && (
