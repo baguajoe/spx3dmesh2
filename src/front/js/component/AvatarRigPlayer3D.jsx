@@ -458,8 +458,7 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
     scene.add(new THREE.GridHelper(10, 10, 0x1a2a1a, 0x1a2a1a));
 
     // Load avatar
-    const loader = new GLTFLoader();
-    loader.load(avatarUrl || '/models/ybot.glb', (gltf) => {
+    const loader = new GLTFLoader();    loader.load(avatarUrl || '/models/ybot.glb', (gltf) => {
       const model = gltf.scene;
       // Disable frustum culling FIRST before any bounding box calc
       model.traverse(child => {
@@ -486,11 +485,10 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
       const box2 = new THREE.Box3().setFromObject(model);
       model.position.set(-center.x * scale, -box2.min.y, -center.z * scale);
       avatarRef.current = model;
-      if (gltf.animations?.length) {
-        const mixer = new THREE.AnimationMixer(model);
-        mixerRef.current = mixer;
-        mixer.clipAction(gltf.animations[0]).play();
-      }
+      // Don't auto-play GLB embedded animations on MoCap avatars.
+      // The avatar should remain in T-pose so MediaPipe data drives the bones.
+      // Auto-playing was causing arms-back/leg-up corruption from baked Mixamo idle clip.
+      mixerRef.current = null;
     }, undefined, (err) => console.error('[AvatarRigPlayer3D] Load error:', err));
 
     // Animate
