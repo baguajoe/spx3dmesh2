@@ -52,6 +52,7 @@ import ModifierStackPanel from "./components/panels/ModifierStackPanel.jsx";
 import ConstraintsPanel from "./components/panels/ConstraintsPanel.jsx";
 import GeometryNodesPanel from "./components/panels/GeometryNodesPanel.jsx";
 import DriversPanel from "./components/panels/DriversPanel.jsx";
+import NLAPanel from "./components/panels/NLAPanel.jsx";
 import FilmSubdivPanel from "./components/panels/FilmSubdivPanel.jsx";
 import FilmRenderPipeline from "./components/panels/FilmRenderPipeline.jsx";
 import ProfessionalShell from "./pro-ui/ProfessionalShell";
@@ -704,6 +705,7 @@ export default function App() {
   const [constraintsPanelOpen, setConstraintsPanelOpen] = useState(false);
   const [geoNodesPanelOpen, setGeoNodesPanelOpen] = useState(false);
   const [driversPanelOpen, setDriversPanelOpen] = useState(false);
+  const [nlaPanelOpen, setNlaPanelOpen] = useState(false);
   // ── VFX panels ──
   const [fluidPanelOpen, setFluidPanelOpen] = useState(false);
   const [weatherPanelOpen, setWeatherPanelOpen] = useState(false);
@@ -4831,6 +4833,7 @@ export default function App() {
                 { label: "Constraints", fn: () => { closeAllWorkspacePanels(); setConstraintsPanelOpen(true); } },
                 { label: "Geometry Nodes", fn: () => { closeAllWorkspacePanels(); setGeoNodesPanelOpen(true); } },
                 { label: "Drivers", fn: () => { closeAllWorkspacePanels(); setDriversPanelOpen(true); } },
+                { label: "NLA", fn: () => { closeAllWorkspacePanels(); setNlaPanelOpen(true); } },
                 { label: "Skin Gen", fn: () => { closeAllWorkspacePanels(); setCustomSkinPanelOpen(true); } },
                 { label: "3D→2D Style", fn: () => { closeAllWorkspacePanels(); setStyle3DTo2DOpen(true); } },
                 { label: "Anim Graph", fn: () => { closeAllWorkspacePanels(); setAnimGraphOpen(true); } },
@@ -5108,6 +5111,11 @@ export default function App() {
         {driversPanelOpen && (
           <FloatPanel title="DRIVERS" onClose={() => setDriversPanelOpen(false)} width={380}>
             <DriversPanel meshRef={meshRef} sceneObjects={sceneObjects} currentFrame={currentFrame} setStatus={setStatus} onClose={() => setDriversPanelOpen(false)} />
+          </FloatPanel>
+        )}
+        {nlaPanelOpen && (
+          <FloatPanel title="NLA" onClose={() => setNlaPanelOpen(false)} width={420}>
+            <NLAPanel meshRef={meshRef} sceneObjects={sceneObjects} currentFrame={currentFrame} setStatus={setStatus} onClose={() => setNlaPanelOpen(false)} />
           </FloatPanel>
         )}
         {showPerformancePanel && (
