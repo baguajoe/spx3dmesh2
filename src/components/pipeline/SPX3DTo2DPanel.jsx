@@ -109,6 +109,32 @@ function applyStyleFilter(srcCanvas, style, params) {
   const d  = id.data;
 
   switch (style) {
+    case 'pencil': return makeLinePass(srcCanvas, params.edgeThreshold ?? 24, params.edgeBias ?? 1.0);
+    case 'low_poly': return makeFlatColorPass(srcCanvas, params.toonLevels ?? 4);
+    case 'ink_wash': {
+      const line = makeLinePass(srcCanvas, params.edgeThreshold ?? 24, params.edgeBias ?? 1.0);
+      const lctx = line.getContext('2d');
+      const lid = lctx.getImageData(0, 0, line.width, line.height);
+      const ld = lid.data;
+      for (let i = 0; i < ld.length; i += 4) {
+        const g = 0.299*ld[i] + 0.587*ld[i+1] + 0.114*ld[i+2];
+        ld[i] = ld[i+1] = ld[i+2] = g;
+      }
+      lctx.putImageData(lid, 0, 0);
+      return line;
+    }
+    case 'charcoal': {
+      const line = makeLinePass(srcCanvas, params.edgeThreshold ?? 24, params.edgeBias ?? 1.0);
+      const lctx = line.getContext('2d');
+      const lid = lctx.getImageData(0, 0, line.width, line.height);
+      const ld = lid.data;
+      for (let i = 0; i < ld.length; i += 4) {
+        const g = (0.299*ld[i] + 0.587*ld[i+1] + 0.114*ld[i+2]) * 0.6;
+        ld[i] = ld[i+1] = ld[i+2] = g;
+      }
+      lctx.putImageData(lid, 0, 0);
+      return line;
+    }
     case 'film_noir': {
       for (let i = 0; i < d.length; i += 4) {
         const g = 0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
@@ -118,7 +144,7 @@ function applyStyleFilter(srcCanvas, style, params) {
       break;
     }
     case 'toon': case 'cel': case 'pixar': case 'anime': case 'manga': case 'comic': {
-      const lv = params.toonLevels || 5;
+      const lv = style === 'cel' ? 4 : (params.toonLevels || 5);
       const sb = params.shadowBands || 3;
       const hc = params.highlightClamp || 0.85;
       for (let i = 0; i < d.length; i += 4) {
@@ -130,9 +156,11 @@ function applyStyleFilter(srcCanvas, style, params) {
         g = Math.min(g, hc);
         b = Math.min(b, hc);
 
-        r = Math.round(r * lv) / lv;
-        g = Math.round(g * lv) / lv;
-        b = Math.round(b * lv) / lv;
+        if (style !== 'pixar') {
+          r = Math.round(r * lv) / lv;
+          g = Math.round(g * lv) / lv;
+          b = Math.round(b * lv) / lv;
+        }
 
         const lum = (r + g + b) / 3;
         const band = Math.round(lum * sb) / sb;
@@ -317,6 +345,10 @@ function applyStyleFilter(srcCanvas, style, params) {
     default: break;
   }
   ctx.putImageData(id, 0, 0);
+  if (style === 'manga' || style === 'comic') {
+    applyHalftoneOverlay(dst, 0.15, 6);
+  }
+  applyPackFinish(dst, style);
   return dst;
 }
 
@@ -472,7 +504,7 @@ function makeLinePass(srcCanvas, threshold=24, bias=1.0){
 }
 
 
-function temporalBlendCanvas(currentCanvas, blend=0.35){
+function temporalBlendCanvas(currentCanvas, blend=0.35, prevFrameRef){
 
   if(!prevFrameRef.current){
     prevFrameRef.current = currentCanvas;
@@ -630,7 +662,7 @@ const captureAndProcess = useCallback((scale = 1) => {
     const result = applyStyleFilter(tmp, activeStyle, { outlineWidth, toonLevels, shadowBands, highlightClamp });
 
 if(exportMode === 'final'){
-  return temporalBlendCanvas(result, temporalBlend);
+  return temporalBlendCanvas(result, temporalBlend, prevFrameRef);
 }
 
 return result;

@@ -6,6 +6,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   writeFile:      (path, data)      => ipcRenderer.invoke('fs:writeFile', path, data),
   showSaveDialog: (options)         => ipcRenderer.invoke('fs:showSaveDialog', options),
   showOpenDialog: (options)         => ipcRenderer.invoke('fs:showOpenDialog', options),
+  saveFile:       (opts)            => ipcRenderer.invoke('fs:showSaveDialog', opts),
+  invoke:         (channel, ...args)=> ipcRenderer.invoke(channel, ...args),
 
   // Python
   runPython:      (code)            => ipcRenderer.invoke('python:run', code),
