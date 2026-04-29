@@ -50,6 +50,8 @@ import FilmPathTracerPanel from "./components/panels/FilmPathTracerPanel.jsx";
 import RotoscopePanel from "./components/panels/RotoscopePanel.jsx";
 import ModifierStackPanel from "./components/panels/ModifierStackPanel.jsx";
 import ConstraintsPanel from "./components/panels/ConstraintsPanel.jsx";
+import GeometryNodesPanel from "./components/panels/GeometryNodesPanel.jsx";
+import DriversPanel from "./components/panels/DriversPanel.jsx";
 import FilmSubdivPanel from "./components/panels/FilmSubdivPanel.jsx";
 import FilmRenderPipeline from "./components/panels/FilmRenderPipeline.jsx";
 import ProfessionalShell from "./pro-ui/ProfessionalShell";
@@ -700,6 +702,8 @@ export default function App() {
   const [proMeshOpen, setProMeshOpen] = useState(false);
   const [modifierStackOpen, setModifierStackOpen] = useState(false);
   const [constraintsPanelOpen, setConstraintsPanelOpen] = useState(false);
+  const [geoNodesPanelOpen, setGeoNodesPanelOpen] = useState(false);
+  const [driversPanelOpen, setDriversPanelOpen] = useState(false);
   // ── VFX panels ──
   const [fluidPanelOpen, setFluidPanelOpen] = useState(false);
   const [weatherPanelOpen, setWeatherPanelOpen] = useState(false);
@@ -4825,6 +4829,8 @@ export default function App() {
                 { label: "Pro Mesh", fn: () => { closeAllWorkspacePanels(); setProMeshOpen(true); } },
                 { label: "Modifiers", fn: () => { closeAllWorkspacePanels(); setModifierStackOpen(true); } },
                 { label: "Constraints", fn: () => { closeAllWorkspacePanels(); setConstraintsPanelOpen(true); } },
+                { label: "Geometry Nodes", fn: () => { closeAllWorkspacePanels(); setGeoNodesPanelOpen(true); } },
+                { label: "Drivers", fn: () => { closeAllWorkspacePanels(); setDriversPanelOpen(true); } },
                 { label: "Skin Gen", fn: () => { closeAllWorkspacePanels(); setCustomSkinPanelOpen(true); } },
                 { label: "3D→2D Style", fn: () => { closeAllWorkspacePanels(); setStyle3DTo2DOpen(true); } },
                 { label: "Anim Graph", fn: () => { closeAllWorkspacePanels(); setAnimGraphOpen(true); } },
@@ -5092,6 +5098,16 @@ export default function App() {
         {constraintsPanelOpen && (
           <FloatPanel title="CONSTRAINTS" onClose={() => setConstraintsPanelOpen(false)} width={360}>
             <ConstraintsPanel meshRef={meshRef} sceneObjects={sceneObjects} setStatus={setStatus} onClose={() => setConstraintsPanelOpen(false)} />
+          </FloatPanel>
+        )}
+        {geoNodesPanelOpen && (
+          <FloatPanel title="GEOMETRY NODES" onClose={() => setGeoNodesPanelOpen(false)} width={380}>
+            <GeometryNodesPanel meshRef={meshRef} setStatus={setStatus} onClose={() => setGeoNodesPanelOpen(false)} />
+          </FloatPanel>
+        )}
+        {driversPanelOpen && (
+          <FloatPanel title="DRIVERS" onClose={() => setDriversPanelOpen(false)} width={380}>
+            <DriversPanel meshRef={meshRef} sceneObjects={sceneObjects} currentFrame={currentFrame} setStatus={setStatus} onClose={() => setDriversPanelOpen(false)} />
           </FloatPanel>
         )}
         {showPerformancePanel && (
