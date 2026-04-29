@@ -1398,6 +1398,20 @@ export default function App() {
     if (meshRef.current?.uuid && !meshByUUID.has(meshRef.current.uuid)) {
       meshByUUID.set(meshRef.current.uuid, meshRef.current);
     }
+    // Bone keyframing: also include bones nested in skinned meshes so bone keyframes replay during scrub.
+    // Bones have .uuid/.position/.rotation/.scale like any Object3D, so the existing evaluator loop works unchanged.
+    for (const so of sceneObjects) {
+      if (!so?.mesh) continue;
+      so.mesh.traverse?.((child) => {
+        if (child.isSkinnedMesh && child.skeleton?.bones) {
+          child.skeleton.bones.forEach((bone) => {
+            if (bone?.uuid && !meshByUUID.has(bone.uuid)) {
+              meshByUUID.set(bone.uuid, bone);
+            }
+          });
+        }
+      });
+    }
 
     // Evaluate one channel's value at currentFrame. Linear interp, hold at edges.
     const evalChannel = (framesObj, frame) => {
@@ -1456,6 +1470,13 @@ export default function App() {
       if (!e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
         if (e.key === 'i' || e.key === 'I' || e.key === 'k' || e.key === 'K') {
           e.preventDefault();
+          // Bone keyframing: if a bone is selected, key the bone first then return.
+          // Object keyframing (cube + I-key) untouched when no bone is selected.
+          if (selectedBoneRef.current && typeof window.keyAllTransform === "function") {
+            window.keyAllTransform(selectedBoneRef.current, currentFrameRef.current);
+            setStatus("◆ Bone keyframe set: " + (selectedBoneRef.current.name || "bone") + " @ frame " + currentFrameRef.current);
+            return;
+          }
           handleApplyFunction?.('add_keyframe');
           return;
         }
@@ -2265,6 +2286,28 @@ export default function App() {
         const model = gltf.scene;
         model.name = label;
         sceneRef.current?.add(model);
+
+        // Bone keyframing: add small helper spheres at each bone for click-select.
+        // Parented to the bone so they track movement. Raycast targets.
+        import("three").then((THREE_MOD) => {
+          const helperGeo = new THREE_MOD.SphereGeometry(0.02, 8, 6);
+          const helperMat = new THREE_MOD.MeshBasicMaterial({ color: 0xff6600, depthTest: false, transparent: true, opacity: 0.7 });
+          model.traverse((child) => {
+            if (child.isSkinnedMesh && child.skeleton) {
+              child.skeleton.bones.forEach((bone) => {
+                const helper = new THREE_MOD.Mesh(helperGeo, helperMat.clone());
+                helper.renderOrder = 999;
+                helper.userData.isBoneHelper = true;
+                helper.userData.boneRef = bone;
+                helper.name = "_boneHelper_" + bone.name;
+                bone.add(helper); // Parent to bone so it tracks
+                boneHelpersRef.current.push(helper);
+              });
+            }
+          });
+          console.log("[bone-keyframe] Added " + boneHelpersRef.current.length + " bone helpers");
+        });
+
         // Auto-fit GLB to scene scale (Mixamo exports in cm = ~138 unit oversize)
         import('three').then((THREE_MOD) => {
           const box = new THREE_MOD.Box3().setFromObject(model);
@@ -4044,7 +4087,8 @@ export default function App() {
   const [animKeys, setAnimKeys] = useState({});
   const [armatures, setArmatures] = useState([]);
   const [selectedBoneId, setSelectedBoneId] = useState(null);
-  const [poseLibrary, setPoseLibrary] = useState({});
+  const selectedBoneRef = useRef(null); // Bone keyframing: holds currently-selected THREE.Bone for raycast/I-key
+  const boneHelpersRef = useRef([]); // Array of helper spheres (for raycast candidates + selection highlight)  const [poseLibrary, setPoseLibrary] = useState({});
   const [wpBoneIndex, setWpBoneIndex] = useState(0);
   const [wpRadius, setWpRadius] = useState(0.5);
   const [wpStrength, setWpStrength] = useState(0.1);
@@ -4268,6 +4312,41 @@ export default function App() {
                     gizmoDragging.current = true;
                     e.stopPropagation();
                     return;
+                  }
+                }
+              }
+              // Bone keyframing: raycast against bone helpers FIRST.
+              // If a helper is hit, select the bone and skip object selection.
+              if (boneHelpersRef.current.length > 0 && canvasRef.current && cameraRef.current) {
+                const _bh_rect = canvasRef.current.getBoundingClientRect();
+                const _bh_mx = ((e.clientX - _bh_rect.left) / _bh_rect.width) * 2 - 1;
+                const _bh_my = -((e.clientY - _bh_rect.top) / _bh_rect.height) * 2 + 1;
+                const _bh_ray = new THREE.Raycaster();
+                _bh_ray.setFromCamera(new THREE.Vector2(_bh_mx, _bh_my), cameraRef.current);
+                _bh_ray.params.Line.threshold = 0.05;
+                let _bh_hits = [];
+                try { _bh_hits = _bh_ray.intersectObjects(boneHelpersRef.current, false); } catch (_e) { }
+                if (_bh_hits.length > 0) {
+                  const _bh_hitHelper = _bh_hits[0].object;
+                  const _bh_bone = _bh_hitHelper.userData.boneRef;
+                  // Clear previous highlight, highlight new
+                  boneHelpersRef.current.forEach((h) => {
+                    if (h.material) h.material.color.setHex(0xff6600);
+                  });
+                  if (_bh_hitHelper.material) _bh_hitHelper.material.color.setHex(0xffff00); // yellow for selected
+                  selectedBoneRef.current = _bh_bone;
+                  setSelectedBoneId(_bh_bone.uuid);
+                  setStatus("Selected bone: " + (_bh_bone.name || "_unnamed") + " (I = key)");
+                  console.log("[bone-select]", _bh_bone.name, _bh_bone.uuid);
+                  return; // Skip object selection
+                } else {
+                  // Clicked empty space -- deselect bone, dehighlight all
+                  if (selectedBoneRef.current) {
+                    boneHelpersRef.current.forEach((h) => {
+                      if (h.material) h.material.color.setHex(0xff6600);
+                    });
+                    selectedBoneRef.current = null;
+                    setSelectedBoneId(null);
                   }
                 }
               }
