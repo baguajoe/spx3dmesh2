@@ -53,6 +53,7 @@ import ConstraintsPanel from "./components/panels/ConstraintsPanel.jsx";
 import GeometryNodesPanel from "./components/panels/GeometryNodesPanel.jsx";
 import DriversPanel from "./components/panels/DriversPanel.jsx";
 import NLAPanel from "./components/panels/NLAPanel.jsx";
+import GraphEditorPanel from "./components/panels/GraphEditorPanel.jsx";
 import FilmSubdivPanel from "./components/panels/FilmSubdivPanel.jsx";
 import FilmRenderPipeline from "./components/panels/FilmRenderPipeline.jsx";
 import ProfessionalShell from "./pro-ui/ProfessionalShell";
@@ -706,6 +707,7 @@ export default function App() {
   const [geoNodesPanelOpen, setGeoNodesPanelOpen] = useState(false);
   const [driversPanelOpen, setDriversPanelOpen] = useState(false);
   const [nlaPanelOpen, setNlaPanelOpen] = useState(false);
+  const [graphEditorOpen, setGraphEditorOpen] = useState(false);
   // ── VFX panels ──
   const [fluidPanelOpen, setFluidPanelOpen] = useState(false);
   const [weatherPanelOpen, setWeatherPanelOpen] = useState(false);
@@ -4834,6 +4836,7 @@ export default function App() {
                 { label: "Geometry Nodes", fn: () => { closeAllWorkspacePanels(); setGeoNodesPanelOpen(true); } },
                 { label: "Drivers", fn: () => { closeAllWorkspacePanels(); setDriversPanelOpen(true); } },
                 { label: "NLA", fn: () => { closeAllWorkspacePanels(); setNlaPanelOpen(true); } },
+                { label: "Graph Editor", fn: () => { closeAllWorkspacePanels(); setGraphEditorOpen(true); } },
                 { label: "Skin Gen", fn: () => { closeAllWorkspacePanels(); setCustomSkinPanelOpen(true); } },
                 { label: "3D→2D Style", fn: () => { closeAllWorkspacePanels(); setStyle3DTo2DOpen(true); } },
                 { label: "Anim Graph", fn: () => { closeAllWorkspacePanels(); setAnimGraphOpen(true); } },
@@ -5116,6 +5119,11 @@ export default function App() {
         {nlaPanelOpen && (
           <FloatPanel title="NLA" onClose={() => setNlaPanelOpen(false)} width={420}>
             <NLAPanel meshRef={meshRef} sceneObjects={sceneObjects} currentFrame={currentFrame} setStatus={setStatus} onClose={() => setNlaPanelOpen(false)} />
+          </FloatPanel>
+        )}
+        {graphEditorOpen && (
+          <FloatPanel title="GRAPH EDITOR" onClose={() => setGraphEditorOpen(false)} width={400}>
+            <GraphEditorPanel meshRef={meshRef} sceneObjects={sceneObjects} currentFrame={currentFrame} setStatus={setStatus} onClose={() => setGraphEditorOpen(false)} />
           </FloatPanel>
         )}
         {showPerformancePanel && (
