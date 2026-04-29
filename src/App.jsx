@@ -48,6 +48,7 @@ import CinematicLightingPanel from "./components/panels/CinematicLightingPanel.j
 import FilmVolumetricsPanel from "./components/panels/FilmVolumetricsPanel.jsx";
 import FilmPathTracerPanel from "./components/panels/FilmPathTracerPanel.jsx";
 import RotoscopePanel from "./components/panels/RotoscopePanel.jsx";
+import ModifierStackPanel from "./components/panels/ModifierStackPanel.jsx";
 import FilmSubdivPanel from "./components/panels/FilmSubdivPanel.jsx";
 import FilmRenderPipeline from "./components/panels/FilmRenderPipeline.jsx";
 import ProfessionalShell from "./pro-ui/ProfessionalShell";
@@ -696,6 +697,7 @@ export default function App() {
   // ── Gamepad Animator + Pro Mesh ──
   const [gamepadOpen, setGamepadOpen] = useState(false);
   const [proMeshOpen, setProMeshOpen] = useState(false);
+  const [modifierStackOpen, setModifierStackOpen] = useState(false);
   // ── VFX panels ──
   const [fluidPanelOpen, setFluidPanelOpen] = useState(false);
   const [weatherPanelOpen, setWeatherPanelOpen] = useState(false);
@@ -4819,6 +4821,7 @@ export default function App() {
               ]} />
               <SpxTabGroup label="GEN" color="#FF6600" tabs={[
                 { label: "Pro Mesh", fn: () => { closeAllWorkspacePanels(); setProMeshOpen(true); } },
+                { label: "Modifiers", fn: () => { closeAllWorkspacePanels(); setModifierStackOpen(true); } },
                 { label: "Skin Gen", fn: () => { closeAllWorkspacePanels(); setCustomSkinPanelOpen(true); } },
                 { label: "3D→2D Style", fn: () => { closeAllWorkspacePanels(); setStyle3DTo2DOpen(true); } },
                 { label: "Anim Graph", fn: () => { closeAllWorkspacePanels(); setAnimGraphOpen(true); } },
@@ -5076,6 +5079,11 @@ export default function App() {
         {proMeshOpen && (
           <FloatPanel title="PRO MESH" onClose={() => setProMeshOpen(false)} width={360}>
             <ProMeshPanelNew open={proMeshOpen} onClose={() => setProMeshOpen(false)} />
+          </FloatPanel>
+        )}
+        {modifierStackOpen && (
+          <FloatPanel title="MODIFIER STACK" onClose={() => setModifierStackOpen(false)} width={340}>
+            <ModifierStackPanel meshRef={meshRef} setStatus={setStatus} onClose={() => setModifierStackOpen(false)} />
           </FloatPanel>
         )}
         {showPerformancePanel && (
