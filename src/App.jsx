@@ -2265,6 +2265,18 @@ export default function App() {
         const model = gltf.scene;
         model.name = label;
         sceneRef.current?.add(model);
+        // Auto-fit GLB to scene scale (Mixamo exports in cm = ~138 unit oversize)
+        import('three').then((THREE_MOD) => {
+          const box = new THREE_MOD.Box3().setFromObject(model);
+          const size = box.getSize(new THREE_MOD.Vector3());
+          const maxDim = Math.max(size.x, size.y, size.z);
+          if (maxDim > 10) {
+            const s = 2 / maxDim;
+            model.scale.setScalar(s);
+            const box2 = new THREE_MOD.Box3().setFromObject(model);
+            model.position.y -= box2.min.y;
+          }
+        }).catch((e) => console.warn('[loadModelToScene] auto-fit failed', e));
         const id = Date.now();
         const newObj = { id, name: label, mesh: model, userData: { type: "glb", url } };
         setSceneObjects(prev => [...prev, newObj]);
