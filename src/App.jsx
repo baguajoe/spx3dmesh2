@@ -1332,9 +1332,13 @@ export default function App() {
       if (!window.animationData[uuid]) window.animationData[uuid] = {};
       const store = window.animationData[uuid];
 
-      const writeScalar = (chan, v) => {
+      const writeScalar = (chan, v, type = "linear") => {
         if (!store[chan]) store[chan] = {};
-        store[chan][f] = Number(v);
+        if (type === "bezier") {
+          store[chan][f] = { v: Number(v), t: "bezier", lh: [-5, 0], rh: [5, 0] };
+        } else {
+          store[chan][f] = Number(v);
+        }
       };
 
       if (key === "position" || key === "rotation" || key === "scale") {
@@ -1425,21 +1429,31 @@ export default function App() {
       });
     }
 
+    // Schema-tolerant reader: bare number (legacy) or { v, t, lh, rh } (bezier).
+    const readKeyValue = (entry) => {
+      if (typeof entry === "number") return entry;
+      if (entry && typeof entry === "object" && typeof entry.v === "number") return entry.v;
+      return 0;
+    };
+
     // Evaluate one channel's value at currentFrame. Linear interp, hold at edges.
+    // Bezier entries lerp linearly until tangent math is added.
     const evalChannel = (framesObj, frame) => {
       const frames = Object.keys(framesObj).map(Number).sort((a, b) => a - b);
       if (frames.length === 0) return null;
-      if (frame <= frames[0]) return framesObj[frames[0]];
-      if (frame >= frames[frames.length - 1]) return framesObj[frames[frames.length - 1]];
+      if (frame <= frames[0]) return readKeyValue(framesObj[frames[0]]);
+      if (frame >= frames[frames.length - 1]) return readKeyValue(framesObj[frames[frames.length - 1]]);
       // Find bracketing pair
       for (let i = 0; i < frames.length - 1; i++) {
         const a = frames[i], b = frames[i + 1];
         if (frame >= a && frame <= b) {
           const t = (frame - a) / (b - a);
-          return framesObj[a] + (framesObj[b] - framesObj[a]) * t;
+          const va = readKeyValue(framesObj[a]);
+          const vb = readKeyValue(framesObj[b]);
+          return va + (vb - va) * t;
         }
       }
-      return framesObj[frames[frames.length - 1]];
+      return readKeyValue(framesObj[frames[frames.length - 1]]);
     };
 
     // Skip evaluation if we just wrote a keyframe — the user just captured
