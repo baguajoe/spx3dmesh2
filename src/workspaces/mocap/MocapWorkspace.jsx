@@ -306,7 +306,13 @@ function LiveCaptureTab({ onExportGlb }) {
         multiMocapRef.current = mp;
 
         // Still need camera stream for video element
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width:  { ideal: 1280, max: 1920 },
+            height: { ideal: 720,  max: 1080 },
+            frameRate: { ideal: 30 }
+          }
+        });
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
       } else {
@@ -602,6 +608,7 @@ function LiveCaptureTab({ onExportGlb }) {
               liveFrame={isPlaying ? null : liveFrame}
               recordedFrames={isPlaying ? recordedFrames : null}
               smoothingEnabled={false}
+              retargetEnabled={retargetEnabled}
             />
           ) : <div className="mw-avatar-empty">⟳ Loading avatar...</div>}
         </div>

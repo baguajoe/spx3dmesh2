@@ -413,7 +413,7 @@ const AvatarRig = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnabled = tr
 // ─────────────────────────────────────────────────────────────
 // EXPORTED COMPONENT
 // ─────────────────────────────────────────────────────────────
-const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnabled, visemes = [], audioRef = null }) => {
+const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnabled, visemes = [], audioRef = null, retargetEnabled = true }) => {
   const mountRef = useRef(null);
   const rendererRef = useRef(null);
   const sceneRef = useRef(null);
@@ -519,7 +519,7 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
       const delta = clockRef.current.getDelta();
 
       // Live frame retargeting - gate with liveFrame check
-      if (liveFrame && avatarRef.current?.bones) {
+      if (liveFrame && retargetEnabled && avatarRef.current?.bones) {
         const bones = avatarRef.current.bones;
         const lm = liveFrame.landmarks || liveFrame;
 
