@@ -1436,7 +1436,7 @@ export default function App() {
 
     // Apply every animated channel to its target mesh.
     // Skip object currently being dragged by gizmo (user is editing it).
-    const draggingUUID = (gizmoDragging.current && (selectedObject?.uuid || meshRef.current?.uuid)) || null;
+    const draggingUUID = (gizmoDragging.current && (gizmoRef.current?.target?.uuid || selectedObject?.uuid || meshRef.current?.uuid)) || null;
 
     for (const uuid of uuids) {
       if (uuid === draggingUUID) continue;
@@ -3995,6 +3995,13 @@ export default function App() {
     if (fn === "collab_snapshot") { const snap = createVersionSnapshot(sceneObjects, prompt("Version note:", "v" + Date.now()) || ""); setStatus("Version snapshot saved — " + snap.message); return; }
     if (fn === "collab_comment") { const pin = createCommentPin(meshRef.current?.position || { x: 0, y: 0, z: 0 }, prompt("Comment:", ""), "user"); setStatus("Comment pin added"); return; }
     if (fn === "spx_sketch") { setGreasePencilPanelOpen(true); return; }
+    if (fn === "gp_onion") {
+      // Onion skin toggle -- flag consumed by GreasePencil render loop
+      window._gpOnion = !window._gpOnion;
+      window.dispatchEvent(new CustomEvent("spx:gp-onion-toggle", { detail: { enabled: window._gpOnion } }));
+      setStatus(window._gpOnion ? "Onion skin ON" : "Onion skin OFF");
+      return;
+    }
     if (fn === "gp_layer") { const l = createLayer("Layer_" + Date.now()); setStatus("SPX Sketch layer created"); return; }
     if (fn === "gp_stroke") { const s = createStroke([]); setStatus("SPX Sketch stroke created"); return; }
     if (fn === "bake_nla") { if (typeof window.bakeNLA === "function") { window.bakeNLA(nlaTracks, nlaActions, 0, 120); setStatus("NLA baked"); } return; }
@@ -4310,6 +4317,17 @@ export default function App() {
                   if (axis) {
                     gizmoRef.current.startDrag(axis, hits[0].point);
                     gizmoDragging.current = true;
+                    // Proportional editing: capture start positions of all scene objects so we can apply delta with falloff.
+                    if (proportionalEnabled && gizmoRef.current?.target) {
+                      const tgt = gizmoRef.current.target;
+                      window._propStart = {
+                        targetUUID: tgt.uuid,
+                        targetPos: tgt.position.clone(),
+                        neighbors: sceneObjectsRef.current
+                          .filter((o) => o.mesh && o.mesh.uuid !== tgt.uuid)
+                          .map((o) => ({ mesh: o.mesh, startPos: o.mesh.position.clone(), dist: o.mesh.position.distanceTo(tgt.position) })),
+                      };
+                    }
                     e.stopPropagation();
                     return;
                   }
@@ -4480,7 +4498,32 @@ export default function App() {
                 const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(planeNormal, gizmoPos);
                 const pt = new THREE.Vector3();
                 const hit = ray.ray.intersectPlane(plane, pt);
-                if (hit) gizmoRef.current.drag(pt);
+                if (hit) {
+                  // Grid snap: quantize pt to snapSize step before drag when snap is on.
+                  if (snapEnabled && snapMode === "grid" && snapSize > 0) {
+                    pt.x = Math.round(pt.x / snapSize) * snapSize;
+                    pt.y = Math.round(pt.y / snapSize) * snapSize;
+                    pt.z = Math.round(pt.z / snapSize) * snapSize;
+                  }
+                  gizmoRef.current.drag(pt);
+                  // Proportional editing: apply falloff-scaled delta to neighbor objects within radius.
+                  if (proportionalEnabled && window._propStart && gizmoRef.current?.target) {
+                    const tgt = gizmoRef.current.target;
+                    const delta = new THREE.Vector3().subVectors(tgt.position, window._propStart.targetPos);
+                    const r = proportionalRadius;
+                    window._propStart.neighbors.forEach((n) => {
+                      if (n.dist >= r) return;
+                      const d = n.dist / r; // 0..1
+                      let w;
+                      if (proportionalFalloff === "linear") w = 1 - d;
+                      else if (proportionalFalloff === "sharp") w = (1 - d) * (1 - d);
+                      else w = 0.5 * (1 + Math.cos(Math.PI * d)); // smooth (default)
+                      n.mesh.position.x = n.startPos.x + delta.x * w;
+                      n.mesh.position.y = n.startPos.y + delta.y * w;
+                      n.mesh.position.z = n.startPos.z + delta.z * w;
+                    });
+                  }
+                }
                 return;
               }
               if (activeWorkspace === "Sculpt" && sculptingRef.current && meshRef.current) {
