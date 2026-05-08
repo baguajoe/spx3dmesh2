@@ -342,6 +342,40 @@ function applyStyleFilter(srcCanvas, style, params) {
       break;
     }
 
+    case 'impressionist': {
+      const w = dst.width;
+      const h = dst.height;
+      const out = new Uint8ClampedArray(d.length);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const i = (y * w + x) * 4;
+          const ox = x + Math.floor((Math.random() - 0.5) * 6);
+          const oy = y + Math.floor((Math.random() - 0.5) * 6);
+          const sx = Math.max(0, Math.min(w - 1, ox));
+          const sy = Math.max(0, Math.min(h - 1, oy));
+          const si = (sy * w + sx) * 4;
+          out[i]   = d[si];
+          out[i+1] = d[si+1];
+          out[i+2] = d[si+2];
+          out[i+3] = 255;
+        }
+      }
+      for (let i = 0; i < d.length; i += 4) {
+        let r = out[i], g = out[i+1], b = out[i+2];
+        const lum = 0.299*r + 0.587*g + 0.114*b;
+        r = lum + (r - lum) * 1.20;
+        g = lum + (g - lum) * 1.20;
+        b = lum + (b - lum) * 1.20;
+        r += (Math.random() - 0.5) * 18;
+        g += (Math.random() - 0.5) * 18;
+        b += (Math.random() - 0.5) * 18;
+        d[i]   = Math.max(0, Math.min(255, r));
+        d[i+1] = Math.max(0, Math.min(255, g));
+        d[i+2] = Math.max(0, Math.min(255, b));
+      }
+      break;
+    }
+
     case 'gouache': {
       for (let i = 0; i < d.length; i += 4) {
         const levels = 5;
