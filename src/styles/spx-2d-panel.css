@@ -46,12 +46,21 @@
   text-transform: uppercase !important;
 }
 
-.s2d-viewport-canvas {
+.s2d-canvas-wrap {
   flex: 1 1 0 !important;
+  position: relative !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.s2d-viewport-canvas {
+  position: absolute !important;
+  inset: 0 !important;
   width: 100% !important;
+  height: 100% !important;
   display: block !important;
   background: #060a10 !important;
-  min-height: 0 !important;
 }
 
 .s2d-viewport-hint {

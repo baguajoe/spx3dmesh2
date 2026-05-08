@@ -1090,7 +1090,9 @@ const out = captureAndProcess(1);
       {/* LEFT — 3D Live Viewport */}
       <div className="s2d-viewport">
         <div className="s2d-viewport-label">3D VIEWPORT — LIVE</div>
-        <canvas ref={liveRef} className="s2d-viewport-canvas" />
+        <div className="s2d-canvas-wrap">
+          <canvas ref={liveRef} className="s2d-viewport-canvas" />
+        </div>
         <div className="s2d-viewport-hint">Live mirror of your scene</div>
       </div>
 
@@ -1100,7 +1102,9 @@ const out = captureAndProcess(1);
           2D OUTPUT —&nbsp;
           <span style={{color: currentStyle.color}}>{currentStyle.label.toUpperCase()}</span>
         </div>
-        <canvas ref={previewRef} className="s2d-viewport-canvas" />
+        <div className="s2d-canvas-wrap">
+          <canvas ref={previewRef} className="s2d-viewport-canvas" />
+        </div>
         <div className="s2d-output-actions">
           <button className="s2d-btn s2d-btn--render" onClick={handleRender} disabled={rendering}>
             {rendering ? '⏳ RENDERING...' : '▶ RENDER'}
