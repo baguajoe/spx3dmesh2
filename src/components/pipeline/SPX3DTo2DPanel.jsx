@@ -895,7 +895,12 @@ function applyNPRIfNeeded(style, sceneRef){
 
 
 const captureAndProcess = useCallback((scale = 1) => {
-    const src = rendererRef?.current?.domElement;
+    const renderer = rendererRef?.current;
+    const scene    = sceneRef?.current;
+    const camera   = cameraRef?.current;
+    if (!renderer || !scene || !camera) return null;
+    renderer.render(scene, camera);
+    const src = renderer.domElement;
     if (!src) return null;
     const tmp = document.createElement('canvas');
     tmp.width  = src.width  * scale;
@@ -917,7 +922,7 @@ if(exportMode === 'final'){
 }
 
 return result;
-  }, [activeStyle, outlineWidth, toonLevels, shadowBands, highlightClamp, exportMode, edgeThreshold, edgeBias, temporalBlend, rendererRef]);
+  }, [activeStyle, outlineWidth, toonLevels, shadowBands, highlightClamp, exportMode, edgeThreshold, edgeBias, temporalBlend, rendererRef, sceneRef, cameraRef]);
 
   const handleRender = useCallback(async () => {
     if (!rendererRef?.current) { setStatus('⚠ No renderer — add a mesh first'); return; }
