@@ -342,6 +342,33 @@ function applyStyleFilter(srcCanvas, style, params) {
       break;
     }
 
+    case 'gouache': {
+      for (let i = 0; i < d.length; i += 4) {
+        const levels = 5;
+        let r = Math.round(d[i]   / 255 * levels) / levels * 255;
+        let g = Math.round(d[i+1] / 255 * levels) / levels * 255;
+        let b = Math.round(d[i+2] / 255 * levels) / levels * 255;
+        const lum = 0.299*r + 0.587*g + 0.114*b;
+        r = lum + (r - lum) * 1.30;
+        g = lum + (g - lum) * 1.30;
+        b = lum + (b - lum) * 1.30;
+        d[i]   = Math.max(0, Math.min(255, r));
+        d[i+1] = Math.max(0, Math.min(255, g));
+        d[i+2] = Math.max(0, Math.min(255, b));
+      }
+      ctx.putImageData(id, 0, 0);
+      const blurCanvas = document.createElement('canvas');
+      blurCanvas.width  = dst.width;
+      blurCanvas.height = dst.height;
+      const bctx = blurCanvas.getContext('2d');
+      bctx.filter = 'blur(1.2px)';
+      bctx.drawImage(dst, 0, 0);
+      ctx.clearRect(0, 0, dst.width, dst.height);
+      ctx.drawImage(blurCanvas, 0, 0);
+      applyPaperTextureOverlay(dst, 0.06);
+      return dst;
+    }
+
     case 'watercolor': {
       const w = dst.width;
       const h = dst.height;
