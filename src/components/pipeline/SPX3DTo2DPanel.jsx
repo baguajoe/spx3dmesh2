@@ -924,9 +924,10 @@ applyNPRIfNeeded(activeStyle, sceneRef);
 const out = captureAndProcess(1);
 
       if (out && previewRef.current) {
-        previewRef.current.width  = out.width;
-        previewRef.current.height = out.height;
-        previewRef.current.getContext('2d').drawImage(out, 0, 0);
+        const c = previewRef.current;
+        c.width  = c.offsetWidth  || out.width;
+        c.height = c.offsetHeight || out.height;
+        c.getContext('2d').drawImage(out, 0, 0, c.width, c.height);
       }
       setStatus(`✓ ${currentStyle.label} — ${out?.width}×${out?.height}`);
     } catch(e) { setStatus(`Error: ${e.message}`); }
