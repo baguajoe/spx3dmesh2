@@ -47,7 +47,7 @@
 }
 
 .s2d-viewport-canvas {
-  flex: 1 1 auto !important;
+  flex: 1 1 0 !important;
   width: 100% !important;
   display: block !important;
   background: #060a10 !important;
