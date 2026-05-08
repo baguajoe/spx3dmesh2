@@ -830,9 +830,13 @@ const prevFrameRef = useRef(null);
   useEffect(() => {
     if (!open) return;
     const mirror = () => {
-      const src = rendererRef?.current?.domElement;
-      const dst = liveRef.current;
-      if (src && dst) {
+      const renderer = rendererRef?.current;
+      const scene    = sceneRef?.current;
+      const camera   = cameraRef?.current;
+      const dst      = liveRef.current;
+      if (renderer && scene && camera && dst) {
+        renderer.render(scene, camera);
+        const src = renderer.domElement;
         dst.width  = dst.offsetWidth  || 600;
         dst.height = dst.offsetHeight || 400;
         dst.getContext('2d').drawImage(src, 0, 0, dst.width, dst.height);
@@ -841,7 +845,7 @@ const prevFrameRef = useRef(null);
     };
     animRef.current = requestAnimationFrame(mirror);
     return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
-  }, [open, rendererRef]);
+  }, [open, rendererRef, sceneRef, cameraRef]);
 
   
 function applyNPRIfNeeded(style, sceneRef){
