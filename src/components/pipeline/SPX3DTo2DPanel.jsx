@@ -3,7 +3,7 @@ import * as THREE from "three";
 import JSZip from "jszip";
 
 const CATEGORIES = [
-  { id:"all",      label:"All 41" },
+  { id:"all",      label:"All 20" },
   { id:"photo",    label:"Photo" },
   { id:"cartoon",  label:"Cartoon" },
   { id:"paint",    label:"Paint" },
