@@ -342,6 +342,50 @@ function applyStyleFilter(srcCanvas, style, params) {
       break;
     }
 
+    case 'risograph': {
+      const w = dst.width;
+      const h = dst.height;
+      const blueR = 30, blueG = 50, blueB = 220;
+      const pinkR = 245, pinkG = 60, pinkB = 160;
+      const paperR = 250, paperG = 245, paperB = 235;
+      const bluePlate = new Uint8ClampedArray(d.length);
+      const pinkPlate = new Uint8ClampedArray(d.length);
+      for (let i = 0; i < d.length; i += 4) {
+        const lum = (0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]) / 255;
+        const blueIntensity = lum < 0.45 ? 1 : (lum < 0.7 ? 0.5 : 0);
+        const pinkIntensity = lum > 0.55 ? Math.min(1, (lum - 0.55) * 2.5) : 0;
+        bluePlate[i]   = blueR; bluePlate[i+1] = blueG; bluePlate[i+2] = blueB;
+        bluePlate[i+3] = blueIntensity * 255;
+        pinkPlate[i]   = pinkR; pinkPlate[i+1] = pinkG; pinkPlate[i+2] = pinkB;
+        pinkPlate[i+3] = pinkIntensity * 255;
+      }
+      for (let i = 0; i < d.length; i += 4) {
+        d[i] = paperR; d[i+1] = paperG; d[i+2] = paperB;
+      }
+      for (let i = 0; i < d.length; i += 4) {
+        const a = bluePlate[i+3] / 255;
+        d[i]   = d[i]   * (1-a) + bluePlate[i]   * a;
+        d[i+1] = d[i+1] * (1-a) + bluePlate[i+1] * a;
+        d[i+2] = d[i+2] * (1-a) + bluePlate[i+2] * a;
+      }
+      const offsetX = 2;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const di = (y * w + x) * 4;
+          const sx = x - offsetX;
+          if (sx < 0 || sx >= w) continue;
+          const si = (y * w + sx) * 4;
+          const a = pinkPlate[si+3] / 255;
+          d[di]   = d[di]   * (1-a) + pinkPlate[si]   * a;
+          d[di+1] = d[di+1] * (1-a) + pinkPlate[si+1] * a;
+          d[di+2] = d[di+2] * (1-a) + pinkPlate[si+2] * a;
+        }
+      }
+      ctx.putImageData(id, 0, 0);
+      applyPaperTextureOverlay(dst, 0.10);
+      return dst;
+    }
+
     case 'linocut': {
       for (let i = 0; i < d.length; i += 4) {
         const g = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
