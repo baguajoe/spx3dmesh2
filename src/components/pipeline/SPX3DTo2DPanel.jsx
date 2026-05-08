@@ -342,6 +342,61 @@ function applyStyleFilter(srcCanvas, style, params) {
       break;
     }
 
+    case 'oil': {
+      const w = dst.width;
+      const h = dst.height;
+      const blurred = new Uint8ClampedArray(d.length);
+      for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+          const i = (y * w + x) * 4;
+          let sr = 0, sg = 0, sb = 0;
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              const ni = ((y+dy) * w + (x+dx)) * 4;
+              sr += d[ni]; sg += d[ni+1]; sb += d[ni+2];
+            }
+          }
+          blurred[i]   = sr / 9;
+          blurred[i+1] = sg / 9;
+          blurred[i+2] = sb / 9;
+          blurred[i+3] = 255;
+        }
+      }
+      const levels = 8;
+      for (let i = 0; i < d.length; i += 4) {
+        let r = blurred[i+3] ? blurred[i]   : d[i];
+        let g = blurred[i+3] ? blurred[i+1] : d[i+1];
+        let b = blurred[i+3] ? blurred[i+2] : d[i+2];
+        r = Math.round(r / 255 * levels) / levels * 255;
+        g = Math.round(g / 255 * levels) / levels * 255;
+        b = Math.round(b / 255 * levels) / levels * 255;
+        const lum = 0.299*r + 0.587*g + 0.114*b;
+        r = lum + (r - lum) * 1.18;
+        g = lum + (g - lum) * 1.18;
+        b = lum + (b - lum) * 1.18;
+        d[i]   = Math.max(0, Math.min(255, r));
+        d[i+1] = Math.max(0, Math.min(255, g));
+        d[i+2] = Math.max(0, Math.min(255, b));
+      }
+      ctx.putImageData(id, 0, 0);
+      const lines = makeLinePass(srcCanvas, 28, 0.7);
+      const lctx = lines.getContext('2d');
+      const lid = lctx.getImageData(0, 0, lines.width, lines.height);
+      const ld = lid.data;
+      const idAfter = ctx.getImageData(0, 0, dst.width, dst.height);
+      const dAfter = idAfter.data;
+      for (let i = 0; i < dAfter.length; i += 4) {
+        if (ld[i] < 80) {
+          dAfter[i]   = Math.max(0, dAfter[i]   * 0.65);
+          dAfter[i+1] = Math.max(0, dAfter[i+1] * 0.65);
+          dAfter[i+2] = Math.max(0, dAfter[i+2] * 0.65);
+        }
+      }
+      ctx.putImageData(idAfter, 0, 0);
+      applyPaperTextureOverlay(dst, 0.10);
+      return dst;
+    }
+
     case 'cinematic': {
       const w = dst.width;
       const h = dst.height;
