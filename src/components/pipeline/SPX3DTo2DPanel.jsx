@@ -342,6 +342,42 @@ function applyStyleFilter(srcCanvas, style, params) {
       break;
     }
 
+    case 'cinematic': {
+      const w = dst.width;
+      const h = dst.height;
+      const cx = w * 0.5;
+      const cy = h * 0.5;
+      const maxDist = Math.sqrt(cx*cx + cy*cy);
+      const sCurve = (v) => v < 0.5 ? 2*v*v : 1 - 2*(1-v)*(1-v);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const i = (y * w + x) * 4;
+          let r = sCurve(d[i]   / 255);
+          let g = sCurve(d[i+1] / 255);
+          let b = sCurve(d[i+2] / 255);
+          const lum = 0.299*r + 0.587*g + 0.114*b;
+          const shadowW = (1 - lum) * 0.35;
+          const highW   = lum * 0.30;
+          const baseW   = 1 - shadowW - highW;
+          r = r * baseW + 0.20 * shadowW + 1.00 * highW;
+          g = g * baseW + 0.55 * shadowW + 0.62 * highW;
+          b = b * baseW + 0.65 * shadowW + 0.30 * highW;
+          const dx = x - cx;
+          const dy = y - cy;
+          const distN = Math.sqrt(dx*dx + dy*dy) / maxDist;
+          const vig = 1 - Math.pow(distN, 2.4) * 0.55;
+          r *= vig; g *= vig; b *= vig;
+          r += (Math.random() - 0.5) * 0.06;
+          g += (Math.random() - 0.5) * 0.06;
+          b += (Math.random() - 0.5) * 0.06;
+          d[i]   = Math.max(0, Math.min(255, r * 255));
+          d[i+1] = Math.max(0, Math.min(255, g * 255));
+          d[i+2] = Math.max(0, Math.min(255, b * 255));
+        }
+      }
+      break;
+    }
+
     default: break;
   }
   ctx.putImageData(id, 0, 0);
