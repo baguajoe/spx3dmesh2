@@ -505,22 +505,28 @@ export default function App() {
     if (!scene) return;
     clearOverlays();
 
-    // Aggressive pre-import cleanup — catches every prior character at
-    // scene root regardless of provenance: built-in defaults, Custom
-    // Upload (blob URL userData), AND meshes some panel hid via
-    // visible:false instead of remove. Lights/grid/camera skipped.
-    const charactersInScene = [];
-    for (const c of scene.children) {
-      if (c.isLight || c.type === 'GridHelper' || c.isCamera) continue;
-      let isChar = false;
-      c.traverse(ch => { if (ch.isSkinnedMesh || ch.isBone) isChar = true; });
-      if (isChar) charactersInScene.push(c);
-    }
-    charactersInScene.forEach(c => {
-      console.log('[importGLB] Removing prior character:', c.name || c.type);
+    // Aggressive pre-import cleanup. File → Import GLB is a clean replace:
+    // keep only infrastructure (lights, grid, axis lines, center marker,
+    // cameras). Wipes primitives, prior characters (skinned or plain-mesh
+    // mannequins), panel-preview meshes, and any leftover hidden Group
+    // regardless of provenance.
+    const isInfrastructure = (c) => {
+      if (c.isLight) return true;
+      if (c.isCamera) return true;
+      if (c.type === 'GridHelper') return true;
+      if (c.type === 'AxesHelper') return true;
+      if (c.type === 'LineSegments') return true;            // centerGuides
+      if (c.userData?.isHelper === true) return true;        // centerMarker
+      if (c.userData?._spxInfrastructure === true) return true;
+      return false;
+    };
+    const toRemove = scene.children.filter(c => !isInfrastructure(c));
+    toRemove.forEach(c => {
+      console.log('[importGLB] Removing prior scene object:',
+        c.name || c.type, '(visible:', c.visible, ', children:', c.children?.length ?? 0, ')');
       scene.remove(c);
     });
-    setSceneObjects(prev => prev.filter(o => !charactersInScene.includes(o.mesh)));
+    setSceneObjects(prev => prev.filter(o => !toRemove.includes(o.mesh)));
 
     const url = URL.createObjectURL(file);
     new GLTFLoader().load(
@@ -1751,6 +1757,7 @@ export default function App() {
 
     sceneRef.current = scene;
     window.__spxScene = scene; // dev: bone keyframing inspection
+    window.__spxMeshRef = meshRef; // dev: import-path diagnostic
 
     const camera = new THREE.PerspectiveCamera(
       55,
@@ -2399,6 +2406,10 @@ export default function App() {
     const box = new THREE.Box3().setFromObject(model);
     const size = box.getSize(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z);
+    console.log('[_addLoadedModelToScene] maxDim:', maxDim,
+      'modelScale:', model.scale.toArray(),
+      'box.isEmpty:', box.isEmpty(),
+      'fires:', maxDim > 0 && (maxDim < 0.5 || maxDim > 10));
     // Auto-fit catches both ends:
     //   maxDim < 0.5  → cm-baked Mixamo lands at ~0.018u (1.8cm — invisible)
     //   maxDim > 10   → cm-unbaked Mixamo lands at ~138u (oversize)
