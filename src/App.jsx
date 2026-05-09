@@ -2356,6 +2356,35 @@ export default function App() {
     }).catch(() => setStatus(`GLTFLoader unavailable`));
   }, [sceneRef, meshRef, setSceneObjects, setActiveObjId]);
 
+  // ── Shared OBJ/FBX register-and-fit helper ──────────────────────────────────
+  // Loaded model is a Three.js Object3D (Group from OBJ/FBXLoader). Auto-fit
+  // matches loadModelToScene; entry shape matches createSceneObject so the
+  // outliner sees OBJ/FBX imports the same as primitives. FBX clips on
+  // model.animations are left untouched for Fix 3 (animation playback).
+  const _addLoadedModelToScene = (model, { label, type, fileName }) => {
+    const scene = sceneRef.current;
+    if (!scene) return null;
+    model.name = label;
+    scene.add(model);
+
+    const box = new THREE.Box3().setFromObject(model);
+    const size = box.getSize(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z);
+    if (maxDim > 10) {
+      model.scale.setScalar(2 / maxDim);
+      const box2 = new THREE.Box3().setFromObject(model);
+      model.position.y -= box2.min.y;
+    }
+
+    const obj = createSceneObject(type, label, model);
+    obj.userData = { url: fileName, hasAnimations: (model.animations?.length || 0) > 0 };
+    setSceneObjects(prev => [...prev, obj]);
+    setActiveObjId(obj.id);
+    meshRef.current = model;
+    heMeshRef.current = null;
+    return obj.id;
+  };
+
   // ── Workspace default model loader ─────────────────────────────────────────
   // Uses active mesh if scene has one, otherwise loads the right starter model
   const ensureWorkspaceMesh = useCallback((workspaceType) => {
@@ -3122,12 +3151,89 @@ export default function App() {
 
     // ── File ──────────────────────────────────────────────────────────────────
     if (fn === "exportSpxScene") { exportSpxScene(); return; }
-    if (fn === "importSpxScene") { if (arg) importSpxScene(arg); return; }
+    if (fn === "importSpxScene") {
+      if (arg) { importSpxScene(arg); return; }
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = '.json,.spx';
+      input.onchange = (e) => {
+        const file = e.target.files?.[0];
+        if (file) handleApplyFunction("importSpxScene", file);
+      };
+      input.click();
+      return;
+    }
     if (fn === "exportGLB") { exportGLB(); return; }
     if (fn === "sendToStreamPireX") { exportGLB(); return; }
-    if (fn === "importGLB") { if (arg) importGLB(arg); return; }
-    if (fn === "importOBJ") { setStatus("OBJ import — select a .obj file"); return; }
-    if (fn === "importFBX") { setStatus("FBX import via backend"); return; }
+    if (fn === "importGLB") {
+      if (arg) { importGLB(arg); return; }
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = '.glb,.gltf';
+      input.onchange = (e) => {
+        const file = e.target.files?.[0];
+        if (file) handleApplyFunction("importGLB", file);
+      };
+      input.click();
+      return;
+    }
+    if (fn === "importOBJ") {
+      if (arg) {
+        const fileName = arg.name;
+        const label = fileName.replace(/\.[^.]+$/, "");
+        const url = URL.createObjectURL(arg);
+        setStatus(`Loading ${fileName}...`);
+        import("three/examples/jsm/loaders/OBJLoader.js").then(({ OBJLoader }) => {
+          new OBJLoader().load(
+            url,
+            (model) => {
+              _addLoadedModelToScene(model, { label, type: "obj", fileName });
+              URL.revokeObjectURL(url);
+              setStatus(`✓ ${fileName} loaded`);
+            },
+            undefined,
+            () => setStatus(`Could not load ${fileName}`),
+          );
+        }).catch(() => setStatus("OBJLoader unavailable"));
+        return;
+      }
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = '.obj';
+      input.onchange = (e) => {
+        const file = e.target.files?.[0];
+        if (file) handleApplyFunction("importOBJ", file);
+      };
+      input.click();
+      return;
+    }
+    if (fn === "importFBX") {
+      if (arg) {
+        const fileName = arg.name;
+        const label = fileName.replace(/\.[^.]+$/, "");
+        const url = URL.createObjectURL(arg);
+        setStatus(`Loading ${fileName}...`);
+        import("three/examples/jsm/loaders/FBXLoader.js").then(({ FBXLoader }) => {
+          new FBXLoader().load(
+            url,
+            (model) => {
+              _addLoadedModelToScene(model, { label, type: "fbx", fileName });
+              URL.revokeObjectURL(url);
+              const n = model.animations?.length || 0;
+              setStatus(`✓ ${fileName} loaded${n ? ` (${n} clip${n > 1 ? "s" : ""})` : ""}`);
+            },
+            undefined,
+            () => setStatus(`Could not load ${fileName}`),
+          );
+        }).catch(() => setStatus("FBXLoader unavailable"));
+        return;
+      }
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = '.fbx';
+      input.onchange = (e) => {
+        const file = e.target.files?.[0];
+        if (file) handleApplyFunction("importFBX", file);
+      };
+      input.click();
+      return;
+    }
     if (fn === "exportOBJ") { if (typeof window.exportOBJ === "function") window.exportOBJ(sceneRef.current); return; }
     if (fn === "exportFBX") { if (typeof window.exportFBXToBackend === "function") window.exportFBXToBackend(sceneRef.current); return; }
     if (fn === "exportAlembic") { if (typeof window.exportAlembic === "function") window.exportAlembic(sceneRef.current); return; }
