@@ -818,6 +818,18 @@ const [highlightClamp, setHighlightClamp] = useState(0.85);
 const [temporalBlend, setTemporalBlend] = useState(0.35);
   const [status,       setStatus]       = useState('Select a style and click Render');
 
+  // Live styled preview playback (independent of main viewport timeline)
+  const PREVIEW_FPS = 24;
+  const [previewPlaying,    setPreviewPlaying]    = useState(false);
+  const [previewFrame,      setPreviewFrame]      = useState(0);
+  const [previewFrameCount, setPreviewFrameCount] = useState(48);
+  const previewPlayingRef     = useRef(false);
+  const previewFrameRef       = useRef(0);
+  const previewStartTimeRef   = useRef(0);
+  const previewStartFrameRef  = useRef(0);
+  const previewFrameCountRef  = useRef(48);
+  const lastTickRef           = useRef(0);
+
   const previewRef = useRef(null);
 const prevFrameRef = useRef(null);
   const liveRef    = useRef(null);
@@ -839,21 +851,85 @@ const prevFrameRef = useRef(null);
   }, [open]);
   useEffect(() => () => { restoreNPRMaterials(); }, []);
 
-  // Mirror main renderer into live canvas
+  // captureAndProcess is recreated whenever activeStyle changes (it's a
+  // useCallback). The rAF closure can't depend on it without tearing down
+  // every style click, so pin the latest version in a ref and read through.
+  const captureRef = useRef(null);
+  useEffect(() => { captureRef.current = captureAndProcess; }, [captureAndProcess]);
+
+  // Mirror main renderer into live canvas + drive live styled preview.
+  // Single rAF chain owns: preview frame advance, mixer seek, styled
+  // capture into previewRef, raw mirror into liveRef.
   useEffect(() => {
     if (!open) return;
-    const mirror = () => {
+    const FRAME_INTERVAL = 1000 / PREVIEW_FPS;
+
+    const mirror = (now) => {
+      // 24fps cap. Heavy filters at 60Hz pin a CPU core; preview only
+      // needs 24 to look fluid.
+      if (typeof now === 'number' && now - lastTickRef.current < FRAME_INTERVAL) {
+        animRef.current = requestAnimationFrame(mirror);
+        return;
+      }
+      lastTickRef.current = (typeof now === 'number') ? now : performance.now();
+
       const renderer = rendererRef?.current;
       const scene    = sceneRef?.current;
       const camera   = cameraRef?.current;
-      const dst      = liveRef.current;
-      if (renderer && scene && camera && dst) {
-        renderer.render(scene, camera);
+      if (!renderer || !scene || !camera) {
+        animRef.current = requestAnimationFrame(mirror);
+        return;
+      }
+
+      // (1) Advance previewFrame from wall-clock when playing. Wall-clock
+      // driven so a slow filter drops frames but keeps real-time speed.
+      if (previewPlayingRef.current) {
+        const elapsedSec = (lastTickRef.current - previewStartTimeRef.current) / 1000;
+        const fc = previewFrameCountRef.current || 1;
+        const f = Math.floor(previewStartFrameRef.current + elapsedSec * PREVIEW_FPS) % fc;
+        if (f !== previewFrameRef.current) {
+          previewFrameRef.current = f;
+          setPreviewFrame(f);
+        }
+      }
+
+      // (2) Seek mixer to the current preview frame. Re-runs every tick
+      // so any drift from App.jsx's animate loop is overridden.
+      const mixer = mixerRef?.current;
+      const root  = mixer?.getRoot?.();
+      const clip  = root?.animations?.[0];
+      const action = (clip && mixer) ? mixer.existingAction(clip) : null;
+      if (action && clip?.duration > 0) {
+        // Keep frame count fresh in case a new model was loaded.
+        const fcDerived = Math.max(1, Math.round(clip.duration * PREVIEW_FPS));
+        if (fcDerived !== previewFrameCountRef.current) {
+          previewFrameCountRef.current = fcDerived;
+          setPreviewFrameCount(fcDerived);
+        }
+        action.time = (previewFrameRef.current / PREVIEW_FPS) % clip.duration;
+        mixer.update(0);
+      }
+
+      // (3) Styled half-res capture → previewRef (4× perf vs full).
+      // captureAndProcess internally calls renderer.render so the
+      // backbuffer is up-to-date for the mirror copy below.
+      const out = captureRef.current ? captureRef.current(0.5) : null;
+      if (out && previewRef.current) {
+        const c = previewRef.current;
+        c.width  = c.offsetWidth  || out.width;
+        c.height = c.offsetHeight || out.height;
+        c.getContext('2d').drawImage(out, 0, 0, c.width, c.height);
+      }
+
+      // (4) Raw mirror → liveRef (existing behavior).
+      const dst = liveRef.current;
+      if (dst) {
         const src = renderer.domElement;
         dst.width  = dst.offsetWidth  || 600;
         dst.height = dst.offsetHeight || 400;
         dst.getContext('2d').drawImage(src, 0, 0, dst.width, dst.height);
       }
+
       animRef.current = requestAnimationFrame(mirror);
     };
     animRef.current = requestAnimationFrame(mirror);
@@ -971,8 +1047,57 @@ const out = captureAndProcess(1);
     // Reset temporal blend buffer so a fresh render after Clear doesn't
     // ghost-blend the previously cleared frame at 35% alpha.
     prevFrameRef.current = null;
+    // Pause preview and rewind to frame 0 so the live loop stops painting
+    // over the cleared canvas with the same in-progress frame.
+    previewPlayingRef.current = false;
+    setPreviewPlaying(false);
+    previewFrameRef.current = 0;
+    setPreviewFrame(0);
     setStatus('Select a style and click Render');
   }, []);
+
+  // ── Preview playback handlers ───────────────────────────────────────────
+  const togglePreviewPlay = useCallback(() => {
+    if (previewPlayingRef.current) {
+      previewPlayingRef.current = false;
+      setPreviewPlaying(false);
+    } else {
+      previewStartTimeRef.current  = performance.now();
+      previewStartFrameRef.current = previewFrameRef.current;
+      previewPlayingRef.current = true;
+      setPreviewPlaying(true);
+    }
+  }, []);
+
+  const seekPreview = useCallback((f) => {
+    const fc = previewFrameCountRef.current || 1;
+    const clamped = Math.max(0, Math.min(fc - 1, Math.floor(f)));
+    previewFrameRef.current = clamped;
+    setPreviewFrame(clamped);
+    if (previewPlayingRef.current) {
+      // Re-anchor wall-clock so play continues from the new frame.
+      previewStartTimeRef.current  = performance.now();
+      previewStartFrameRef.current = clamped;
+    }
+  }, []);
+
+  // Auto-play preview when the panel opens. Matches the auto-play-on-import
+  // behavior so a walking avatar shows up walking, not as a still pose.
+  useEffect(() => {
+    if (!open) return;
+    const mixer = mixerRef?.current;
+    const clip  = mixer?.getRoot?.()?.animations?.[0];
+    if (!clip) return;
+    const fc = Math.max(1, Math.round(clip.duration * PREVIEW_FPS));
+    previewFrameCountRef.current = fc;
+    setPreviewFrameCount(fc);
+    previewFrameRef.current = 0;
+    setPreviewFrame(0);
+    previewStartTimeRef.current  = performance.now();
+    previewStartFrameRef.current = 0;
+    previewPlayingRef.current = true;
+    setPreviewPlaying(true);
+  }, [open, mixerRef]);
 
   const handleRender4K = useCallback(async () => {
     if (!rendererRef?.current) { setStatus('⚠ No renderer'); return; }
@@ -1211,6 +1336,17 @@ const out = captureAndProcess(renderScale);
             <option value="webp">WebP</option>
           </select>
           <button className="s2d-btn s2d-btn--export" onClick={handleExportBrowser}>⬇ SAVE</button>
+        </div>
+        <div className="s2d-playback">
+          <button className="s2d-pb-btn" onClick={() => seekPreview(0)} title="Rewind">⏮</button>
+          <button className="s2d-pb-btn s2d-pb-btn--play" onClick={togglePreviewPlay}
+                  title={previewPlaying ? 'Pause preview' : 'Play preview'}>
+            {previewPlaying ? '❚❚' : '▶'}
+          </button>
+          <input type="range" min={0} max={Math.max(0, previewFrameCount - 1)} step={1}
+                 value={previewFrame} onChange={(e) => seekPreview(+e.target.value)}
+                 className="s2d-pb-scrub" />
+          <span className="s2d-pb-counter">{previewFrame} / {Math.max(0, previewFrameCount - 1)}</span>
         </div>
         <div className="s2d-status">{status}</div>
       </div>
