@@ -237,11 +237,20 @@ function applyStyleFilter(srcCanvas, style, params) {
       break;
     }
     case 'blueprint': {
-      for (let i = 0; i < d.length; i += 4) {
-        const g=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
-        d[i]=Math.max(0,30-g*0.1); d[i+1]=Math.max(0,60-g*0.1); d[i+2]=Math.min(255,100+g);
+      // Sobel edge detection → color-map: edges = pale cyan, fill = saturated
+      // technical-blueprint blue. Returns the line canvas directly so the
+      // trailing posterize/halftone passes don't kick in.
+      const lines = makeLinePass(srcCanvas, params.edgeThreshold ?? 24, params.edgeBias ?? 1.0);
+      const lctx = lines.getContext('2d');
+      const lid  = lctx.getImageData(0, 0, lines.width, lines.height);
+      const ld   = lid.data;
+      for (let i = 0; i < ld.length; i += 4) {
+        const isEdge = ld[i] < 128;
+        if (isEdge) { ld[i] = 200; ld[i+1] = 235; ld[i+2] = 255; }
+        else        { ld[i] = 18;  ld[i+1] = 68;  ld[i+2] = 180; }
       }
-      break;
+      lctx.putImageData(lid, 0, 0);
+      return lines;
     }
     case 'sepia': case 'dutch_masters': {
       for (let i = 0; i < d.length; i += 4) {
