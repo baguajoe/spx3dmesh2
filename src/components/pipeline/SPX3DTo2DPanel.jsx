@@ -144,6 +144,22 @@ function applyStyleFilter(srcCanvas, style, params) {
       break;
     }
     case 'toon': case 'cel': case 'pixar': case 'anime': case 'manga': case 'comic': {
+      // Cel-shaded styles (those in CEL_SHADED_STYLES) have already been
+      // rendered with MeshToonMaterial → frame is already flat-cel-shaded.
+      // Re-quantizing pixel colors would muddy the result. Skip posterize
+      // and banding boost. Monochrome flag forces a B&W conversion (manga).
+      const cfg = CEL_SHADED_STYLES[style];
+      if (cfg) {
+        if (cfg.monochrome) {
+          for (let i = 0; i < d.length; i += 4) {
+            const lum = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+            d[i] = d[i+1] = d[i+2] = lum;
+          }
+        }
+        break;
+      }
+      // Legacy posterize path — used by cartoon-family styles that have not
+      // yet been migrated to the cel-shader rig.
       const lv = style === 'cel' ? 4 : (params.toonLevels || 5);
       const sb = params.shadowBands || 3;
       const hc = params.highlightClamp || 0.85;
@@ -796,6 +812,73 @@ function makeFlatColorPass(srcCanvas, levels=4){
   return dst;
 }
 
+// ── Cel-shader rig ──────────────────────────────────────────────────────────
+// Per-style configuration. Anime is the template; siblings (manga, comic,
+// cel, toon, pixar) ship in subsequent commits by adding rows to this table.
+const CEL_SHADED_STYLES = {
+  anime: { steps: 3, outlineMul: 1.0, halftone: false, monochrome: false },
+};
+
+// 1×N DataTexture used by MeshToonMaterial.gradientMap. NearestFilter snaps
+// the diffuse term to discrete steps → hard cel transitions instead of a
+// smooth Lambertian falloff.
+function makeCelGradientMap(steps) {
+  const stops = steps === 2 ? [0.4, 1.0]
+              : steps === 4 ? [0.3, 0.55, 0.8, 1.0]
+              : steps === 5 ? [0.2, 0.4, 0.6, 0.8, 1.0]
+              : [0.3, 0.7, 1.0];                       // default 3 (anime)
+  const data = new Uint8Array(stops.length * 4);
+  stops.forEach((v, i) => {
+    const c = Math.round(v * 255);
+    data[i*4] = c; data[i*4+1] = c; data[i*4+2] = c; data[i*4+3] = 255;
+  });
+  const tex = new THREE.DataTexture(data, stops.length, 1, THREE.RGBAFormat);
+  tex.minFilter = THREE.NearestFilter;
+  tex.magFilter = THREE.NearestFilter;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+// MeshToonMaterial inherits albedo (color, map, normalMap) from the source
+// PBR material — skin tone, hair color, eye whites all preserved. No spec /
+// metalness / roughness. SkinnedMesh-compatible out of the box (built-in).
+function makeCelMaterial(originalMat, steps) {
+  return new THREE.MeshToonMaterial({
+    color:       originalMat?.color || new THREE.Color(0xffffff),
+    map:         originalMat?.map || null,
+    normalMap:   originalMat?.normalMap || null,
+    gradientMap: makeCelGradientMap(steps),
+    transparent: originalMat?.transparent || false,
+    opacity:     originalMat?.opacity ?? 1,
+    side:        originalMat?.side || THREE.FrontSide,
+  });
+}
+
+// Inverted-hull outline. MeshBasicMaterial keeps built-in skinning chunks;
+// onBeforeCompile injects clip-space normal extrusion AFTER skinning_vertex
+// so the outline tracks animated bones. Multiplying by clipPos.w gives
+// constant screen-space thickness regardless of camera distance / model scale.
+function makeOutlineMaterial(widthClipSpace) {
+  const mat = new THREE.MeshBasicMaterial({
+    color: 0x000000,
+    side: THREE.BackSide,
+  });
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.outlineWidth = { value: widthClipSpace };
+    shader.vertexShader = 'uniform float outlineWidth;\n' + shader.vertexShader;
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <project_vertex>',
+      `
+      vec4 spxClipPos = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
+      vec3 spxClipNormal = normalize(mat3(projectionMatrix) * mat3(modelViewMatrix) * objectNormal);
+      spxClipPos.xy += spxClipNormal.xy * outlineWidth * spxClipPos.w;
+      gl_Position = spxClipPos;
+      `
+    );
+  };
+  return mat;
+}
+
 
 export default function SPX3DTo2DPanel({ open, onClose, sceneRef, rendererRef, cameraRef, mixerRef }) {
   const [activeCat,    setActiveCat]    = useState('all');
@@ -854,6 +937,15 @@ const prevFrameRef = useRef(null);
     restoreNPRMaterials();
   }, [open]);
   useEffect(() => () => { restoreNPRMaterials(); }, []);
+
+  // Apply cel-shading for cel-family styles. Registered BEFORE the auto-render
+  // useEffect (Bug 2 commit) so materials are swapped before the captured
+  // frame is taken — no stale-frame flash on style change. Outline width
+  // tied to the existing slider for live tuning.
+  useEffect(() => {
+    if (!open) return;
+    applyCelShading(activeStyle);
+  }, [open, activeStyle, outlineWidth]);
 
   // captureAndProcess is recreated whenever activeStyle changes (it's a
   // useCallback declared further down). The rAF closure can't depend on
@@ -1007,8 +1099,9 @@ function reframePreviewCamera() {
 }
 
 // Restore original materials and remove outlines added during NPR.
+// Cel-shaded outlines are parented under each mesh's parent (not directly
+// the scene), so removeFromParent() is the correct deparent call.
 function restoreNPRMaterials() {
-  const scene = sceneRef?.current;
   for (const [mesh, originalMat] of materialBackupRef.current.entries()) {
     if (mesh.material && mesh.material !== originalMat) {
       mesh.material.dispose?.();
@@ -1016,13 +1109,48 @@ function restoreNPRMaterials() {
     mesh.material = originalMat;
   }
   materialBackupRef.current.clear();
-  if (scene) {
-    for (const outline of outlineMeshesRef.current) {
-      scene.remove(outline);
-      outline.material?.dispose?.();
-    }
+  for (const outline of outlineMeshesRef.current) {
+    if (outline.parent) outline.parent.remove(outline);
+    outline.material?.dispose?.();
   }
   outlineMeshesRef.current = [];
+}
+
+// Apply cel-shading for the current style. Always restores prior NPR state
+// first so style transitions (anime → pencil) deterministically clean up.
+function applyCelShading(style) {
+  restoreNPRMaterials();
+  const scene = sceneRef?.current;
+  if (!scene) return;
+  const cfg = CEL_SHADED_STYLES[style];
+  if (!cfg) return;
+
+  const widthClip = (outlineWidth || 1.5) * 0.003 * cfg.outlineMul;
+
+  scene.traverse(obj => {
+    if (!obj.isMesh) return;
+    if (obj.userData?._spxNprOutline) return;          // skip outlines we added
+    if (obj.userData?.isHelper === true) return;       // skip viewport helpers
+    if (!obj.parent) return;
+
+    materialBackupRef.current.set(obj, obj.material);
+    obj.material = makeCelMaterial(obj.material, cfg.steps);
+
+    let outline;
+    if (obj.isSkinnedMesh) {
+      outline = new THREE.SkinnedMesh(obj.geometry, makeOutlineMaterial(widthClip));
+      outline.bind(obj.skeleton, obj.bindMatrix);
+    } else {
+      outline = new THREE.Mesh(obj.geometry, makeOutlineMaterial(widthClip));
+    }
+    outline.userData._spxNprOutline = true;
+    outline.renderOrder = (obj.renderOrder || 0) - 1;
+    outline.position.copy(obj.position);
+    outline.rotation.copy(obj.rotation);
+    outline.scale.copy(obj.scale);
+    obj.parent.add(outline);
+    outlineMeshesRef.current.push(outline);
+  });
 }
 
 
