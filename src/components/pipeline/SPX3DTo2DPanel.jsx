@@ -961,13 +961,18 @@ const prevFrameRef = useRef(null);
   }, [open]);
   useEffect(() => () => { restoreNPRMaterials(); }, []);
 
-  // Apply cel-shading for cel-family styles. Registered BEFORE the auto-render
-  // useEffect (Bug 2 commit) so materials are swapped before the captured
-  // frame is taken — no stale-frame flash on style change. Outline width
-  // tied to the existing slider for live tuning.
+  // Material override dispatch. Registered BEFORE the auto-render useEffect
+  // (Bug 2 commit) so materials are swapped before the captured frame is
+  // taken — no stale-frame flash on style change.
+  //   - cel-family styles (anime/manga/comic/cel/toon/pixar) → cel-shader
+  //   - low_poly → flatShading override
+  //   - everything else → restore PBR
+  // Outline width is tied to the slider for live tuning of the cel path.
   useEffect(() => {
     if (!open) return;
-    applyCelShading(activeStyle);
+    if (CEL_SHADED_STYLES[activeStyle])    applyCelShading(activeStyle);
+    else if (activeStyle === 'low_poly')   applyFlatShading();
+    else                                   restoreNPRMaterials();
   }, [open, activeStyle, outlineWidth]);
 
   // captureAndProcess is recreated whenever activeStyle changes (it's a
@@ -1137,6 +1142,27 @@ function restoreNPRMaterials() {
     outline.material?.dispose?.();
   }
   outlineMeshesRef.current = [];
+}
+
+// Faux low-poly: clone each mesh's existing material and flip flatShading.
+// True low-poly needs geometry decimation (out of scope per audit). This
+// "cheat" produces faceted shading without changing vertex count by
+// disabling per-vertex normal interpolation.
+function applyFlatShading() {
+  restoreNPRMaterials();
+  const scene = sceneRef?.current;
+  if (!scene) return;
+  scene.traverse(obj => {
+    if (!obj.isMesh) return;
+    if (obj.userData?._spxNprOutline) return;
+    if (obj.userData?.isHelper === true) return;
+
+    materialBackupRef.current.set(obj, obj.material);
+    const flat = (obj.material && obj.material.clone) ? obj.material.clone() : obj.material;
+    flat.flatShading = true;
+    flat.needsUpdate = true;
+    obj.material = flat;
+  });
 }
 
 // Apply cel-shading for the current style. Always restores prior NPR state
