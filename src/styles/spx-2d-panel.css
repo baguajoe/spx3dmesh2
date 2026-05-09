@@ -37,7 +37,7 @@
 .s2d-viewport-label {
   font-size: 9px !important;
   font-weight: 700 !important;
-  color: #444 !important;
+  color: #b8c5d6 !important;
   letter-spacing: 1.5px !important;
   padding: 6px 10px !important;
   background: #0a0d13 !important;
@@ -65,7 +65,7 @@
 
 .s2d-viewport-hint {
   font-size: 9px !important;
-  color: #333 !important;
+  color: #b8c5d6 !important;
   padding: 4px 10px !important;
   background: #0a0d13 !important;
   border-top: 1px solid #21262d !important;
@@ -84,7 +84,7 @@
 
 .s2d-status {
   font-size: 10px !important;
-  color: #555 !important;
+  color: #b8c5d6 !important;
   padding: 4px 10px !important;
   background: #0a0d13 !important;
   border-top: 1px solid #21262d !important;
@@ -107,7 +107,7 @@
 .s2d-section-title {
   font-size: 9px !important;
   font-weight: 700 !important;
-  color: #444 !important;
+  color: #b8c5d6 !important;
   letter-spacing: 1.5px !important;
   text-transform: uppercase !important;
   padding: 8px 4px 4px !important;
@@ -126,7 +126,7 @@
   background: #0d1117 !important;
   border: 1px solid #21262d !important;
   border-radius: 3px !important;
-  color: #666 !important;
+  color: #b8c5d6 !important;
   font-family: inherit !important;
   font-size: 9px !important;
   font-weight: 700 !important;
@@ -179,7 +179,7 @@
 }
 .s2d-param-label {
   font-size: 10px !important;
-  color: #666 !important;
+  color: #b8c5d6 !important;
   width: 90px !important;
   flex-shrink: 0 !important;
 }
@@ -231,7 +231,7 @@
 .s2d-select {
   background: #0d1117 !important;
   border: 1px solid #21262d !important;
-  color: #888 !important;
+  color: #b8c5d6 !important;
   font-family: inherit !important;
   font-size: 10px !important;
   padding: 5px 8px !important;
@@ -280,7 +280,7 @@
 }
 .s2d-native-label {
   font-size: 8px !important;
-  color: #555 !important;
+  color: #b8c5d6 !important;
   font-weight: 400 !important;
   letter-spacing: 0 !important;
 }
