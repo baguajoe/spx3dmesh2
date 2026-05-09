@@ -497,6 +497,11 @@ export default function App() {
   const rendererRef = useRef(null);
   const cameraRef = useRef(null);
   const heMeshRef = useRef(null);
+  const mixerRef = useRef(null);
+  const clockRef = useRef(null);
+  const mixerDurationRef = useRef(0);
+  const isPlayingRef = useRef(false);
+  const autoPlayingRef = useRef(false);
   const importGLB = async (file) => {
     const { GLTFLoader } = await import(
       "three/examples/jsm/loaders/GLTFLoader.js"
@@ -1423,6 +1428,27 @@ export default function App() {
     };
   }, [isPlaying]);
 
+  // ── Mixer ↔ timeline play/pause bridge ───────────────────────────────────
+  // First user-driven play/pause yields control from auto-play. After that,
+  // mixer follows isPlaying directly (timeScale 1 / 0).
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+    if (mixerRef.current) {
+      autoPlayingRef.current = false;
+      mixerRef.current.timeScale = isPlaying ? 1 : 0;
+    }
+  }, [isPlaying]);
+
+  // ── Mixer ↔ timeline scrub bridge ────────────────────────────────────────
+  // While paused, scrubbing currentFrame seeks the mixer and applies pose.
+  // setTime internally calls update(0), so the pose refreshes immediately.
+  useEffect(() => {
+    if (!mixerRef.current || isPlaying) return;
+    autoPlayingRef.current = false;
+    const dur = mixerDurationRef.current || 1;
+    mixerRef.current.setTime((currentFrame / 24) % dur);
+  }, [currentFrame, isPlaying]);
+
   // ── Blender-style keyframe evaluator ─────────────────────────────────────
   // Runs on every frame change (play OR scrub). For each animated object,
   // walks its 9 channels, finds bracketing keyframes, linearly interpolates,
@@ -1799,6 +1825,8 @@ export default function App() {
       }
     }, 200);
 
+    clockRef.current = new THREE.Clock();
+
     const animate = () => {
       rafRef.current = requestAnimationFrame(animate);
 
@@ -1806,6 +1834,13 @@ export default function App() {
       // This prevents the canvas from blinking through React overlays
       if (typeof window.__spxFullscreenOpen !== 'undefined' && window.__spxFullscreenOpen) {
         return;
+      }
+
+      // getDelta() is consumed every frame so resuming play after a pause
+      // doesn't snap forward by accumulated wall-clock seconds.
+      const _dt = clockRef.current ? clockRef.current.getDelta() : 0;
+      if (mixerRef.current && (isPlayingRef.current || autoPlayingRef.current)) {
+        mixerRef.current.update(_dt);
       }
 
       // Keep gizmo at constant screen-space size
@@ -2342,6 +2377,10 @@ export default function App() {
       loader.load(url, (gltf) => {
         const model = gltf.scene;
         model.name = label;
+        // GLTFLoader returns animations alongside the scene; mirror onto the
+        // Object3D so _attachMixerToModel finds them the same way OBJ/FBX
+        // imports do.
+        model.animations = gltf.animations || [];
         sceneRef.current?.add(model);
 
         // Bone keyframing: add small helper spheres at each bone for click-select.
@@ -2382,16 +2421,45 @@ export default function App() {
         setSceneObjects(prev => [...prev, newObj]);
         setActiveObjId(id);
         meshRef.current = model;
+        _attachMixerToModel(model);
         setStatus(`✓ ${label} loaded`);
       }, undefined, () => setStatus(`Could not load ${label}`));
     }).catch(() => setStatus(`GLTFLoader unavailable`));
   }, [sceneRef, meshRef, setSceneObjects, setActiveObjId]);
 
+  // ── AnimationMixer lifecycle ────────────────────────────────────────────────
+  const _disposeMixer = () => {
+    const m = mixerRef.current;
+    if (m) {
+      m.stopAllAction();
+      const root = m.getRoot();
+      if (root) m.uncacheRoot(root);
+    }
+    mixerRef.current = null;
+    mixerDurationRef.current = 0;
+    autoPlayingRef.current = false;
+  };
+
+  // Auto-play sets autoPlayingRef + timeScale directly (NOT setIsPlaying) so
+  // the mixer loops its native clip without coupling to the editor's 0–250
+  // frame counter. The user pressing play/pause later takes over via the
+  // isPlaying effect.
+  const _attachMixerToModel = (model) => {
+    _disposeMixer();
+    const clips = model?.animations || [];
+    if (!clips.length) return;
+    const mixer = new THREE.AnimationMixer(model);
+    mixer.clipAction(clips[0]).play();
+    mixer.timeScale = 1;
+    mixerRef.current = mixer;
+    mixerDurationRef.current = clips[0].duration || 0;
+    autoPlayingRef.current = true;
+  };
+
   // ── Shared OBJ/FBX register-and-fit helper ──────────────────────────────────
   // Loaded model is a Three.js Object3D (Group from OBJ/FBXLoader). Auto-fit
   // matches loadModelToScene; entry shape matches createSceneObject so the
-  // outliner sees OBJ/FBX imports the same as primitives. FBX clips on
-  // model.animations are left untouched for Fix 3 (animation playback).
+  // outliner sees OBJ/FBX imports the same as primitives.
   const _addLoadedModelToScene = (model, { label, type, fileName }) => {
     const scene = sceneRef.current;
     if (!scene) return null;
@@ -2426,6 +2494,7 @@ export default function App() {
     setActiveObjId(obj.id);
     meshRef.current = model;
     heMeshRef.current = null;
+    _attachMixerToModel(model);
     return obj.id;
   };
 
