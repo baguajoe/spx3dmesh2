@@ -820,6 +820,7 @@ const CEL_SHADED_STYLES = {
   manga: { steps: 2, outlineMul: 1.5, halftone: true,  monochrome: true  },
   comic: { steps: 3, outlineMul: 1.5, halftone: true,  monochrome: false },
   cel:   { steps: 2, outlineMul: 1.2, halftone: false, monochrome: false },
+  toon:  { steps: 4, outlineMul: 1.0, halftone: false, monochrome: false },
 };
 
 // 1×N DataTexture used by MeshToonMaterial.gradientMap. NearestFilter snaps
