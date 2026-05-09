@@ -412,11 +412,20 @@ function applyStyleFilter(srcCanvas, style, params) {
     }
 
     case 'linocut': {
+      // Sobel edges layered over the binary luminance threshold so gouged-
+      // edge linework reads as real linocut, not a stark posterize. Edges
+      // always render as ink; non-edge pixels fall to the binary threshold
+      // with jitter for that hand-cut feel.
+      const lines = makeLinePass(srcCanvas, params.edgeThreshold ?? 32, 1.2);
+      const lctx = lines.getContext('2d');
+      const lid  = lctx.getImageData(0, 0, lines.width, lines.height);
+      const ld   = lid.data;
       for (let i = 0; i < d.length; i += 4) {
-        const g = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
-        const jitter = (Math.random() - 0.5) * 30;
-        const threshold = 130 + jitter;
-        const v = g > threshold ? 245 : 18;
+        const lum    = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+        const jitter = (Math.random() - 0.5) * 24;
+        const fill   = (lum + jitter) > 130 ? 245 : 18;
+        const edge   = ld[i] < 128;
+        const v      = edge ? 18 : fill;
         d[i] = d[i+1] = d[i+2] = v;
       }
       break;
