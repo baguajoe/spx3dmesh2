@@ -5157,7 +5157,7 @@ export default function App() {
               <button onClick={() => setStyle3DTo2DOpen(false)} className="spx-overlay-close">✕ CLOSE</button>
             </div>
             <div className="spx-overlay-body">
-              <SPX3DTo2DPanel open={style3DTo2DOpen} onClose={() => setStyle3DTo2DOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} cameraRef={cameraRef} />
+              <SPX3DTo2DPanel open={style3DTo2DOpen} onClose={() => setStyle3DTo2DOpen(false)} sceneRef={sceneRef} rendererRef={rendererRef} cameraRef={cameraRef} mixerRef={mixerRef} />
             </div>
           </div>
         )}

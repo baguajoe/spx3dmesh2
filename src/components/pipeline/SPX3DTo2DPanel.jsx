@@ -797,7 +797,7 @@ function makeFlatColorPass(srcCanvas, levels=4){
 }
 
 
-export default function SPX3DTo2DPanel({ open, onClose, sceneRef, rendererRef, cameraRef }) {
+export default function SPX3DTo2DPanel({ open, onClose, sceneRef, rendererRef, cameraRef, mixerRef }) {
   const [activeCat,    setActiveCat]    = useState('all');
   const [activeStyle,  setActiveStyle]  = useState('cinematic');
   
@@ -988,36 +988,103 @@ const out = captureAndProcess(renderScale);
 
   const handleVideoExport = useCallback(async () => {
     if (!rendererRef?.current) { setStatus('⚠ No renderer'); return; }
-    setExporting(true);
-    const FRAMES = 60;
-    const frames = [];
-    setStatus(`Capturing ${FRAMES} frames...`);
-    for (let i = 0; i < FRAMES; i++) {
-      
-applyNPRIfNeeded(activeStyle, sceneRef);
-const out = captureAndProcess(1);
-
-      if (out) frames.push(out.toDataURL('image/jpeg', 0.9));
-      if (i % 10 === 0) setStatus(`Capturing frame ${i}/${FRAMES}...`);
-      await new Promise(r => setTimeout(r, 16));
+    if (typeof VideoEncoder === 'undefined' || typeof VideoFrame === 'undefined') {
+      setStatus('⚠ Browser lacks WebCodecs — use PNG SEQUENCE instead');
+      return;
     }
-    if (isElectron && window.electronAPI?.invoke) {
-      setStatus('Sending to FFmpeg...');
-      try {
-        const result = await window.electronAPI.invoke('render:export-video', {
-          frames,
-          fps: 24,
-          style: activeStyle,
+
+    setExporting(true);
+    const FPS = 24;
+    const FRAMES = 60;
+
+    // Probe a frame for output dimensions. mp4-muxer + yuv420p require even W/H.
+    applyNPRIfNeeded(activeStyle, sceneRef);
+    const probe = captureAndProcess(1);
+    if (!probe) { setStatus('⚠ Capture failed'); setExporting(false); return; }
+    const W = probe.width  - (probe.width  % 2);
+    const H = probe.height - (probe.height % 2);
+
+    // Frame-driven seek: drive AnimationMixer by frame index, not wall-clock,
+    // so the encoded video plays at the intended speed.
+    const mixer = mixerRef?.current || null;
+    const root  = mixer?.getRoot?.();
+    const clip  = root?.animations?.[0] || null;
+    const action = (clip && mixer) ? mixer.existingAction(clip) : null;
+    const duration = clip?.duration || 0;
+
+    try {
+      const { Muxer, ArrayBufferTarget } = await import('mp4-muxer');
+      const muxer = new Muxer({
+        target: new ArrayBufferTarget(),
+        video: { codec: 'avc', width: W, height: H, frameRate: FPS },
+        fastStart: 'in-memory',
+      });
+
+      let encoderError = null;
+      const encoder = new VideoEncoder({
+        output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+        error: (e) => { encoderError = e; },
+      });
+      encoder.configure({
+        codec: 'avc1.42001f',
+        width: W, height: H,
+        bitrate: 8_000_000,
+        framerate: FPS,
+      });
+
+      setStatus(`Encoding ${FRAMES} frames @ ${FPS}fps...`);
+      for (let i = 0; i < FRAMES; i++) {
+        if (encoderError) throw encoderError;
+
+        if (action && duration > 0) {
+          action.time = (i / FPS) % duration;
+          mixer.update(0);
+        }
+
+        applyNPRIfNeeded(activeStyle, sceneRef);
+        const out = captureAndProcess(1);
+        if (!out) continue;
+
+        let src = out;
+        if (out.width !== W || out.height !== H) {
+          const tmp = document.createElement('canvas');
+          tmp.width = W; tmp.height = H;
+          tmp.getContext('2d').drawImage(out, 0, 0, W, H);
+          src = tmp;
+        }
+
+        const frame = new VideoFrame(src, {
+          timestamp: Math.round((i / FPS) * 1_000_000),
+          duration:  Math.round((1 / FPS) * 1_000_000),
         });
-        setStatus(result?.outputPath ? `✓ Video: ${result.outputPath.split('/').pop()}` : '✓ Video exported');
-      } catch(e) {
-        setStatus(`FFmpeg error: ${e.message}`);
+        encoder.encode(frame, { keyFrame: i % FPS === 0 });
+        frame.close();
+
+        if (i % 10 === 0) setStatus(`Encoding ${i}/${FRAMES}...`);
+        await new Promise(r => setTimeout(r, 0));
       }
-    } else {
-      setStatus(`✓ ${frames.length} frames captured (FFmpeg requires desktop app)`);
+
+      await encoder.flush();
+      if (encoderError) throw encoderError;
+      muxer.finalize();
+
+      const { buffer } = muxer.target;
+      const blob = new Blob([buffer], { type: 'video/mp4' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `spx_${activeStyle}_${W}x${H}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+      setStatus(`✓ MP4 exported (${FRAMES} frames @ ${FPS}fps, ${W}×${H})`);
+    } catch (e) {
+      setStatus(`Export failed: ${e?.message || e}`);
     }
     setExporting(false);
-  }, [captureAndProcess, activeStyle, rendererRef]);
+  }, [captureAndProcess, activeStyle, sceneRef, rendererRef, mixerRef]);
 
   const handlePngSequenceExport = useCallback(async () => {
     if (!rendererRef?.current) { setStatus('No renderer'); return; }
