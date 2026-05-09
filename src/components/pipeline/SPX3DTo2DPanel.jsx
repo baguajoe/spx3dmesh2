@@ -852,10 +852,12 @@ const prevFrameRef = useRef(null);
   useEffect(() => () => { restoreNPRMaterials(); }, []);
 
   // captureAndProcess is recreated whenever activeStyle changes (it's a
-  // useCallback). The rAF closure can't depend on it without tearing down
-  // every style click, so pin the latest version in a ref and read through.
+  // useCallback declared further down). The rAF closure can't depend on
+  // it without tearing down every style click, so pin the latest version
+  // in a ref and read through. The actual sync effect lives below the
+  // useCallback declaration to avoid a temporal-dead-zone reference at
+  // render time.
   const captureRef = useRef(null);
-  useEffect(() => { captureRef.current = captureAndProcess; }, [captureAndProcess]);
 
   // Mirror main renderer into live canvas + drive live styled preview.
   // Single rAF chain owns: preview frame advance, mixer seek, styled
@@ -1002,6 +1004,12 @@ if(exportMode === 'final'){
 
 return result;
   }, [activeStyle, outlineWidth, toonLevels, shadowBands, highlightClamp, exportMode, edgeThreshold, edgeBias, temporalBlend, rendererRef, sceneRef, cameraRef]);
+
+  // Sync the captureAndProcess ref AFTER the useCallback above is in scope.
+  // Placed here (not earlier near captureRef) to avoid a TDZ reference on
+  // first render — the dep array would otherwise touch captureAndProcess
+  // before its const initializer ran.
+  useEffect(() => { captureRef.current = captureAndProcess; }, [captureAndProcess]);
 
   const handleRender = useCallback(async () => {
     if (!rendererRef?.current) { setStatus('⚠ No renderer — add a mesh first'); return; }
