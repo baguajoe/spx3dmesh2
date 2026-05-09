@@ -1005,6 +1005,17 @@ const out = captureAndProcess(1);
     setStatus(`✓ Exported ${exportFormat.toUpperCase()}`);
   };
 
+  const handleClear = useCallback(() => {
+    if (previewRef.current) {
+      const c = previewRef.current;
+      c.getContext('2d').clearRect(0, 0, c.width, c.height);
+    }
+    // Reset temporal blend buffer so a fresh render after Clear doesn't
+    // ghost-blend the previously cleared frame at 35% alpha.
+    prevFrameRef.current = null;
+    setStatus('Select a style and click Render');
+  }, []);
+
   const handleRender4K = useCallback(async () => {
     if (!rendererRef?.current) { setStatus('⚠ No renderer'); return; }
     setExporting(true); setStatus('Rendering 4K...');
@@ -1235,6 +1246,7 @@ const out = captureAndProcess(renderScale);
           <button className="s2d-btn s2d-btn--render" onClick={handleRender} disabled={rendering}>
             {rendering ? '⏳ RENDERING...' : '▶ RENDER'}
           </button>
+          <button className="s2d-btn s2d-btn--clear" onClick={handleClear}>✕ CLEAR</button>
           <select className="s2d-select" value={exportFormat} onChange={e=>setExportFormat(e.target.value)}>
             <option value="png">PNG</option>
             <option value="jpeg">JPEG</option>

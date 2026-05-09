@@ -223,6 +223,11 @@
   color: #ffaa00 !important;
   border: 1px solid #ffaa0044 !important;
 }
+.s2d-btn--clear {
+  background: #1a1f28 !important;
+  color: #b8c5d6 !important;
+  border: 1px solid #2a3340 !important;
+}
 .s2d-select {
   background: #0d1117 !important;
   border: 1px solid #21262d !important;
