@@ -504,26 +504,47 @@ export default function App() {
     const scene = sceneRef.current;
     if (!scene) return;
     clearOverlays();
-    if (meshRef.current) scene.remove(meshRef.current);
-    const url = URL.createObjectURL(file);
-    new GLTFLoader().load(url, (gltf) => {
-      const obj = gltf.scene;
-      const box = new THREE.Box3().setFromObject(obj);
-      const center = box.getCenter(new THREE.Vector3());
-      const size = box.getSize(new THREE.Vector3());
-      obj.position.sub(center);
-      obj.scale.setScalar(3 / Math.max(size.x, size.y, size.z));
-      scene.add(obj);
-      meshRef.current = obj;
-      obj.traverse((child) => {
-        if (child.isMesh && !heMeshRef.current) {
-          heMeshRef.current = HalfEdgeMesh.fromBufferGeometry(child.geometry);
-          setStats(heMeshRef.current.stats());
-        }
-      });
-      setStatus(`Imported ${file.name}`);
-      URL.revokeObjectURL(url);
+
+    // Built-in defaults are removed on import so the new model isn't
+    // stacked on top. User-imported GLBs (userData.url = file.name) survive.
+    const DEFAULT_URLS = [
+      "/models/michelle.glb",
+      "/models/xbot.glb",
+      "/models/ybot.glb",
+      "/ybot.glb",
+    ];
+    setSceneObjects(prev => {
+      const toRemove = prev.filter(o => DEFAULT_URLS.includes(o.userData?.url));
+      toRemove.forEach(o => { if (o.mesh) scene.remove(o.mesh); });
+      return prev.filter(o => !DEFAULT_URLS.includes(o.userData?.url));
     });
+
+    const url = URL.createObjectURL(file);
+    new GLTFLoader().load(
+      url,
+      (gltf) => {
+        // GLTFLoader returns animations alongside scene; copy onto the
+        // Object3D so OBJ/FBX/GLB all expose mesh.animations consistently.
+        gltf.scene.animations = gltf.animations || [];
+        const label = file.name.replace(/\.[^.]+$/, "");
+        _addLoadedModelToScene(gltf.scene, { label, type: "glb", fileName: file.name });
+
+        gltf.scene.traverse((child) => {
+          if (child.isMesh && !heMeshRef.current) {
+            heMeshRef.current = HalfEdgeMesh.fromBufferGeometry(child.geometry);
+            setStats(heMeshRef.current.stats());
+          }
+        });
+
+        setStatus(`Imported ${file.name}`);
+        URL.revokeObjectURL(url);
+      },
+      undefined,
+      () => {
+        setStatus(`Could not load ${file.name}`);
+        URL.revokeObjectURL(url);
+      },
+    );
   };
 
 
