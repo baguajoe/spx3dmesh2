@@ -861,62 +861,20 @@ const prevFrameRef = useRef(null);
   }, [open, rendererRef, sceneRef, cameraRef]);
 
   
-function applyNPRIfNeeded(style, sceneRef){
-  if(!sceneRef?.current) return;
-
-  const toonStyles = [
-    "toon",
-    "cel",
-    "anime",
-    "manga",
-    "comic",
-    "pixar",
-    "mythic_ink",
-    "celestial_glow",
-    "silk_mist",
-    "spirit_flame",
-    "moonlit_legend",
-    "heavy_ink",
-    "halftone_action",
-    "shadow_panel",
-    "crime_neon",
-    "motion_comic"
-  ];
-
-  if(!toonStyles.includes(style)) return;
-
-  if(!window.createToonMaterial) return;
-
-  sceneRef.current.traverse(obj=>{
-    if(!obj.isMesh) return;
-    // Skip outline meshes we already added on a prior pass — otherwise we
-    // outline the outline and the count compounds every Render click.
-    if (obj.userData?._spxNprOutline) return;
-
-    // Snapshot original material once per mesh; later re-renders keep the
-    // first snapshot so close() restores the truly original look.
-    if (!materialBackupRef.current.has(obj)) {
-      materialBackupRef.current.set(obj, obj.material);
-    }
-
-    const mat = window.createToonMaterial({
-      levels: 4
-    });
-
-    obj.material = mat;
-
-    if(window.addOutlineToMesh){
-      const outline = window.addOutlineToMesh(obj, sceneRef.current,{ thickness:0.002 * edgeStrength,
-        thickness:0.003
-      });
-      if (outline) {
-        outline.userData._spxNprOutline = true;
-        outlineMeshesRef.current.push(outline);
-      }
-    }
-
-  });
-
+function applyNPRIfNeeded(/* style, sceneRef */){
+  // Disabled. The 3D toon-material override + addOutlineToMesh pre-pass
+  // produced black silhouettes for animated avatars. addOutlineToMesh adds
+  // a plain THREE.Mesh (not SkinnedMesh) using the SkinnedMesh's geometry
+  // at scene root — so it renders at rest T-pose, ignores the auto-fit
+  // scale, and explodes to ~70× the character's size as a black BackSide
+  // shell that buries the animated mesh.
+  //
+  // The applyStyleFilter pass (toon/cel/anime/manga/comic/pixar branch)
+  // already handles cel-shading via 2D banding+boost on the rendered
+  // frame, which works for every mesh including animated ones. The 3D
+  // pre-pass is redundant and harmful — leaving the function as a no-op
+  // keeps every call site working without further edits.
+  return;
 }
 
 // Restore original materials and remove outlines added during NPR.
