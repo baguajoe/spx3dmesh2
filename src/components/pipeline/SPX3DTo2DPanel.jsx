@@ -988,6 +988,15 @@ const out = captureAndProcess(1);
     setRendering(false);
   }, [captureAndProcess, currentStyle, rendererRef]);
 
+  // Auto-render whenever the chosen style changes (or panel opens with one).
+  // handleRender already guards on rendererRef, but checking it here too
+  // prevents a "⚠ No renderer" status flash on first mount.
+  useEffect(() => {
+    if (!open) return;
+    if (!rendererRef?.current) return;
+    handleRender();
+  }, [activeStyle, open, handleRender]);
+
   const handleExportBrowser = () => {
     if (!previewRef.current) { setStatus('Render first'); return; }
     const url = previewRef.current.toDataURL(`image/${exportFormat}`);
