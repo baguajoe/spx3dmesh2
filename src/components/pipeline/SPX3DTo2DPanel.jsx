@@ -1005,11 +1005,13 @@ if(exportMode === 'final'){
 return result;
   }, [activeStyle, outlineWidth, toonLevels, shadowBands, highlightClamp, exportMode, edgeThreshold, edgeBias, temporalBlend, rendererRef, sceneRef, cameraRef]);
 
-  // Sync the captureAndProcess ref AFTER the useCallback above is in scope.
-  // Placed here (not earlier near captureRef) to avoid a TDZ reference on
-  // first render — the dep array would otherwise touch captureAndProcess
-  // before its const initializer ran.
-  useEffect(() => { captureRef.current = captureAndProcess; }, [captureAndProcess]);
+  // Sync ref every render — runs after the captureAndProcess const initializer
+  // above. No useEffect, no dep array. A dep-array reference to
+  // captureAndProcess was tripping `Cannot access 'captureAndProcess' before
+  // initialization` on first mount in some build/strict-mode configurations
+  // even with the source order correct; a plain property write sidesteps the
+  // issue entirely. Cost: one assignment per render, negligible.
+  captureRef.current = captureAndProcess;
 
   const handleRender = useCallback(async () => {
     if (!rendererRef?.current) { setStatus('⚠ No renderer — add a mesh first'); return; }
