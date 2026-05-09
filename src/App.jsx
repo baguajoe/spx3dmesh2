@@ -505,19 +505,22 @@ export default function App() {
     if (!scene) return;
     clearOverlays();
 
-    // Built-in defaults are removed on import so the new model isn't
-    // stacked on top. User-imported GLBs (userData.url = file.name) survive.
-    const DEFAULT_URLS = [
-      "/models/michelle.glb",
-      "/models/xbot.glb",
-      "/models/ybot.glb",
-      "/ybot.glb",
-    ];
-    setSceneObjects(prev => {
-      const toRemove = prev.filter(o => DEFAULT_URLS.includes(o.userData?.url));
-      toRemove.forEach(o => { if (o.mesh) scene.remove(o.mesh); });
-      return prev.filter(o => !DEFAULT_URLS.includes(o.userData?.url));
+    // Aggressive pre-import cleanup — catches every prior character at
+    // scene root regardless of provenance: built-in defaults, Custom
+    // Upload (blob URL userData), AND meshes some panel hid via
+    // visible:false instead of remove. Lights/grid/camera skipped.
+    const charactersInScene = [];
+    for (const c of scene.children) {
+      if (c.isLight || c.type === 'GridHelper' || c.isCamera) continue;
+      let isChar = false;
+      c.traverse(ch => { if (ch.isSkinnedMesh || ch.isBone) isChar = true; });
+      if (isChar) charactersInScene.push(c);
+    }
+    charactersInScene.forEach(c => {
+      console.log('[importGLB] Removing prior character:', c.name || c.type);
+      scene.remove(c);
     });
+    setSceneObjects(prev => prev.filter(o => !charactersInScene.includes(o.mesh)));
 
     const url = URL.createObjectURL(file);
     new GLTFLoader().load(
@@ -2387,12 +2390,21 @@ export default function App() {
     if (!scene) return null;
     model.name = label;
     scene.add(model);
+    // Box3.setFromObject only calls updateWorldMatrix(false, false) — does
+    // NOT propagate to descendants. SkinnedMesh under an Armature with
+    // baked scale (Mixamo's 0.01 cm→m bake) measures stale identity
+    // transforms otherwise.
+    model.updateMatrixWorld(true);
 
     const box = new THREE.Box3().setFromObject(model);
     const size = box.getSize(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z);
-    if (maxDim > 10) {
+    // Auto-fit catches both ends:
+    //   maxDim < 0.5  → cm-baked Mixamo lands at ~0.018u (1.8cm — invisible)
+    //   maxDim > 10   → cm-unbaked Mixamo lands at ~138u (oversize)
+    if (maxDim > 0 && (maxDim < 0.5 || maxDim > 10)) {
       model.scale.setScalar(2 / maxDim);
+      model.updateMatrixWorld(true);
       const box2 = new THREE.Box3().setFromObject(model);
       model.position.y -= box2.min.y;
     }
