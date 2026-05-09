@@ -834,6 +834,10 @@ const [temporalBlend, setTemporalBlend] = useState(0.35);
 const prevFrameRef = useRef(null);
   const liveRef    = useRef(null);
   const animRef    = useRef(null);
+  // Panel-owned camera that auto-frames the scene's subject. Used by the
+  // preview rAF, SAVE, EXPORT VIDEO, 4K render, and PNG sequence. Falls
+  // back to the user's main viewport camera when no subject exists.
+  const previewCameraRef = useRef(null);
   // NPR side-effect tracking — applyNPRIfNeeded mutates scene materials and
   // adds outline meshes. These refs track what was changed so we can restore
   // the original look when the panel closes.
@@ -912,10 +916,13 @@ const prevFrameRef = useRef(null);
         mixer.update(0);
       }
 
-      // (3) Styled half-res capture → previewRef (4× perf vs full).
-      // captureAndProcess internally calls renderer.render so the
+      // (3) Auto-frame and styled half-res capture → previewRef (4× perf vs
+      // full). captureAndProcess internally calls renderer.render so the
       // backbuffer is up-to-date for the mirror copy below.
-      const out = captureRef.current ? captureRef.current(0.5) : null;
+      reframePreviewCamera();
+      const out = captureRef.current
+        ? captureRef.current(0.5, previewCameraRef.current)
+        : null;
       if (out && previewRef.current) {
         const c = previewRef.current;
         c.width  = c.offsetWidth  || out.width;
@@ -923,9 +930,13 @@ const prevFrameRef = useRef(null);
         c.getContext('2d').drawImage(out, 0, 0, c.width, c.height);
       }
 
-      // (4) Raw mirror → liveRef (existing behavior).
+      // (4) Raw mirror → liveRef. Re-render with the user's main viewport
+      // camera so the left pane keeps showing their orbit-controlled view
+      // rather than the panel's auto-framed shot.
       const dst = liveRef.current;
-      if (dst) {
+      const userCam = cameraRef?.current;
+      if (dst && userCam) {
+        renderer.render(scene, userCam);
         const src = renderer.domElement;
         dst.width  = dst.offsetWidth  || 600;
         dst.height = dst.offsetHeight || 400;
@@ -955,6 +966,46 @@ function applyNPRIfNeeded(/* style, sceneRef */){
   return;
 }
 
+// Auto-frame the preview camera on whatever non-helper subject is in the
+// scene. Box3.setFromObject on a SkinnedMesh returns the rest-pose bbox, so
+// framing is stable across animation — no jitter as bones move.
+function reframePreviewCamera() {
+  const renderer = rendererRef?.current;
+  const scene    = sceneRef?.current;
+  if (!renderer || !scene) return;
+
+  const isInfra = (c) => (
+    c.isLight || c.isCamera ||
+    c.type === 'GridHelper' || c.type === 'AxesHelper' || c.type === 'LineSegments' ||
+    c.userData?.isHelper === true || c.userData?._spxInfrastructure === true
+  );
+  const subjects = scene.children.filter(c => !isInfra(c));
+  if (subjects.length === 0) return;  // leave camera null → fallback to cameraRef
+
+  const box = new THREE.Box3();
+  subjects.forEach(s => box.expandByObject(s));
+  if (box.isEmpty()) return;
+
+  const center = box.getCenter(new THREE.Vector3());
+  const size   = box.getSize(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z) || 5;
+  const dist   = Math.max(maxDim * 1.8, 0.5);
+
+  const canvas = renderer.domElement;
+  const aspect = canvas.clientWidth / Math.max(1, canvas.clientHeight);
+
+  if (!previewCameraRef.current) {
+    previewCameraRef.current = new THREE.PerspectiveCamera(35, aspect, 0.01, 1000);
+  }
+  const cam = previewCameraRef.current;
+  if (Math.abs(cam.aspect - aspect) > 0.001) {
+    cam.aspect = aspect;
+    cam.updateProjectionMatrix();
+  }
+  cam.position.set(center.x, center.y, center.z + dist);
+  cam.lookAt(center);
+}
+
 // Restore original materials and remove outlines added during NPR.
 function restoreNPRMaterials() {
   const scene = sceneRef?.current;
@@ -975,10 +1026,13 @@ function restoreNPRMaterials() {
 }
 
 
-const captureAndProcess = useCallback((scale = 1) => {
+const captureAndProcess = useCallback((scale = 1, cameraOverride = null) => {
     const renderer = rendererRef?.current;
     const scene    = sceneRef?.current;
-    const camera   = cameraRef?.current;
+    // Override is the panel's auto-framed previewCamera; fall back to the
+    // user's main viewport camera if the override hasn't been set yet
+    // (empty scene case).
+    const camera   = cameraOverride || cameraRef?.current;
     if (!renderer || !scene || !camera) return null;
     renderer.render(scene, camera);
     const src = renderer.domElement;
@@ -1019,7 +1073,7 @@ return result;
     try {
       
 applyNPRIfNeeded(activeStyle, sceneRef);
-const out = captureAndProcess(1);
+const out = captureAndProcess(1, previewCameraRef.current);
 
       if (out && previewRef.current) {
         const c = previewRef.current;
@@ -1115,7 +1169,7 @@ const out = captureAndProcess(1);
     try {
       
 applyNPRIfNeeded(activeStyle, sceneRef);
-const out = captureAndProcess(renderScale);
+const out = captureAndProcess(renderScale, previewCameraRef.current);
 
       if (!out) { setStatus('Render failed'); setExporting(false); return; }
       const dataURL = out.toDataURL('image/png');
@@ -1157,7 +1211,8 @@ const out = captureAndProcess(renderScale);
 
     // Probe a frame for output dimensions. mp4-muxer + yuv420p require even W/H.
     applyNPRIfNeeded(activeStyle, sceneRef);
-    const probe = captureAndProcess(1);
+    reframePreviewCamera();
+    const probe = captureAndProcess(1, previewCameraRef.current);
     if (!probe) { setStatus('⚠ Capture failed'); setExporting(false); return; }
     const W = probe.width  - (probe.width  % 2);
     const H = probe.height - (probe.height % 2);
@@ -1200,7 +1255,7 @@ const out = captureAndProcess(renderScale);
         }
 
         applyNPRIfNeeded(activeStyle, sceneRef);
-        const out = captureAndProcess(1);
+        const out = captureAndProcess(1, previewCameraRef.current);
         if (!out) continue;
 
         let src = out;
@@ -1259,7 +1314,7 @@ const out = captureAndProcess(renderScale);
     try {
       for (let i = 0; i < FRAMES; i++) {
         applyNPRIfNeeded(activeStyle, sceneRef);
-        const out = captureAndProcess(1);
+        const out = captureAndProcess(1, previewCameraRef.current);
         if (!out) continue;
         if (i === 0) { firstWidth = out.width; firstHeight = out.height; }
 
