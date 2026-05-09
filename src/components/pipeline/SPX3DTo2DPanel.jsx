@@ -822,9 +822,22 @@ const [temporalBlend, setTemporalBlend] = useState(0.35);
 const prevFrameRef = useRef(null);
   const liveRef    = useRef(null);
   const animRef    = useRef(null);
+  // NPR side-effect tracking — applyNPRIfNeeded mutates scene materials and
+  // adds outline meshes. These refs track what was changed so we can restore
+  // the original look when the panel closes.
+  const materialBackupRef = useRef(new Map());
+  const outlineMeshesRef  = useRef([]);
 
   const filtered = (activeCat === 'all' ? STYLES : STYLES.filter(s => s.cat === activeCat)).filter(s => VISIBLE_STYLES.includes(s.id));
   const currentStyle = STYLES.find(s => s.id === activeStyle && VISIBLE_STYLES.includes(s.id)) || STYLES.find(s => VISIBLE_STYLES.includes(s.id)) || STYLES[0];
+
+  // Restore scene materials when the panel closes or unmounts. Lives in its
+  // own effect so it runs on `open` going false even if other effects don't.
+  useEffect(() => {
+    if (open) return;
+    restoreNPRMaterials();
+  }, [open]);
+  useEffect(() => () => { restoreNPRMaterials(); }, []);
 
   // Mirror main renderer into live canvas
   useEffect(() => {
@@ -876,6 +889,15 @@ function applyNPRIfNeeded(style, sceneRef){
 
   sceneRef.current.traverse(obj=>{
     if(!obj.isMesh) return;
+    // Skip outline meshes we already added on a prior pass — otherwise we
+    // outline the outline and the count compounds every Render click.
+    if (obj.userData?._spxNprOutline) return;
+
+    // Snapshot original material once per mesh; later re-renders keep the
+    // first snapshot so close() restores the truly original look.
+    if (!materialBackupRef.current.has(obj)) {
+      materialBackupRef.current.set(obj, obj.material);
+    }
 
     const mat = window.createToonMaterial({
       levels: 4
@@ -884,13 +906,36 @@ function applyNPRIfNeeded(style, sceneRef){
     obj.material = mat;
 
     if(window.addOutlineToMesh){
-      window.addOutlineToMesh(obj, sceneRef.current,{ thickness:0.002 * edgeStrength,
+      const outline = window.addOutlineToMesh(obj, sceneRef.current,{ thickness:0.002 * edgeStrength,
         thickness:0.003
       });
+      if (outline) {
+        outline.userData._spxNprOutline = true;
+        outlineMeshesRef.current.push(outline);
+      }
     }
 
   });
 
+}
+
+// Restore original materials and remove outlines added during NPR.
+function restoreNPRMaterials() {
+  const scene = sceneRef?.current;
+  for (const [mesh, originalMat] of materialBackupRef.current.entries()) {
+    if (mesh.material && mesh.material !== originalMat) {
+      mesh.material.dispose?.();
+    }
+    mesh.material = originalMat;
+  }
+  materialBackupRef.current.clear();
+  if (scene) {
+    for (const outline of outlineMeshesRef.current) {
+      scene.remove(outline);
+      outline.material?.dispose?.();
+    }
+  }
+  outlineMeshesRef.current = [];
 }
 
 
