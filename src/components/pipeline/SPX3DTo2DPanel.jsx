@@ -817,6 +817,7 @@ function makeFlatColorPass(srcCanvas, levels=4){
 // cel, toon, pixar) ship in subsequent commits by adding rows to this table.
 const CEL_SHADED_STYLES = {
   anime: { steps: 3, outlineMul: 1.0, halftone: false, monochrome: false },
+  manga: { steps: 2, outlineMul: 1.5, halftone: true,  monochrome: true  },
 };
 
 // 1×N DataTexture used by MeshToonMaterial.gradientMap. NearestFilter snaps
