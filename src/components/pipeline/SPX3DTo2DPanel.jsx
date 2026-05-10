@@ -1037,6 +1037,26 @@ const CEL_2D_PASS = {
   pixar: { posterizeLv: 5, bilateralRadius: 2, bilateralSigmaR: 35, edgeThreshold: 80, edgeBias: 0.7 },
 };
 
+// Face-pass cel parameters — separate from CEL_2D_PASS body params.
+// Tighter edge threshold so eye/lip detail renders, higher posterize lv
+// for skin gradient, smaller bilateral radius to preserve fine facial
+// detail. Tuned for anime; siblings copy structure.
+const CEL_FACE_PASS = {
+  anime: { posterizeLv: 7, bilateralRadius: 2, bilateralSigmaR: 35, edgeThreshold: 60, edgeBias: 1.0 },
+  manga: { posterizeLv: 4, bilateralRadius: 3, bilateralSigmaR: 45, edgeThreshold: 45, edgeBias: 1.2 },
+  comic: { posterizeLv: 5, bilateralRadius: 2, bilateralSigmaR: 40, edgeThreshold: 45, edgeBias: 1.2 },
+  cel:   { posterizeLv: 4, bilateralRadius: 2, bilateralSigmaR: 30, edgeThreshold: 50, edgeBias: 1.0 },
+  toon:  { posterizeLv: 6, bilateralRadius: 2, bilateralSigmaR: 40, edgeThreshold: 55, edgeBias: 1.0 },
+  pixar: { posterizeLv: 7, bilateralRadius: 2, bilateralSigmaR: 30, edgeThreshold: 65, edgeBias: 0.7 },
+};
+
+// Face render scales the face rect's pixel size by this factor for the
+// off-screen face-pass render. 4 means a 100×120 face rect renders to a
+// 400×480 buffer (16× pixel density), then downsamples back during
+// composite. Higher = more face detail at higher GPU cost. Capped at 4
+// because beyond that you're paying for sub-pixel detail nobody can see.
+const FACE_PASS_SCALE = 4;
+
 // 1×N DataTexture used by MeshToonMaterial.gradientMap. NearestFilter snaps
 // the diffuse term to discrete steps → hard cel transitions instead of a
 // smooth Lambertian falloff.
@@ -1208,6 +1228,136 @@ function captureSilhouetteMask(renderer, scene, camera) {
     }
     renderer.setClearColor(originalClearColor, originalClearAlpha);
   }
+}
+
+// Step 2 face-detail pipeline: render the face rect at FACE_PASS_SCALE
+// times its pixel size with face-tuned cel parameters, return a styled
+// face canvas at faceRect (pre-scale) dimensions for compositing.
+//
+// Camera approach: setViewOffset on a body-camera clone. Same position,
+// rotation, FOV, near, far → identical perspective; the projection matrix
+// is altered to render only the body view's [faceRect.x..x+w, y..y+h]
+// subregion, scaled to fill the face render canvas. Pixel-perfect
+// alignment with the body composite — no FOV math, no lookAt rotation.
+//
+// viewW/viewH are the dimensions of the coordinate system that
+// faceRect.{x,y,w,h} live in (i.e. the body styled-output canvas
+// dims = tmp.width/tmp.height). They define "the conceptual full image"
+// for setViewOffset.
+function captureFacePass(renderer, scene, bodyCamera, faceRect, faceCelParams, viewW, viewH) {
+  if (!renderer || !scene || !bodyCamera || !faceRect || !faceCelParams) return null;
+  if (!viewW || !viewH) return null;
+
+  const renderW = Math.max(1, Math.round(faceRect.w * FACE_PASS_SCALE));
+  const renderH = Math.max(1, Math.round(faceRect.h * FACE_PASS_SCALE));
+
+  const originalSize = new THREE.Vector2();
+  renderer.getSize(originalSize);
+  const originalPixelRatio = renderer.getPixelRatio();
+  const originalClearColor = new THREE.Color();
+  renderer.getClearColor(originalClearColor);
+  const originalClearAlpha = renderer.getClearAlpha();
+
+  const faceCamera = bodyCamera.clone();
+  faceCamera.setViewOffset(viewW, viewH, faceRect.x, faceRect.y, faceRect.w, faceRect.h);
+  faceCamera.updateProjectionMatrix();
+
+  let normalSwap = null;
+
+  try {
+    renderer.setSize(renderW, renderH, false);
+
+    // (1) Cel render of the face subregion (current cel materials).
+    renderer.render(scene, faceCamera);
+    const celSrc = renderer.domElement;
+    const celCanvas = document.createElement('canvas');
+    celCanvas.width  = renderW;
+    celCanvas.height = renderH;
+    celCanvas.getContext('2d').drawImage(celSrc, 0, 0);
+
+    // (2) Normal-edge render of the same subregion. Sobel runs on the
+    // normal-colored output so face edges follow geometric form (eye
+    // sockets, lip line, jaw) rather than cel band transitions.
+    normalSwap = _swapAllMeshes(scene, _normalMaterialForEdges);
+    renderer.render(scene, faceCamera);
+    const normalSrc = renderer.domElement;
+    const normalCanvas = document.createElement('canvas');
+    normalCanvas.width  = renderW;
+    normalCanvas.height = renderH;
+    normalCanvas.getContext('2d').drawImage(normalSrc, 0, 0);
+    const lines = makeLinePass(normalCanvas, faceCelParams.edgeThreshold, faceCelParams.edgeBias);
+
+    // Restore from normal swap before face-tuned cel pipeline runs.
+    for (const { mesh, material } of normalSwap.savedMaterials) mesh.material = material;
+    for (const { mesh, visible }  of normalSwap.savedVisibility) mesh.visible  = visible;
+    normalSwap = null;
+
+    // (3) Face-tuned cel pipeline on the face cel render.
+    const blurred = bilateralBlurSeparable(celCanvas, faceCelParams.bilateralRadius, faceCelParams.bilateralSigmaR);
+    posterizeLuminance(blurred, faceCelParams.posterizeLv);
+
+    const bctx = blurred.getContext('2d');
+    bctx.globalCompositeOperation = 'multiply';
+    bctx.drawImage(lines, 0, 0);
+    bctx.globalCompositeOperation = 'source-over';
+
+    // (4) Downsample to faceRect (pre-scale) dimensions for composite.
+    const final = document.createElement('canvas');
+    final.width  = Math.max(1, Math.round(faceRect.w));
+    final.height = Math.max(1, Math.round(faceRect.h));
+    const fctx = final.getContext('2d');
+    fctx.imageSmoothingEnabled = true;
+    fctx.imageSmoothingQuality = 'high';
+    fctx.drawImage(blurred, 0, 0, final.width, final.height);
+
+    return final;
+  } catch (e) {
+    console.warn('[captureFacePass] failed:', e);
+    return null;
+  } finally {
+    if (normalSwap) {
+      for (const { mesh, material } of normalSwap.savedMaterials) mesh.material = material;
+      for (const { mesh, visible }  of normalSwap.savedVisibility) mesh.visible  = visible;
+    }
+    renderer.setSize(originalSize.x, originalSize.y, false);
+    renderer.setPixelRatio(originalPixelRatio);
+    renderer.setClearColor(originalClearColor, originalClearAlpha);
+  }
+}
+
+// Composite the styled face canvas onto the body output at faceRect with
+// a feathered alpha falloff inside `feather` pixels of any rect edge,
+// hiding the seam between high-detail face-pass and lower-detail body
+// pass. Mutates bodyCanvas in place.
+function compositeFaceOntoBody(bodyCanvas, faceCanvas, faceRect) {
+  if (!bodyCanvas || !faceCanvas || !faceRect) return;
+
+  const w = Math.round(faceRect.w);
+  const h = Math.round(faceRect.h);
+  if (w < 1 || h < 1) return;
+  const feather = Math.max(2, Math.round(faceRect.featherPx || 0));
+
+  const masked = document.createElement('canvas');
+  masked.width  = w;
+  masked.height = h;
+  const mctx = masked.getContext('2d');
+  mctx.drawImage(faceCanvas, 0, 0, w, h);
+
+  const id = mctx.getImageData(0, 0, w, h);
+  const d = id.data;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const dx = Math.min(x, w - 1 - x);
+      const dy = Math.min(y, h - 1 - y);
+      const edgeDist = Math.min(dx, dy);
+      const alpha = edgeDist >= feather ? 1.0 : edgeDist / feather;
+      const i = (y * w + x) * 4;
+      d[i + 3] = Math.round(d[i + 3] * alpha);
+    }
+  }
+  mctx.putImageData(id, 0, 0);
+
+  bodyCanvas.getContext('2d').drawImage(masked, faceRect.x, faceRect.y);
 }
 
 export default function SPX3DTo2DPanel({ open, onClose, sceneRef, rendererRef, cameraRef, mixerRef }) {
@@ -1685,6 +1835,25 @@ const captureAndProcess = useCallback((scale = 1, cameraOverride = null) => {
       edgeThresholdSlider, exposure,
       precomputedLines, silhouetteMask,
     });
+
+    // Step 2 face-detail composite. Cel-family only, gated on a face rect
+    // being detectable. Re-detects at THIS call's tmp dims rather than
+    // reading faceRectRef (which mirror() populates at preview-canvas
+    // dims; render path may run at scale=1 with different tmp dims). The
+    // bone/mesh/restPoseSize cache in faceDetectCacheRef is camera- and
+    // canvas-dim-agnostic, so re-detection is cheap (no re-traversal).
+    if (CEL_SHADED_STYLES[activeStyle]) {
+      const faceCelParams = CEL_FACE_PASS[activeStyle];
+      const faceRect = detectFaceRect(scene, camera, tmp.width, tmp.height, faceDetectCacheRef.current);
+      if (faceRect && faceCelParams) {
+        const faceCanvas = captureFacePass(
+          renderer, scene, camera, faceRect, faceCelParams, tmp.width, tmp.height,
+        );
+        if (faceCanvas) {
+          compositeFaceOntoBody(result, faceCanvas, faceRect);
+        }
+      }
+    }
 
 if(exportMode === 'final'){
   return temporalBlendCanvas(result, temporalBlend, prevFrameRef);
