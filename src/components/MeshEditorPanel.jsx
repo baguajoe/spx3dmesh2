@@ -1,4 +1,8 @@
 import React, { useState } from "react";
+import { DragNumberInput } from "./inputs/DragNumberInput";
+
+const RAD_TO_DEG = 180 / Math.PI;
+const DEG_TO_RAD = Math.PI / 180;
 
 // ── SVG Primitive Icons ─────────────────────────────────────────────
 const PrimIcon = ({ id }) => {
@@ -137,12 +141,33 @@ const EDIT_TOOLS = [
 // ── Transform / Properties panel (right-side N-panel style) ─────────
 export function PropertiesPanel({ stats, activeObj }) {
   const [section, setSection] = useState("transform");
+  // Bumped by every commit-from-DragNumberInput so the row's `value` props
+  // re-read mesh.position/rotation/scale after the parent's keyed remount
+  // doesn't cycle (we don't bump the global transformVersion from drag —
+  // that would unmount us mid-drag).
+  const [, forceRow] = useState(0);
 
   const loc  = activeObj?.position  || { x:0, y:0, z:0 };
   const rot  = activeObj?.rotation  || { x:0, y:0, z:0 };
   const scl  = activeObj?.scale     || { x:1, y:1, z:1 };
 
-  const fmt = (v) => (typeof v === "number" ? v.toFixed(4) : "0.0000");
+  const disabled = !activeObj;
+
+  const setLoc = (ax) => (v) => {
+    if (!activeObj) return;
+    activeObj.position[ax] = v;
+    forceRow((n) => n + 1);
+  };
+  const setRot = (ax) => (deg) => {
+    if (!activeObj) return;
+    activeObj.rotation[ax] = deg * DEG_TO_RAD;
+    forceRow((n) => n + 1);
+  };
+  const setScl = (ax) => (v) => {
+    if (!activeObj) return;
+    activeObj.scale[ax] = v;
+    forceRow((n) => n + 1);
+  };
 
   return (
     <div className="props-root">
@@ -164,8 +189,13 @@ export function PropertiesPanel({ stats, activeObj }) {
           {["x","y","z"].map(ax => (
             <div key={ax} className="props-row">
               <span className={`props-axis props-axis--${ax}`}>{ax.toUpperCase()}</span>
-              <input className="props-input" type="number" step="0.01"
-                defaultValue={fmt(loc[ax])} />
+              <DragNumberInput
+                value={loc[ax]}
+                onChange={setLoc(ax)}
+                step={0.01}
+                precision={2}
+                disabled={disabled}
+              />
               <span className="props-unit">m</span>
             </div>
           ))}
@@ -174,8 +204,13 @@ export function PropertiesPanel({ stats, activeObj }) {
           {["x","y","z"].map(ax => (
             <div key={ax} className="props-row">
               <span className={`props-axis props-axis--${ax}`}>{ax.toUpperCase()}</span>
-              <input className="props-input" type="number" step="1"
-                defaultValue={fmt(rot[ax])} />
+              <DragNumberInput
+                value={rot[ax] * RAD_TO_DEG}
+                onChange={setRot(ax)}
+                step={0.1}
+                precision={1}
+                disabled={disabled}
+              />
               <span className="props-unit">°</span>
             </div>
           ))}
@@ -184,8 +219,14 @@ export function PropertiesPanel({ stats, activeObj }) {
           {["x","y","z"].map(ax => (
             <div key={ax} className="props-row">
               <span className={`props-axis props-axis--${ax}`}>{ax.toUpperCase()}</span>
-              <input className="props-input" type="number" step="0.01"
-                defaultValue={fmt(scl[ax])} />
+              <DragNumberInput
+                value={scl[ax]}
+                onChange={setScl(ax)}
+                step={0.01}
+                precision={3}
+                min={0.001}
+                disabled={disabled}
+              />
             </div>
           ))}
 
