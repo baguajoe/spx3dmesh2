@@ -1829,12 +1829,17 @@ const prevFrameRef = useRef(null);
         }
       }
 
-      // (3) Auto-frame and styled half-res capture → previewRef (4× perf vs
-      // full). captureAndProcess internally calls renderer.render so the
-      // backbuffer is up-to-date for the mirror copy below.
+      // (3) Auto-frame and styled capture → previewRef. Scale=0.33 (≈9×
+      // fewer pixels than full) was chosen to fit the per-frame budget
+      // for multi-avatar scenes: bilateral / posterize / Sobel / face
+      // composite / hair composite all scale with canvas area, so going
+      // from 0.5 → 0.33 cuts pixel work ~56% and restores animation
+      // smoothness with 2-3 animated avatars. Tuned for performance,
+      // not maximum visual fidelity. Export path uses scale=1 (or the
+      // user's renderScale multiplier) for full quality.
       reframePreviewCamera();
       const out = captureRef.current
-        ? captureRef.current(0.5, previewCameraRef.current)
+        ? captureRef.current(0.33, previewCameraRef.current)
         : null;
       if (out && previewRef.current) {
         const c = previewRef.current;
