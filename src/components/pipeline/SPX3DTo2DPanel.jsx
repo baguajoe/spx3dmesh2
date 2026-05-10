@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import * as THREE from "three";
 import JSZip from "jszip";
+import { detectFaceRect } from "../../utils/faceDetection";
 
 const CATEGORIES = [
   { id:"all",      label:"All 20" },
@@ -1100,6 +1101,16 @@ const prevFrameRef = useRef(null);
   // preview rAF, SAVE, EXPORT VIDEO, 4K render, and PNG sequence. Falls
   // back to the user's main viewport camera when no subject exists.
   const previewCameraRef = useRef(null);
+
+  // Face detection state (Step 1, Phase 1A). faceRectRef is the latest
+  // {x,y,w,h,featherPx} or null, mutated on every rAF tick. Caching the
+  // one-shot bone/mesh lookups in faceDetectCacheRef avoids re-traversing
+  // the scene every frame. The overlay div is a debug visualizer toggled
+  // by window.__SPX_DEBUG_FACE_RECT — direct DOM mutation (no React state)
+  // because the rect updates per animation frame.
+  const faceRectRef         = useRef(null);
+  const faceDetectCacheRef  = useRef({});
+  const faceRectOverlayRef  = useRef(null);
   // NPR side-effect tracking — applyNPRIfNeeded mutates scene materials and
   // adds outline meshes. These refs track what was changed so we can restore
   // the original look when the panel closes.
@@ -1251,6 +1262,35 @@ const prevFrameRef = useRef(null);
         c.width  = c.offsetWidth  || out.width;
         c.height = c.offsetHeight || out.height;
         c.getContext('2d').drawImage(out, 0, 0, c.width, c.height);
+
+        // (3b) Face rect detection (Step 1, Phase 1A). Computed in the
+        // 2D OUTPUT canvas's pixel space — same camera (previewCameraRef)
+        // and same canvas dimensions as the styled draw above, so the
+        // overlay div's pixel coords line up with what the user sees.
+        const rect = detectFaceRect(
+          scene,
+          previewCameraRef.current || camera,
+          c.width,
+          c.height,
+          faceDetectCacheRef.current,
+        );
+        faceRectRef.current = rect;
+
+        const overlay = faceRectOverlayRef.current;
+        if (overlay) {
+          if (window.__SPX_DEBUG_FACE_RECT && rect) {
+            overlay.style.display   = 'block';
+            overlay.style.left      = `${rect.x}px`;
+            overlay.style.top       = `${rect.y}px`;
+            overlay.style.width     = `${rect.w}px`;
+            overlay.style.height    = `${rect.h}px`;
+            // boxShadow inset visualizes the feather falloff zone in one
+            // overlay (rect outline + feather band).
+            overlay.style.boxShadow = `inset 0 0 0 ${rect.featherPx}px rgba(255,0,0,0.25)`;
+          } else {
+            overlay.style.display = 'none';
+          }
+        }
       }
 
       // (4) Raw mirror → liveRef. Re-render with the user's main viewport
@@ -1783,6 +1823,13 @@ const out = captureAndProcess(renderScale, previewCameraRef.current);
         </div>
         <div className="s2d-canvas-wrap">
           <canvas ref={previewRef} className="s2d-viewport-canvas" />
+          <div ref={faceRectOverlayRef} style={{
+            position:      'absolute',
+            display:       'none',
+            border:        '2px solid red',
+            pointerEvents: 'none',
+            zIndex:        10,
+          }} />
         </div>
         <div className="s2d-output-actions">
           <button className="s2d-btn s2d-btn--render" onClick={handleRender} disabled={rendering}>
