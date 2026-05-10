@@ -1576,7 +1576,7 @@ function compositeFaceOntoBody(bodyCanvas, faceCanvas, faceRect) {
   bodyCanvas.getContext('2d').drawImage(masked, faceRect.x, faceRect.y);
 }
 
-export default function SPX3DTo2DPanel({ open, onClose, sceneRef, rendererRef, cameraRef, mixerRef }) {
+export default function SPX3DTo2DPanel({ open, onClose, sceneRef, rendererRef, cameraRef, mixerRef, sceneObjectsRef }) {
   const [activeCat,    setActiveCat]    = useState('all');
   const [activeStyle,  setActiveStyle]  = useState('cinematic');
   
@@ -1795,21 +1795,38 @@ const prevFrameRef = useRef(null);
         }
       }
 
-      // (2) Seek mixer to the current preview frame. Re-runs every tick
-      // so any drift from App.jsx's animate loop is overridden.
+      // (2) Seek every model's mixer to the current preview frame. Phase 1
+      // multi-import gave each model its own AnimationMixer (obj.mixer in
+      // sceneObjects). Iterating here means non-active animated avatars
+      // play correctly in the styled preview, not just the selected one.
+      // Re-runs every tick so drift from App.jsx's animate loop is
+      // overridden. Each mixer interprets previewSeconds against its own
+      // clip duration (independent loop points).
+      const previewSeconds = previewFrameRef.current / PREVIEW_FPS;
+      const objs = sceneObjectsRef?.current || [];
+      objs.forEach(o => {
+        const m = o.mixer;
+        if (!m) return;
+        const r = m.getRoot?.();
+        const c = r?.animations?.[0];
+        if (!c || c.duration <= 0) return;
+        const a = m.existingAction(c);
+        if (!a) return;
+        a.time = previewSeconds % c.duration;
+        m.update(0);
+      });
+
+      // Active mixer's clip duration still drives previewFrameCount so
+      // the scrubber UI tracks the selected model. Other models simply
+      // loop within that timeline against their own durations.
       const mixer = mixerRef?.current;
-      const root  = mixer?.getRoot?.();
-      const clip  = root?.animations?.[0];
-      const action = (clip && mixer) ? mixer.existingAction(clip) : null;
-      if (action && clip?.duration > 0) {
-        // Keep frame count fresh in case a new model was loaded.
+      const clip  = mixer?.getRoot?.()?.animations?.[0];
+      if (clip?.duration > 0) {
         const fcDerived = Math.max(1, Math.round(clip.duration * PREVIEW_FPS));
         if (fcDerived !== previewFrameCountRef.current) {
           previewFrameCountRef.current = fcDerived;
           setPreviewFrameCount(fcDerived);
         }
-        action.time = (previewFrameRef.current / PREVIEW_FPS) % clip.duration;
-        mixer.update(0);
       }
 
       // (3) Auto-frame and styled half-res capture → previewRef (4× perf vs
