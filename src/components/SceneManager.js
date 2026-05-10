@@ -30,9 +30,14 @@ export function createSceneObject(type, name, mesh) {
     id,
     name: label,
     type,
-    mesh,       // THE SAME mesh that was added to the scene
+    mesh,           // THE SAME mesh that was added to the scene
     visible: true,
     parentId: null,
+    // Per-model AnimationMixer (Phase 1 multi-import). Populated by
+    // _attachMixerToModel after construction; null until then or for
+    // models without clips after the loader runs.
+    mixer: null,
+    mixerDuration: 0,
   };
 }
 

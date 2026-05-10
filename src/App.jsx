@@ -510,28 +510,13 @@ export default function App() {
     if (!scene) return;
     clearOverlays();
 
-    // Aggressive pre-import cleanup. File → Import GLB is a clean replace:
-    // keep only infrastructure (lights, grid, axis lines, center marker,
-    // cameras). Wipes primitives, prior characters (skinned or plain-mesh
-    // mannequins), panel-preview meshes, and any leftover hidden Group
-    // regardless of provenance.
-    const isInfrastructure = (c) => {
-      if (c.isLight) return true;
-      if (c.isCamera) return true;
-      if (c.type === 'GridHelper') return true;
-      if (c.type === 'AxesHelper') return true;
-      if (c.type === 'LineSegments') return true;            // centerGuides
-      if (c.userData?.isHelper === true) return true;        // centerMarker
-      if (c.userData?._spxInfrastructure === true) return true;
-      return false;
-    };
-    const toRemove = scene.children.filter(c => !isInfrastructure(c));
-    toRemove.forEach(c => {
-      console.log('[importGLB] Removing prior scene object:',
-        c.name || c.type, '(visible:', c.visible, ', children:', c.children?.length ?? 0, ')');
-      scene.remove(c);
-    });
-    setSceneObjects(prev => prev.filter(o => !toRemove.includes(o.mesh)));
+    // Phase 1 multi-import: imports are PURELY ADDITIVE. Prior scene
+    // contents (other characters, primitives, panel previews) are
+    // preserved. _addLoadedModelToScene auto-offsets the spawn position
+    // on +X so multi-import doesn't visually overlap. Per-model animation
+    // mixers (stored on each sceneObjects entry) keep each character
+    // animating independently. To remove a model, use the SCENE outliner
+    // delete — that path calls _disposeMixer on the specific model.
 
     const url = URL.createObjectURL(file);
     new GLTFLoader().load(
@@ -958,6 +943,11 @@ export default function App() {
     // handled by OutlinePass in the composer (wired separately).
     setActiveObjId(id);
     meshRef.current = obj.mesh;
+    // Phase 1 multi-import: point active mixer at the selected model so
+    // play/pause/scrub bridges (and SPX3DTo2DPanel's mixerRef consumer)
+    // act on whichever model the user clicked in the outliner.
+    mixerRef.current = obj.mixer || null;
+    mixerDurationRef.current = obj.mixerDuration || 0;
 
     if (obj.mesh) {
       const box = new THREE.Box3().setFromObject(obj.mesh);
@@ -994,13 +984,21 @@ export default function App() {
 
   const deleteSceneObject = (id) => {
     const obj = sceneObjects.find((o) => o.id === id);
-    if (obj?.mesh) sceneRef.current?.remove(obj.mesh);
+    if (obj?.mesh) {
+      // Phase 1 multi-import: dispose the model's mixer before removing
+      // the mesh so AnimationMixer's bone-cache doesn't leak.
+      _disposeMixer(obj.mesh);
+      sceneRef.current?.remove(obj.mesh);
+    }
     setSceneObjects((prev) => {
       const next = prev.filter((o) => o.id !== id && o.parentId !== id);
       if (activeObjId === id) {
         const fallback = next[0];
         setActiveObjId(fallback?.id || null);
         meshRef.current = fallback?.mesh || null;
+        // Re-point active mixer at the fallback selection (or null).
+        mixerRef.current = fallback?.mixer || null;
+        mixerDurationRef.current = fallback?.mixerDuration || 0;
       }
       return next;
     });
@@ -1839,9 +1837,14 @@ export default function App() {
       // getDelta() is consumed every frame so resuming play after a pause
       // doesn't snap forward by accumulated wall-clock seconds.
       const _dt = clockRef.current ? clockRef.current.getDelta() : 0;
-      if (mixerRef.current && (isPlayingRef.current || autoPlayingRef.current)) {
-        mixerRef.current.update(_dt);
-      }
+      // Phase 1 multi-import: tick every model's mixer. Each mixer's own
+      // timeScale handles play/pause individually — the user pressing the
+      // global play/pause toggles only the active mixer's timeScale via
+      // the isPlaying useEffect bridge, while other models keep playing.
+      // This is intentional: per-model independent animation.
+      sceneObjectsRef.current.forEach(o => {
+        if (o.mixer) o.mixer.update(_dt);
+      });
 
       // Keep gizmo at constant screen-space size
       if (gizmoRef.current && canvas) {
@@ -2417,43 +2420,71 @@ export default function App() {
           }
         }).catch((e) => console.warn('[loadModelToScene] auto-fit failed', e));
         const id = Date.now();
-        const newObj = { id, name: label, mesh: model, userData: { type: "glb", url } };
+        const newObj = {
+          id, name: label, mesh: model,
+          userData: { type: "glb", url },
+          // Phase 1 multi-import: per-model mixer fields populated by
+          // _attachMixerToModel below before pushing to state.
+          mixer: null, mixerDuration: 0,
+        };
+        _attachMixerToModel(model, newObj);
         setSceneObjects(prev => [...prev, newObj]);
         setActiveObjId(id);
         meshRef.current = model;
-        _attachMixerToModel(model);
         setStatus(`✓ ${label} loaded`);
       }, undefined, () => setStatus(`Could not load ${label}`));
     }).catch(() => setStatus(`GLTFLoader unavailable`));
   }, [sceneRef, meshRef, setSceneObjects, setActiveObjId]);
 
-  // ── AnimationMixer lifecycle ────────────────────────────────────────────────
-  const _disposeMixer = () => {
-    const m = mixerRef.current;
-    if (m) {
-      m.stopAllAction();
-      const root = m.getRoot();
-      if (root) m.uncacheRoot(root);
+  // ── AnimationMixer lifecycle (Phase 1 multi-import) ─────────────────────────
+  // Mixers are per-model, stored on each sceneObjects entry's `mixer` field.
+  // mixerRef.current and mixerDurationRef.current are now "active model"
+  // pointers — driven by selection — preserving backward compat for
+  // SPX3DTo2DPanel and the play/pause/scrub bridges that read mixerRef.
+
+  // Dispose a SPECIFIC model's mixer. Called from deleteSceneObject when a
+  // model is removed from the outliner. No-op if no model passed (callers
+  // wanting "stop everything" must iterate sceneObjectsRef themselves).
+  const _disposeMixer = (model) => {
+    if (!model) return;
+    const obj = sceneObjectsRef.current.find(o => o.mesh === model);
+    if (!obj || !obj.mixer) return;
+    obj.mixer.stopAllAction();
+    obj.mixer.uncacheRoot(model);
+    if (mixerRef.current === obj.mixer) {
+      mixerRef.current = null;
+      mixerDurationRef.current = 0;
+      autoPlayingRef.current = false;
     }
-    mixerRef.current = null;
-    mixerDurationRef.current = 0;
-    autoPlayingRef.current = false;
+    obj.mixer = null;
+    obj.mixerDuration = 0;
   };
 
+  // Build a mixer for `model` and store on `obj.mixer`. Always creates a
+  // mixer, even for models without clips (idle mixer is harmless and
+  // keeps obj.mixer non-null for future clip assignment).
   // Auto-play sets autoPlayingRef + timeScale directly (NOT setIsPlaying) so
   // the mixer loops its native clip without coupling to the editor's 0–250
   // frame counter. The user pressing play/pause later takes over via the
   // isPlaying effect.
-  const _attachMixerToModel = (model) => {
-    _disposeMixer();
-    const clips = model?.animations || [];
-    if (!clips.length) return;
+  const _attachMixerToModel = (model, obj = null) => {
     const mixer = new THREE.AnimationMixer(model);
-    mixer.clipAction(clips[0]).play();
+    const clips = model?.animations || [];
+    let duration = 0;
+    if (clips.length) {
+      mixer.clipAction(clips[0]).play();
+      duration = clips[0].duration || 0;
+      autoPlayingRef.current = true;
+    }
     mixer.timeScale = 1;
+    if (obj) {
+      obj.mixer = mixer;
+      obj.mixerDuration = duration;
+    }
+    // Active-model pointers — newly-imported model becomes active.
     mixerRef.current = mixer;
-    mixerDurationRef.current = clips[0].duration || 0;
-    autoPlayingRef.current = true;
+    mixerDurationRef.current = duration;
+    return mixer;
   };
 
   // ── Shared OBJ/FBX register-and-fit helper ──────────────────────────────────
@@ -2488,13 +2519,26 @@ export default function App() {
       model.position.y -= box2.min.y;
     }
 
+    // Auto-offset spawn (Phase 1 multi-import). Each new model lands
+    // 1.5× its post-auto-fit width to the +X side of the previous one
+    // so multiple imports don't visually overlap. First import lands
+    // at origin (count === 0).
+    const existingCount = sceneObjectsRef.current.length;
+    if (existingCount > 0) {
+      const finalBox = new THREE.Box3().setFromObject(model);
+      const finalWidth = Math.max(0.1, finalBox.getSize(new THREE.Vector3()).x);
+      model.position.x += existingCount * finalWidth * 1.5;
+    }
+
     const obj = createSceneObject(type, label, model);
     obj.userData = { url: fileName, hasAnimations: (model.animations?.length || 0) > 0 };
+    // Build mixer + populate obj.mixer BEFORE pushing to state so the
+    // animate loop's forEach sees the mixer on the very first tick.
+    _attachMixerToModel(model, obj);
     setSceneObjects(prev => [...prev, obj]);
     setActiveObjId(obj.id);
     meshRef.current = model;
     heMeshRef.current = null;
-    _attachMixerToModel(model);
     return obj.id;
   };
 
