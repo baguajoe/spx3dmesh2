@@ -161,9 +161,15 @@ function applyStyleFilter(srcCanvas, style, params) {
         const pass = CEL_2D_PASS[style];
 
         // Edge Threshold slider overrides per-style default; raises threshold
-        // → fewer/sparser ink lines, lowers → denser/manga-like.
+        // → fewer/sparser ink lines, lowers → denser/manga-like. When
+        // captureAndProcess provides params.precomputedLines (the
+        // normal-edge pass), use that instead — Sobel-on-normal finds
+        // geometric creases instead of cel-band transitions on the styled
+        // source. Falls back to the legacy in-branch Sobel if the helper
+        // returned null (e.g. single-frame render path).
         const threshold = params.edgeThresholdSlider ?? pass.edgeThreshold;
-        const lines   = makeLinePass(srcCanvas, threshold, pass.edgeBias);
+        const lines = params.precomputedLines
+          || makeLinePass(srcCanvas, threshold, pass.edgeBias);
         const blurred = bilateralBlurSeparable(srcCanvas, pass.bilateralRadius, pass.bilateralSigmaR);
         // Toon Levels slider overrides the per-style default. Lets the
         // user push more or fewer cel bands without editing CEL_2D_PASS.
@@ -191,13 +197,34 @@ function applyStyleFilter(srcCanvas, style, params) {
         bctx.globalCompositeOperation = 'source-over';
 
         const bid = bctx.getImageData(0, 0, blurred.width, blurred.height);
+        const bd = bid.data;
         if (cfg.monochrome) {
-          const bd = bid.data;
           for (let i = 0; i < bd.length; i += 4) {
             const lum = 0.299*bd[i] + 0.587*bd[i+1] + 0.114*bd[i+2];
             bd[i] = bd[i+1] = bd[i+2] = lum;
           }
         }
+
+        // Silhouette mask — wipe background pixels (mask < 32) to clean
+        // panel-bg gray. Without this, bilateral+posterize+Sobel produce
+        // floating debris dots in empty space because the renderer uses
+        // a solid (non-alpha) clear color so empty pixels are processed.
+        // Mask was scaled to (blurred.width × blurred.height) upstream
+        // in captureAndProcess, so per-pixel index alignment is exact.
+        if (params.silhouetteMask) {
+          const maskCtx  = params.silhouetteMask.getContext('2d');
+          const maskData = maskCtx.getImageData(
+            0, 0, params.silhouetteMask.width, params.silhouetteMask.height,
+          ).data;
+          for (let i = 0; i < bd.length; i += 4) {
+            if (maskData[i] < 32) {
+              bd[i]   = 20;
+              bd[i+1] = 20;
+              bd[i+2] = 20;
+            }
+          }
+        }
+
         id.data.set(bid.data);
         break;
       }
@@ -1093,6 +1120,96 @@ function makeCelMaterial(originalMat, steps) {
   return mat;
 }
 
+// Module-level shared materials for the cel-family second/third render
+// passes. Allocated once, reused every frame — zero per-frame GC. Modern
+// Three.js (r152+) auto-detects skinning when these materials are bound
+// to a SkinnedMesh, so the legacy `skinning: true` flag is unnecessary
+// (and silently ignored). DoubleSide so back-facing triangles also write
+// edges/mask — important for hair caps and open garment shells.
+const _normalMaterialForEdges = new THREE.MeshNormalMaterial({
+  side: THREE.DoubleSide,
+});
+const _whiteMaterialForMask = new THREE.MeshBasicMaterial({
+  color: 0xffffff,
+  side:  THREE.DoubleSide,
+});
+
+// Helper: traverse the scene, swap every visible non-infrastructure mesh
+// to `material`, hide outline meshes (they'd contaminate the pass).
+// Returns ({savedMaterials, savedVisibility}) for restoration.
+// CALLERS MUST restore in a try/finally.
+function _swapAllMeshes(scene, material) {
+  const savedMaterials = [];
+  const savedVisibility = [];
+  scene.traverse(obj => {
+    if (!obj.isMesh) return;
+    if (obj.userData?.isHelper === true) return;
+    if (obj.userData?._spxInfrastructure === true) return;
+    if (obj.userData?._spxNprOutline === true) {
+      savedVisibility.push({ mesh: obj, visible: obj.visible });
+      obj.visible = false;
+      return;
+    }
+    savedMaterials.push({ mesh: obj, material: obj.material });
+    obj.material = material;
+  });
+  return { savedMaterials, savedVisibility };
+}
+
+// Render the scene with MeshNormalMaterial swapped in, then run Sobel on
+// the result. Returns a black-on-white line canvas (or null on failure).
+// Edges follow geometric form (creases, silhouettes) instead of being
+// found at cel-band transitions on the styled output — that's the whole
+// point. Try/finally guarantees material/visibility restore.
+function captureNormalEdges(renderer, scene, camera, threshold, bias) {
+  if (!renderer || !scene || !camera) return null;
+  let saved;
+  try {
+    saved = _swapAllMeshes(scene, _normalMaterialForEdges);
+    renderer.render(scene, camera);
+    const src = renderer.domElement;
+    const tmp = document.createElement('canvas');
+    tmp.width  = src.width;
+    tmp.height = src.height;
+    tmp.getContext('2d').drawImage(src, 0, 0);
+    return makeLinePass(tmp, threshold, bias);
+  } finally {
+    if (saved) {
+      for (const { mesh, material } of saved.savedMaterials) mesh.material = material;
+      for (const { mesh, visible }  of saved.savedVisibility) mesh.visible  = visible;
+    }
+  }
+}
+
+// Render the scene as flat white against a black clear color. The result
+// is a binary silhouette mask used by applyStyleFilter to wipe noisy
+// background pixels back to clean panel-bg. Same try/finally restoration
+// pattern + clearColor save/restore.
+function captureSilhouetteMask(renderer, scene, camera) {
+  if (!renderer || !scene || !camera) return null;
+  let saved;
+  const originalClearColor = new THREE.Color();
+  renderer.getClearColor(originalClearColor);
+  const originalClearAlpha = renderer.getClearAlpha();
+  try {
+    saved = _swapAllMeshes(scene, _whiteMaterialForMask);
+    renderer.setClearColor(0x000000, 1.0);
+    renderer.render(scene, camera);
+    const src = renderer.domElement;
+    const tmp = document.createElement('canvas');
+    tmp.width  = src.width;
+    tmp.height = src.height;
+    tmp.getContext('2d').drawImage(src, 0, 0);
+    return tmp;
+  } finally {
+    if (saved) {
+      for (const { mesh, material } of saved.savedMaterials) mesh.material = material;
+      for (const { mesh, visible }  of saved.savedVisibility) mesh.visible  = visible;
+    }
+    renderer.setClearColor(originalClearColor, originalClearAlpha);
+  }
+}
+
 export default function SPX3DTo2DPanel({ open, onClose, sceneRef, rendererRef, cameraRef, mixerRef }) {
   const [activeCat,    setActiveCat]    = useState('all');
   const [activeStyle,  setActiveStyle]  = useState('cinematic');
@@ -1523,9 +1640,50 @@ const captureAndProcess = useCallback((scale = 1, cameraOverride = null) => {
     if (exportMode === 'flat') {
       return makeFlatColorPass(tmp, toonLevels);
     }
+
+    // Cel-family extra passes (architectural fix): a normal-edge ink pass
+    // and a silhouette mask, both rendered with material swaps. The cel
+    // Sobel previously read from the cel-shaded source and inked every
+    // band transition; normal-edge pass finds geometric creases instead.
+    // Mask wipes noisy background pixels back to clean panel-bg.
+    let precomputedLines = null;
+    let silhouetteMask   = null;
+    if (CEL_SHADED_STYLES[activeStyle]) {
+      const pass = CEL_2D_PASS[activeStyle];
+      const threshold = edgeThresholdSlider ?? pass.edgeThreshold;
+      precomputedLines = captureNormalEdges(renderer, scene, camera, threshold, pass.edgeBias);
+      silhouetteMask   = captureSilhouetteMask(renderer, scene, camera);
+
+      // Helpers capture from renderer.domElement (full res). tmp is at
+      // src*scale (preview rAF uses scale=0.5). Scale captures down to
+      // tmp dims so the per-pixel mask loop and multiply-composite line
+      // up correctly.
+      if (precomputedLines && (precomputedLines.width !== tmp.width || precomputedLines.height !== tmp.height)) {
+        const scaled = document.createElement('canvas');
+        scaled.width  = tmp.width;
+        scaled.height = tmp.height;
+        scaled.getContext('2d').drawImage(precomputedLines, 0, 0, tmp.width, tmp.height);
+        precomputedLines = scaled;
+      }
+      if (silhouetteMask && (silhouetteMask.width !== tmp.width || silhouetteMask.height !== tmp.height)) {
+        const scaled = document.createElement('canvas');
+        scaled.width  = tmp.width;
+        scaled.height = tmp.height;
+        scaled.getContext('2d').drawImage(silhouetteMask, 0, 0, tmp.width, tmp.height);
+        silhouetteMask = scaled;
+      }
+
+      // The two helpers left the backbuffer in mask state. Re-render
+      // normally so tmp gets the cel-shaded look back.
+      renderer.render(scene, camera);
+      ctx.clearRect(0, 0, tmp.width, tmp.height);
+      ctx.drawImage(src, 0, 0, tmp.width, tmp.height);
+    }
+
     const result = applyStyleFilter(tmp, activeStyle, {
       outlineWidth, toonLevels, shadowBands, highlightClamp,
       edgeThresholdSlider, exposure,
+      precomputedLines, silhouetteMask,
     });
 
 if(exportMode === 'final'){
