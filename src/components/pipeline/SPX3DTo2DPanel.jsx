@@ -996,7 +996,18 @@ function makeCelGradientMap(steps) {
   const stops = steps === 2 ? [0.4, 1.0]
               : steps === 4 ? [0.3, 0.55, 0.8, 1.0]
               : steps === 5 ? [0.2, 0.4, 0.6, 0.8, 1.0]
-              : [0.3, 0.7, 1.0];                       // default 3 (anime)
+              : [0.45, 0.7, 1.0];
+              // ↑ default 3 (anime). Bottom stop lifted from 0.3 → 0.45 to
+              //   prevent the 3D MeshToon + 2D posterize double-quantize
+              //   from collapsing shadow-side fragments to pure black in
+              //   armpits/inner-thighs/neck/visor cavity. Math: at the 2D
+              //   pass's posterizeLv=5 (lvSteps=4), the bottom-band ceil
+              //   threshold sits at 1/4 = 0.25 — so a 0.30 input rounds to
+              //   band 1 (≈0/255), reading as plate black. 0.45 lands well
+              //   above 0.25, snapping into band 2 (≈64/255 → ratio
+              //   recolor with original chroma) for a readable dark-cel
+              //   zone. If shadows still too dark, raise to 0.50; if
+              //   washed out, drop to 0.40.
   const data = new Uint8Array(stops.length * 4);
   stops.forEach((v, i) => {
     const c = Math.round(v * 255);
