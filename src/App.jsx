@@ -643,6 +643,10 @@ export default function App() {
 
   const [autoRigOpen, setAutoRigOpen] = useState(false);
   const [style3DTo2DOpen, setStyle3DTo2DOpen] = useState(false);
+  // Ref-mirror so the animate-loop rAF closure can read the latest panel
+  // state without stale-closure issues. Synced via the useEffect below.
+  const style3DTo2DOpenRef = useRef(false);
+  useEffect(() => { style3DTo2DOpenRef.current = style3DTo2DOpen; }, [style3DTo2DOpen]);
   const [proportionalEnabled, setProportionalEnabled] = useState(false);
   const [proportionalRadius, setProportionalRadius] = useState(1.0);
   const [proportionalFalloff, setProportionalFalloff] = useState('smooth');
@@ -1854,9 +1858,17 @@ export default function App() {
       // global play/pause toggles only the active mixer's timeScale via
       // the isPlaying useEffect bridge, while other models keep playing.
       // This is intentional: per-model independent animation.
-      sceneObjectsRef.current.forEach(o => {
-        if (o.mixer) o.mixer.update(_dt);
-      });
+      //
+      // When the 2D-style panel is open, the panel's mirror() rAF takes
+      // over mixer time advancement (it seeks all mixers to previewFrame
+      // each tick). Two writers to mixer.time creates frame-to-frame
+      // desync between 3D viewport and 2D output. Skip App.jsx's tick so
+      // the panel is the sole authority while it's open.
+      if (!style3DTo2DOpenRef.current) {
+        sceneObjectsRef.current.forEach(o => {
+          if (o.mixer) o.mixer.update(_dt);
+        });
+      }
 
       // Keep gizmo at constant screen-space size
       if (gizmoRef.current && canvas) {
