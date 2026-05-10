@@ -162,7 +162,9 @@ function applyStyleFilter(srcCanvas, style, params) {
 
         const lines   = makeLinePass(srcCanvas, pass.edgeThreshold, pass.edgeBias);
         const blurred = bilateralBlurSeparable(srcCanvas, pass.bilateralRadius, pass.bilateralSigmaR);
-        posterizeLuminance(blurred, pass.posterizeLv);
+        // Toon Levels slider overrides the per-style default. Lets the
+        // user push more or fewer cel bands without editing CEL_2D_PASS.
+        posterizeLuminance(blurred, params.toonLevels ?? pass.posterizeLv);
 
         const bctx = blurred.getContext('2d');
         bctx.globalCompositeOperation = 'multiply';
@@ -1437,7 +1439,9 @@ function applyCelShading(style) {
   // Slider mapping: scale factor = 1 + (outlineWidth * outlineMul * 0.02).
   // outlineWidth=1.5, outlineMul=1.0 → 1.03 (subtle, default look).
   // outlineWidth=2.5, outlineMul=1.5 → 1.075 (heavy, manga look).
-  const scaleFactor = 1 + ((outlineWidth || 1.5) * cfg.outlineMul * 0.02);
+  // Coefficient bumped 0.02 → 0.04 to make the slider visibly affect output
+  // across its 0–5 range; the previous coefficient kept thickness sub-pixel.
+  const scaleFactor = 1 + ((outlineWidth || 1.5) * cfg.outlineMul * 0.04);
 
   scene.traverse(obj => {
     if (!obj.isMesh) return;
@@ -1898,12 +1902,12 @@ const out = captureAndProcess(renderScale, previewCameraRef.current);
         </div>
         <div className="s2d-param-row">
           <span className="s2d-param-label">Toon Levels</span>
-          <input type="range" min={2} max={10} step={1} value={toonLevels}
+          <input type="range" min={2} max={8} step={1} value={toonLevels}
             onChange={e=>setToonLevels(+e.target.value)} className="s2d-slider"/>
           <span className="s2d-param-val">{toonLevels}</span>
         </div>
         <div className="s2d-param-row">
-          <span className="s2d-param-label">4K Scale</span>
+          <span className="s2d-param-label">Export Resolution</span>
           <input type="range" min={1} max={4} step={1} value={renderScale}
             onChange={e=>setRenderScale(+e.target.value)} className="s2d-slider"/>
           <span className="s2d-param-val">{renderScale}x</span>
