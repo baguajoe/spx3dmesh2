@@ -933,6 +933,12 @@ function bilateralBlurSeparable(srcCanvas, radius = 3, sigmaR = 30) {
 // each pixel's original chroma — produces clean cel "blocks" where multiple
 // hues share the same brightness band. Avoids the per-channel-quantize
 // confetti edges of makeFlatColorPass. Mutates the canvas in place.
+//
+// Math.ceil (not round) on the band index biases every pixel UP into its
+// next brighter band. Without this, mid-tone skin (lum ~110/255 with
+// levels=4) rounds DOWN to band 1 of 3 (≈85/255) and the character looks
+// underexposed; with ceil it snaps to band 2 (≈170/255) for a brighter,
+// healthier cel result. Pure black (lum<1) still short-circuits.
 function posterizeLuminance(canvas, levels) {
   const ctx = canvas.getContext('2d');
   const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -941,7 +947,7 @@ function posterizeLuminance(canvas, levels) {
   for (let i = 0; i < d.length; i += 4) {
     const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
     if (lum < 1) continue;
-    const newLum = Math.round(lum / 255 * lvSteps) / lvSteps * 255;
+    const newLum = Math.ceil(lum / 255 * lvSteps) / lvSteps * 255;
     const ratio = newLum / lum;
     d[i]     = Math.max(0, Math.min(255, d[i]     * ratio));
     d[i + 1] = Math.max(0, Math.min(255, d[i + 1] * ratio));
@@ -1010,7 +1016,11 @@ function makeCelMaterial(originalMat, steps) {
     opacity:     originalMat?.opacity ?? 1,
     side:        originalMat?.side || THREE.FrontSide,
   });
-  mat.envMapIntensity = 0;
+  // Low (not zero) IBL fill: 0 underexposes the character because the
+  // ambient + hemi alone don't compensate for the lost env contribution.
+  // 0.35 restores enough fill to read at proper exposure without drowning
+  // the Lambert N·L term the gradient quantizes.
+  mat.envMapIntensity = 0.35;
   return mat;
 }
 
