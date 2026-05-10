@@ -1037,6 +1037,29 @@ const CEL_2D_PASS = {
   pixar: { posterizeLv: 5, bilateralRadius: 2, bilateralSigmaR: 35, edgeThreshold: 80, edgeBias: 0.7 },
 };
 
+// Cel-family presets. Keys are "<style>:<preset-name>". Each entry is
+// a partial override of the slider values (outlineWidth, toonLevels,
+// edgeThresholdSlider, exposure). Render scale is excluded — that's
+// an export-only knob, not a style choice. Outline width matters
+// visually so it's per-preset.
+//
+// Default presets pull from CEL_2D_PASS for posterize/edge defaults so
+// they stay in sync if the body cel params get tuned later.
+const CEL_PRESETS = {
+  'anime:default':    { outlineWidth: 1.5, toonLevels: 5, edgeThreshold: 90,  exposure: 1.0 },
+  'anime:heavy-ink':  { outlineWidth: 3.0, toonLevels: 5, edgeThreshold: 50,  exposure: 1.0 },
+  'anime:soft':       { outlineWidth: 0.5, toonLevels: 7, edgeThreshold: 130, exposure: 1.1 },
+  'manga:default':    { outlineWidth: 2.0, toonLevels: 2, edgeThreshold: 55,  exposure: 1.0 },
+  'comic:default':    { outlineWidth: 2.0, toonLevels: 3, edgeThreshold: 55,  exposure: 1.0 },
+  'cel:default':      { outlineWidth: 1.8, toonLevels: 2, edgeThreshold: 65,  exposure: 1.0 },
+  'toon:default':     { outlineWidth: 1.5, toonLevels: 4, edgeThreshold: 70,  exposure: 1.0 },
+  'pixar:default':    { outlineWidth: 0.8, toonLevels: 5, edgeThreshold: 80,  exposure: 1.0 },
+};
+
+// Global defaults for non-cel styles. Reset uses these when the style
+// doesn't have any preset entries.
+const GLOBAL_DEFAULTS = { outlineWidth: 1.5, toonLevels: 4, edgeThreshold: 90, exposure: 1.0 };
+
 // Face-pass cel parameters — separate from CEL_2D_PASS body params.
 // Tighter edge threshold so eye/lip detail renders, higher posterize lv
 // for skin gradient, smaller bilateral radius to preserve fine facial
@@ -1376,6 +1399,7 @@ const [highlightClamp, setHighlightClamp] = useState(0.85);
 // drives pencil/blueprint paths — keeps non-cel tuning decoupled).
 const [exposure, setExposure] = useState(1.0);
 const [edgeThresholdSlider, setEdgeThresholdSlider] = useState(90);
+const [activePreset, setActivePreset] = useState('default');
   const [renderScale,  setRenderScale]  = useState(2);
   const [rendering,    setRendering]    = useState(false);
   const [exporting,    setExporting]    = useState(false);
@@ -1492,6 +1516,47 @@ const prevFrameRef = useRef(null);
     else if (activeStyle === 'low_poly')   applyFlatShading();
     else                                   restoreNPRMaterials();
   }, [open, activeStyle, outlineWidth]);
+
+  // Preset system. presetsForStyle returns the dropdown options for the
+  // current style (empty = hide dropdown). applyPreset writes the preset
+  // values into slider state — re-renders trigger captureAndProcess
+  // naturally via deps. handleResetParameters restores the currently
+  // selected preset, not the style's default, so dragging-then-resetting
+  // keeps the user's preset choice intact.
+  const presetsForStyle = useCallback((styleId) => {
+    const prefix = `${styleId}:`;
+    return Object.keys(CEL_PRESETS)
+      .filter(k => k.startsWith(prefix))
+      .map(k => ({
+        key: k.slice(prefix.length),
+        label: k.slice(prefix.length).replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+      }));
+  }, []);
+
+  const applyPreset = useCallback((styleId, presetKey) => {
+    const fullKey = `${styleId}:${presetKey}`;
+    const preset = CEL_PRESETS[fullKey] || GLOBAL_DEFAULTS;
+    setOutlineWidth(preset.outlineWidth);
+    setToonLevels(preset.toonLevels);
+    setEdgeThresholdSlider(preset.edgeThreshold);
+    setExposure(preset.exposure);
+    setActivePreset(presetKey);
+  }, []);
+
+  // Auto-apply the current style's "default" preset on style change so
+  // anime's tuned slider values don't linger when the user switches to
+  // manga/comic/etc.
+  useEffect(() => {
+    if (!open) return;
+    const presets = presetsForStyle(activeStyle);
+    if (presets.length > 0) {
+      applyPreset(activeStyle, 'default');
+    }
+  }, [activeStyle, open, applyPreset, presetsForStyle]);
+
+  const handleResetParameters = useCallback(() => {
+    applyPreset(activeStyle, activePreset);
+  }, [activeStyle, activePreset, applyPreset]);
 
   // captureAndProcess is recreated whenever activeStyle changes (it's a
   // useCallback declared further down). The rAF closure can't depend on
@@ -2248,6 +2313,24 @@ const out = captureAndProcess(renderScale, previewCameraRef.current);
         </div>
 
         <div className="s2d-section-title">PARAMETERS</div>
+        {(() => {
+          const presets = presetsForStyle(activeStyle);
+          if (presets.length === 0) return null;
+          return (
+            <div className="s2d-param-row">
+              <span className="s2d-param-label">Preset</span>
+              <select
+                className="s2d-select s2d-preset-select"
+                value={activePreset}
+                onChange={e => applyPreset(activeStyle, e.target.value)}
+              >
+                {presets.map(p => (
+                  <option key={p.key} value={p.key}>{p.label}</option>
+                ))}
+              </select>
+            </div>
+          );
+        })()}
         <div className="s2d-param-row">
           <span className="s2d-param-label">Outline Width</span>
           <input type="range" min={0} max={5} step={0.5} value={outlineWidth}
@@ -2277,6 +2360,15 @@ const out = captureAndProcess(renderScale, previewCameraRef.current);
           <input type="range" min={1} max={4} step={1} value={renderScale}
             onChange={e=>setRenderScale(+e.target.value)} className="s2d-slider"/>
           <span className="s2d-param-val">{renderScale}x</span>
+        </div>
+        <div className="s2d-param-row" style={{ justifyContent: 'flex-end', marginTop: '8px' }}>
+          <button
+            className="s2d-btn s2d-btn--reset"
+            onClick={handleResetParameters}
+            title="Reset sliders to current preset's baseline"
+          >
+            ↺ Reset Parameters
+          </button>
         </div>
 
         <div className="s2d-native-actions">
