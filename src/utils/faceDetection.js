@@ -41,6 +41,15 @@ const EXCLUDE_MESH_PATTERNS = [
   /eyelash/i,
 ];
 
+// Per-axis inward shrink applied to the rest-pose head bbox half-extents.
+// Y is much smaller than X/Z because Wolf3D-style rigs include the neck
+// stub in the head mesh (Wolf3D_Head Y-extent measured at 1.67× X-extent
+// in diagnostic) — cutting half the Y isolates the face proper. The
+// CENTER_Y_OFFSET below compensates for the head bone sitting at the
+// base of this range (neck joint) rather than at the face center.
+const SHRINK = { x: 0.85, y: 0.55, z: 0.85 };
+const CENTER_Y_OFFSET_RATIO = 0.25;
+
 // Pre-allocated to avoid per-frame GC churn. Module-level → not safe for
 // concurrent calls, but the panel calls this from a single rAF loop.
 const _corner = new THREE.Vector3();
@@ -125,8 +134,8 @@ export function detectFaceRect(scene, camera, canvasW, canvasH, cache) {
     if (_box.isEmpty()) return null;
     _box.getCenter(_center);
     if (!cache.restPoseSize) {
-      _box.getSize(_restSize);
-      cache.restPoseSize = _restSize.clone();
+      cache.restPoseSize = new THREE.Vector3();
+      _box.getSize(cache.restPoseSize);
     }
   } else {
     return null;
@@ -134,12 +143,20 @@ export function detectFaceRect(scene, camera, canvasW, canvasH, cache) {
 
   if (!cache.restPoseSize) return null;
 
-  // Inward shrink — rest-pose bbox includes ear-tips/neck/hair-attach. Face
-  // pass should focus on face-proper to avoid edge-treatment seams at the
-  // composite boundary with the body pass.
-  const halfX = cache.restPoseSize.x * 0.5 * 0.88;
-  const halfY = cache.restPoseSize.y * 0.5 * 0.88;
-  const halfZ = cache.restPoseSize.z * 0.5 * 0.88;
+  // Y center offset — applies to BOTH the rigged path (head bone sits at
+  // neck joint) and the rigless path (geometric center is half-way down a
+  // mesh that includes the neck). Either way, push center upward by 25% of
+  // rest-pose Y so the rect lands on the face proper, not the collarbone.
+  _center.y += cache.restPoseSize.y * CENTER_Y_OFFSET_RATIO;
+
+  // Per-axis half-extents — see SHRINK constant header for why Y is
+  // much smaller than X/Z. Stored in the pre-allocated _restSize vector
+  // for use in the corner loop below.
+  _restSize.set(
+    cache.restPoseSize.x * 0.5 * SHRINK.x,
+    cache.restPoseSize.y * 0.5 * SHRINK.y,
+    cache.restPoseSize.z * 0.5 * SHRINK.z,
+  );
 
   // Project all 8 AABB corners. anyInFront flag bails out when face is
   // fully off-screen / behind the near plane (project() returns z >= 1
@@ -152,9 +169,9 @@ export function detectFaceRect(scene, camera, canvasW, canvasH, cache) {
   for (let dy = -1; dy <= 1; dy += 2)
   for (let dz = -1; dz <= 1; dz += 2) {
     _corner.set(
-      _center.x + halfX * dx,
-      _center.y + halfY * dy,
-      _center.z + halfZ * dz,
+      _center.x + _restSize.x * dx,
+      _center.y + _restSize.y * dy,
+      _center.z + _restSize.z * dz,
     ).project(camera);
     if (_corner.z < 1) anyInFront = true;
     if (_corner.x < xMin) xMin = _corner.x;
