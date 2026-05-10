@@ -144,18 +144,39 @@ function applyStyleFilter(srcCanvas, style, params) {
       break;
     }
     case 'toon': case 'cel': case 'pixar': case 'anime': case 'manga': case 'comic': {
-      // Cel-shaded styles (those in CEL_SHADED_STYLES) have already been
-      // rendered with MeshToonMaterial → frame is already flat-cel-shaded.
-      // Re-quantizing pixel colors would muddy the result. Skip posterize
-      // and banding boost. Monochrome flag forces a B&W conversion (manga).
+      // Cel-family pipeline: 3D pass already gave us a MeshToon-rendered frame.
+      // 2D pass forces hard cel bands + ink lines on top.
+      //   (1) Sobel edges on the ORIGINAL src — captures fine surface detail
+      //       before the bilateral wipes it.
+      //   (2) Bilateral blur — flatten residual gradient.
+      //   (3) Luminance posterize — hard cel bands, original chroma preserved.
+      //   (4) Multiply-composite black ink lines on top.
+      //   (5) Optional greyscale (manga).
+      // Output written into `id` so the post-switch putImageData pushes the
+      // pipeline result to dst, where halftone overlay + applyPackFinish
+      // continue to operate unchanged.
       const cfg = CEL_SHADED_STYLES[style];
       if (cfg) {
+        const pass = CEL_2D_PASS[style];
+
+        const lines   = makeLinePass(srcCanvas, pass.edgeThreshold, pass.edgeBias);
+        const blurred = bilateralBlurSeparable(srcCanvas, pass.bilateralRadius, pass.bilateralSigmaR);
+        posterizeLuminance(blurred, pass.posterizeLv);
+
+        const bctx = blurred.getContext('2d');
+        bctx.globalCompositeOperation = 'multiply';
+        bctx.drawImage(lines, 0, 0);
+        bctx.globalCompositeOperation = 'source-over';
+
+        const bid = bctx.getImageData(0, 0, blurred.width, blurred.height);
         if (cfg.monochrome) {
-          for (let i = 0; i < d.length; i += 4) {
-            const lum = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
-            d[i] = d[i+1] = d[i+2] = lum;
+          const bd = bid.data;
+          for (let i = 0; i < bd.length; i += 4) {
+            const lum = 0.299*bd[i] + 0.587*bd[i+1] + 0.114*bd[i+2];
+            bd[i] = bd[i+1] = bd[i+2] = lum;
           }
         }
+        id.data.set(bid.data);
         break;
       }
       // Legacy posterize path — used by cartoon-family styles that have not
@@ -830,6 +851,105 @@ function makeFlatColorPass(srcCanvas, levels=4){
   return dst;
 }
 
+// Separable bilateral approximation. Two 1D passes (X then Y) where each tap
+// is weighted by spatial Gaussian × range Gaussian (luminance distance). Not a
+// true 2D bilateral but visually close and ~3× cheaper. Used to flatten
+// residual gradient on the MeshToon-rendered frame before posterize so the
+// final cel bands are clean instead of speckled.
+function bilateralBlurSeparable(srcCanvas, radius = 3, sigmaR = 30) {
+  const w = srcCanvas.width, h = srcCanvas.height;
+  const sctx = srcCanvas.getContext('2d');
+  const src = sctx.getImageData(0, 0, w, h).data;
+  const tmp = new Uint8ClampedArray(src.length);
+  const out = new Uint8ClampedArray(src.length);
+
+  const sigmaS = Math.max(1, radius);
+  const spatial = new Float32Array(radius + 1);
+  for (let i = 0; i <= radius; i++) spatial[i] = Math.exp(-(i * i) / (2 * sigmaS * sigmaS));
+
+  const range = new Float32Array(256);
+  for (let i = 0; i < 256; i++) range[i] = Math.exp(-(i * i) / (2 * sigmaR * sigmaR));
+
+  // X pass: src → tmp
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const ci = (y * w + x) * 4;
+      const cl = 0.299 * src[ci] + 0.587 * src[ci + 1] + 0.114 * src[ci + 2];
+      let r = 0, g = 0, b = 0, wsum = 0;
+      const x0 = Math.max(0, x - radius);
+      const x1 = Math.min(w - 1, x + radius);
+      for (let xs = x0; xs <= x1; xs++) {
+        const si = (y * w + xs) * 4;
+        const sl = 0.299 * src[si] + 0.587 * src[si + 1] + 0.114 * src[si + 2];
+        const dl = (sl - cl) | 0;
+        const wt = spatial[xs >= x ? xs - x : x - xs] * range[dl < 0 ? -dl : dl];
+        r += src[si]     * wt;
+        g += src[si + 1] * wt;
+        b += src[si + 2] * wt;
+        wsum += wt;
+      }
+      tmp[ci]     = r / wsum;
+      tmp[ci + 1] = g / wsum;
+      tmp[ci + 2] = b / wsum;
+      tmp[ci + 3] = 255;
+    }
+  }
+
+  // Y pass: tmp → out
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const ci = (y * w + x) * 4;
+      const cl = 0.299 * tmp[ci] + 0.587 * tmp[ci + 1] + 0.114 * tmp[ci + 2];
+      let r = 0, g = 0, b = 0, wsum = 0;
+      const y0 = Math.max(0, y - radius);
+      const y1 = Math.min(h - 1, y + radius);
+      for (let ys = y0; ys <= y1; ys++) {
+        const si = (ys * w + x) * 4;
+        const sl = 0.299 * tmp[si] + 0.587 * tmp[si + 1] + 0.114 * tmp[si + 2];
+        const dl = (sl - cl) | 0;
+        const wt = spatial[ys >= y ? ys - y : y - ys] * range[dl < 0 ? -dl : dl];
+        r += tmp[si]     * wt;
+        g += tmp[si + 1] * wt;
+        b += tmp[si + 2] * wt;
+        wsum += wt;
+      }
+      out[ci]     = r / wsum;
+      out[ci + 1] = g / wsum;
+      out[ci + 2] = b / wsum;
+      out[ci + 3] = 255;
+    }
+  }
+
+  const dst = document.createElement('canvas');
+  dst.width = w; dst.height = h;
+  const dctx = dst.getContext('2d');
+  const idOut = dctx.createImageData(w, h);
+  idOut.data.set(out);
+  dctx.putImageData(idOut, 0, 0);
+  return dst;
+}
+
+// Luminance-based posterize. Snaps brightness to N flat steps while keeping
+// each pixel's original chroma — produces clean cel "blocks" where multiple
+// hues share the same brightness band. Avoids the per-channel-quantize
+// confetti edges of makeFlatColorPass. Mutates the canvas in place.
+function posterizeLuminance(canvas, levels) {
+  const ctx = canvas.getContext('2d');
+  const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = id.data;
+  const lvSteps = Math.max(1, levels - 1);
+  for (let i = 0; i < d.length; i += 4) {
+    const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+    if (lum < 1) continue;
+    const newLum = Math.round(lum / 255 * lvSteps) / lvSteps * 255;
+    const ratio = newLum / lum;
+    d[i]     = Math.max(0, Math.min(255, d[i]     * ratio));
+    d[i + 1] = Math.max(0, Math.min(255, d[i + 1] * ratio));
+    d[i + 2] = Math.max(0, Math.min(255, d[i + 2] * ratio));
+  }
+  ctx.putImageData(id, 0, 0);
+}
+
 // ── Cel-shader rig ──────────────────────────────────────────────────────────
 // Per-style configuration. Anime is the template; siblings (manga, comic,
 // cel, toon, pixar) ship in subsequent commits by adding rows to this table.
@@ -840,6 +960,19 @@ const CEL_SHADED_STYLES = {
   cel:   { steps: 2, outlineMul: 1.2, halftone: false, monochrome: false },
   toon:  { steps: 4, outlineMul: 1.0, halftone: false, monochrome: false },
   pixar: { steps: 5, outlineMul: 0.5, halftone: false, monochrome: false },
+};
+
+// 2D post-pass tuning (paired 1:1 with CEL_SHADED_STYLES). Bilateral flattens
+// what's left of the gradient on the MeshToon-rendered frame; luminance
+// posterize forces N hard cel bands; Sobel edges (computed on the ORIGINAL
+// captured frame, before bilateral wipes detail) composite as black ink lines.
+const CEL_2D_PASS = {
+  anime: { posterizeLv: 4, bilateralRadius: 3, bilateralSigmaR: 30, edgeThreshold: 28, edgeBias: 1.0 },
+  manga: { posterizeLv: 2, bilateralRadius: 5, bilateralSigmaR: 40, edgeThreshold: 22, edgeBias: 1.4 },
+  comic: { posterizeLv: 3, bilateralRadius: 3, bilateralSigmaR: 30, edgeThreshold: 22, edgeBias: 1.4 },
+  cel:   { posterizeLv: 2, bilateralRadius: 2, bilateralSigmaR: 25, edgeThreshold: 28, edgeBias: 1.0 },
+  toon:  { posterizeLv: 4, bilateralRadius: 3, bilateralSigmaR: 30, edgeThreshold: 28, edgeBias: 1.0 },
+  pixar: { posterizeLv: 5, bilateralRadius: 2, bilateralSigmaR: 25, edgeThreshold: 36, edgeBias: 0.7 },
 };
 
 // 1×N DataTexture used by MeshToonMaterial.gradientMap. NearestFilter snaps
