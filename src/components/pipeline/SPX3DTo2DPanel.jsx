@@ -1008,21 +1008,49 @@ function makeCelGradientMap(steps) {
   return tex;
 }
 
-// MeshToonMaterial inherits albedo (color, map) from the source PBR material —
-// skin tone, hair color, eye whites all preserved. normalMap is intentionally
-// dropped: per-pixel normal perturbation smears the gradient bands across
-// every face and washes out the cel look. envMapIntensity = 0 cuts the IBL
-// flat-fill that otherwise drowns the Lambert N·L term the gradient quantizes.
+// MeshToonMaterial inherits ONLY albedo (color, map) from the source PBR
+// material — skin tone, hair color, eye whites preserved. Every other
+// secondary lighting/normal/displacement contribution is explicitly stripped
+// so iClone's baked PBR specular / AO / emissive / clearcoat / displacement
+// can't bleed through as bright face patches or odd dark zones.
+//
+// Note on PBR-only properties (roughness, metalness, clearcoat, *Map
+// variants): MeshToonMaterial does NOT use these in its shader, so setting
+// them to 0/null is functionally a no-op. Included anyway as a defensive
+// belt — Material.setValues() pass-through, copy() flows, and any future
+// Three.js shader changes can't surprise us if we explicitly zero them.
 function makeCelMaterial(originalMat, steps) {
   const mat = new THREE.MeshToonMaterial({
     color:       originalMat?.color || new THREE.Color(0xffffff),
     map:         originalMat?.map || null,
-    normalMap:   null,
     gradientMap: makeCelGradientMap(steps),
     transparent: originalMat?.transparent || false,
     opacity:     originalMat?.opacity ?? 1,
     side:        originalMat?.side || THREE.FrontSide,
+    // Secondary lighting/normal contributions — all valid MeshToonMaterial
+    // inputs, all explicitly nulled so face highlights from baked AO,
+    // emissive maps, light maps, bump, or normal can't bleed through.
+    normalMap:        null,
+    aoMap:            null,
+    bumpMap:          null,
+    lightMap:         null,
+    emissiveMap:      null,
+    displacementMap:  null,
+    emissive:         new THREE.Color(0x000000),
   });
+
+  // PBR-only properties — ignored by MeshToonMaterial's shader but set
+  // anyway for the reasons in the header comment. iClone exports often
+  // ship with non-trivial roughnessMap/metalnessMap/clearcoat baked in.
+  mat.roughness               = 1;
+  mat.metalness               = 0;
+  mat.roughnessMap            = null;
+  mat.metalnessMap            = null;
+  mat.clearcoat               = 0;
+  mat.clearcoatMap            = null;
+  mat.clearcoatNormalMap      = null;
+  mat.clearcoatRoughnessMap   = null;
+
   // Low (not zero) IBL fill: 0 underexposes the character because the
   // ambient + hemi alone don't compensate for the lost env contribution.
   // 0.35 restores enough fill to read at proper exposure without drowning
