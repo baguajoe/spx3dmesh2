@@ -1073,6 +1073,23 @@ const CEL_FACE_PASS = {
   pixar: { posterizeLv: 7, bilateralRadius: 2, bilateralSigmaR: 30, edgeThreshold: 65, edgeBias: 0.7 },
 };
 
+// Hair-pass cel parameters (separate from CEL_2D_PASS body params and
+// CEL_FACE_PASS face params). Hair wants:
+//   - Fewer cel bands (2-3) — anime hair is shadow/midtone/highlight
+//     not a 5-band gradient
+//   - Higher edge threshold — minimal interior ink, mostly silhouette
+//   - Tighter bilateral — preserve strand-direction transitions
+// Tuned for anime first; siblings copy structure with style-appropriate
+// adjustments (manga heavier ink, pixar smoother bands).
+const CEL_HAIR_PASS = {
+  anime: { posterizeLv: 3, bilateralRadius: 1, bilateralSigmaR: 25, edgeThreshold: 130, edgeBias: 0.7 },
+  manga: { posterizeLv: 2, bilateralRadius: 2, bilateralSigmaR: 35, edgeThreshold: 80,  edgeBias: 1.2 },
+  comic: { posterizeLv: 3, bilateralRadius: 2, bilateralSigmaR: 30, edgeThreshold: 90,  edgeBias: 1.0 },
+  cel:   { posterizeLv: 2, bilateralRadius: 1, bilateralSigmaR: 25, edgeThreshold: 100, edgeBias: 0.8 },
+  toon:  { posterizeLv: 3, bilateralRadius: 1, bilateralSigmaR: 30, edgeThreshold: 110, edgeBias: 0.7 },
+  pixar: { posterizeLv: 4, bilateralRadius: 1, bilateralSigmaR: 25, edgeThreshold: 120, edgeBias: 0.5 },
+};
+
 // Face render scales the face rect's pixel size by this factor for the
 // off-screen face-pass render. 4 means a 100×120 face rect renders to a
 // 400×480 buffer (16× pixel density), then downsamples back during
@@ -1176,6 +1193,10 @@ const _whiteMaterialForMask = new THREE.MeshBasicMaterial({
   color: 0xffffff,
   side:  THREE.DoubleSide,
 });
+const _blackMaterialForHairMask = new THREE.MeshBasicMaterial({
+  color: 0x000000,
+  side:  THREE.DoubleSide,
+});
 
 // Helper: traverse the scene, swap every visible non-infrastructure mesh
 // to `material`, hide outline meshes (they'd contaminate the pass).
@@ -1197,6 +1218,27 @@ function _swapAllMeshes(scene, material) {
     obj.material = material;
   });
   return { savedMaterials, savedVisibility };
+}
+
+// Hair mesh matchers covering the rigs we ship: ReadyPlayerMe (Wolf3D_Hair),
+// CC4/iClone (CC_Base_Hair_*, CC_Base_Scalp), Mixamo/generic (^hair, ^scalp).
+// Returns [] when no hair mesh exists — captureHairMask treats that as a
+// graceful no-op and the hair composite skips entirely.
+const HAIR_MESH_PATTERNS = [/wolf3d_hair/i, /^cc_base_hair/i, /^hair/i, /^scalp/i];
+
+function _findHairMeshes(scene) {
+  const hits = [];
+  scene.traverse(obj => {
+    if (!obj.isMesh) return;
+    if (obj.userData?.isHelper === true) return;
+    if (obj.userData?._spxInfrastructure === true) return;
+    if (obj.userData?._spxNprOutline === true) return;
+    const name = obj.name || '';
+    if (HAIR_MESH_PATTERNS.some(re => re.test(name))) {
+      hits.push(obj);
+    }
+  });
+  return hits;
 }
 
 // Render the scene with MeshNormalMaterial swapped in, then run Sobel on
@@ -1251,6 +1293,157 @@ function captureSilhouetteMask(renderer, scene, camera) {
     }
     renderer.setClearColor(originalClearColor, originalClearAlpha);
   }
+}
+
+// Hair-only mask: render hair meshes white, everything else black on a
+// black clear. Returns null if no hair meshes are present so the caller
+// can short-circuit the rest of the hair composite. Manual swap (not
+// _swapAllMeshes) because we need a per-mesh hair-vs-not-hair decision.
+function captureHairMask(renderer, scene, camera) {
+  if (!renderer || !scene || !camera) return null;
+
+  const hairMeshes = _findHairMeshes(scene);
+  if (hairMeshes.length === 0) return null;
+
+  const hairSet = new Set(hairMeshes);
+  const savedMaterials = [];
+  const savedVisibility = [];
+  const originalClearColor = new THREE.Color();
+  renderer.getClearColor(originalClearColor);
+  const originalClearAlpha = renderer.getClearAlpha();
+
+  try {
+    scene.traverse(obj => {
+      if (!obj.isMesh) return;
+      if (obj.userData?.isHelper === true) return;
+      if (obj.userData?._spxInfrastructure === true) return;
+
+      if (obj.userData?._spxNprOutline === true) {
+        savedVisibility.push({ mesh: obj, visible: obj.visible });
+        obj.visible = false;
+        return;
+      }
+
+      savedMaterials.push({ mesh: obj, material: obj.material });
+      obj.material = hairSet.has(obj) ? _whiteMaterialForMask : _blackMaterialForHairMask;
+    });
+
+    renderer.setClearColor(0x000000, 1.0);
+    renderer.render(scene, camera);
+
+    const src = renderer.domElement;
+    const tmp = document.createElement('canvas');
+    tmp.width  = src.width;
+    tmp.height = src.height;
+    tmp.getContext('2d').drawImage(src, 0, 0);
+    return tmp;
+  } finally {
+    for (const { mesh, material } of savedMaterials) mesh.material = material;
+    for (const { mesh, visible }  of savedVisibility) mesh.visible  = visible;
+    renderer.setClearColor(originalClearColor, originalClearAlpha);
+  }
+}
+
+// Full-scene cel + normal-edge render with hair-tuned parameters. Returns
+// the styled canvas at renderer dims; caller scales it to body-canvas dims
+// during composite. Re-renders rather than re-posterizing the body output
+// to avoid double-quantization artifacts on already-banded data.
+function captureHairPass(renderer, scene, camera, hairCelParams) {
+  if (!renderer || !scene || !camera || !hairCelParams) return null;
+
+  const originalSize = new THREE.Vector2();
+  renderer.getSize(originalSize);
+
+  let normalSwap = null;
+
+  try {
+    renderer.render(scene, camera);
+    const celSrc = renderer.domElement;
+    const celCanvas = document.createElement('canvas');
+    celCanvas.width  = celSrc.width;
+    celCanvas.height = celSrc.height;
+    celCanvas.getContext('2d').drawImage(celSrc, 0, 0);
+
+    normalSwap = _swapAllMeshes(scene, _normalMaterialForEdges);
+    renderer.render(scene, camera);
+    const normalSrc = renderer.domElement;
+    const normalCanvas = document.createElement('canvas');
+    normalCanvas.width  = normalSrc.width;
+    normalCanvas.height = normalSrc.height;
+    normalCanvas.getContext('2d').drawImage(normalSrc, 0, 0);
+    const lines = makeLinePass(normalCanvas, hairCelParams.edgeThreshold, hairCelParams.edgeBias);
+
+    for (const { mesh, material } of normalSwap.savedMaterials) mesh.material = material;
+    for (const { mesh, visible }  of normalSwap.savedVisibility) mesh.visible  = visible;
+    normalSwap = null;
+
+    const blurred = bilateralBlurSeparable(celCanvas, hairCelParams.bilateralRadius, hairCelParams.bilateralSigmaR);
+    posterizeLuminance(blurred, hairCelParams.posterizeLv);
+
+    const bctx = blurred.getContext('2d');
+    bctx.globalCompositeOperation = 'multiply';
+    bctx.drawImage(lines, 0, 0);
+    bctx.globalCompositeOperation = 'source-over';
+
+    return blurred;
+  } catch (e) {
+    console.warn('[captureHairPass] failed:', e);
+    return null;
+  } finally {
+    if (normalSwap) {
+      for (const { mesh, material } of normalSwap.savedMaterials) mesh.material = material;
+      for (const { mesh, visible }  of normalSwap.savedVisibility) mesh.visible  = visible;
+    }
+    renderer.setSize(originalSize.x, originalSize.y, false);
+  }
+}
+
+// Per-pixel mask copy: where hairMask > 128, replace bodyCanvas RGB with
+// hairCanvas RGB. No feathering — hair edges already have outline ink from
+// the body pass which provides visual separation. Scales hair/mask down to
+// body dims when capture happened at full renderer size.
+function compositeHairOntoBody(bodyCanvas, hairCanvas, hairMask) {
+  if (!bodyCanvas || !hairCanvas || !hairMask) return;
+
+  const bw = bodyCanvas.width;
+  const bh = bodyCanvas.height;
+
+  let scaledHair = hairCanvas;
+  if (hairCanvas.width !== bw || hairCanvas.height !== bh) {
+    scaledHair = document.createElement('canvas');
+    scaledHair.width  = bw;
+    scaledHair.height = bh;
+    scaledHair.getContext('2d').drawImage(hairCanvas, 0, 0, bw, bh);
+  }
+
+  let scaledMask = hairMask;
+  if (hairMask.width !== bw || hairMask.height !== bh) {
+    scaledMask = document.createElement('canvas');
+    scaledMask.width  = bw;
+    scaledMask.height = bh;
+    scaledMask.getContext('2d').drawImage(hairMask, 0, 0, bw, bh);
+  }
+
+  const bctx = bodyCanvas.getContext('2d');
+  const bid  = bctx.getImageData(0, 0, bw, bh);
+  const bd   = bid.data;
+
+  const hctx = scaledHair.getContext('2d');
+  const hid  = hctx.getImageData(0, 0, bw, bh);
+  const hd   = hid.data;
+
+  const mctx = scaledMask.getContext('2d');
+  const md   = mctx.getImageData(0, 0, bw, bh).data;
+
+  for (let i = 0; i < bd.length; i += 4) {
+    if (md[i] > 128) {
+      bd[i]   = hd[i];
+      bd[i+1] = hd[i+1];
+      bd[i+2] = hd[i+2];
+    }
+  }
+
+  bctx.putImageData(bid, 0, 0);
 }
 
 // Step 2 face-detail pipeline: render the face rect at FACE_PASS_SCALE
@@ -1917,6 +2110,25 @@ const captureAndProcess = useCallback((scale = 1, cameraOverride = null) => {
         if (faceCanvas) {
           compositeFaceOntoBody(result, faceCanvas, faceRect);
         }
+      }
+    }
+
+    // Hair-specific cel pass. Cel-family only. Gated on a hair mesh
+    // existing — captureHairMask returns null on bald avatars / rigs
+    // with no hair mesh, so the composite skips and we only pay one
+    // material-swap render. Cleanup re-render at the end leaves the
+    // backbuffer in cel-shaded state for downstream consumers.
+    if (CEL_SHADED_STYLES[activeStyle]) {
+      const hairCelParams = CEL_HAIR_PASS[activeStyle];
+      if (hairCelParams) {
+        const hairMask = captureHairMask(renderer, scene, camera);
+        if (hairMask) {
+          const hairCanvas = captureHairPass(renderer, scene, camera, hairCelParams);
+          if (hairCanvas) {
+            compositeHairOntoBody(result, hairCanvas, hairMask);
+          }
+        }
+        renderer.render(scene, camera);
       }
     }
 
