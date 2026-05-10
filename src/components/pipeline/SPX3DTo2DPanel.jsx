@@ -1089,6 +1089,53 @@ const prevFrameRef = useRef(null);
   }, [open]);
   useEffect(() => () => { restoreNPRMaterials(); }, []);
 
+  // STEP 0 — Bone + mesh name discovery for the face pipeline (Phase 1A/3A).
+  // One-shot dump on every panel-open so we can lock the iClone matcher
+  // patterns to whatever the loaded character actually uses (CC4, ActorCore,
+  // Mixamo, etc.). Remove this effect once Step 1 ships and matchers are set.
+  useEffect(() => {
+    if (!open) return;
+    const scene = sceneRef?.current;
+    if (!scene) return;
+
+    const bones = [];
+    const skinnedMeshes = [];
+    const meshes = [];
+
+    scene.traverse(obj => {
+      if (obj.userData?._spxNprOutline) return;
+      if (obj.userData?.isHelper === true) return;
+      if (obj.userData?._spxInfrastructure === true) return;
+
+      if (obj.isBone) {
+        bones.push({ name: obj.name || '(unnamed)', parent: obj.parent?.name || '-' });
+      } else if (obj.isSkinnedMesh) {
+        skinnedMeshes.push({
+          name:     obj.name || '(unnamed)',
+          parent:   obj.parent?.name || '-',
+          material: obj.material?.type || '-',
+          verts:    obj.geometry?.attributes?.position?.count || 0,
+        });
+      } else if (obj.isMesh) {
+        meshes.push({
+          name:     obj.name || '(unnamed)',
+          parent:   obj.parent?.name || '-',
+          material: obj.material?.type || '-',
+          verts:    obj.geometry?.attributes?.position?.count || 0,
+        });
+      }
+    });
+
+    console.groupCollapsed(`[SPX 2D-panel] Step 0 — bone/mesh discovery (${bones.length} bones, ${skinnedMeshes.length} skinned, ${meshes.length} meshes)`);
+    console.log('Bones — look for head/eye/jaw/nose/mouth patterns:');
+    console.table(bones);
+    console.log('Skinned meshes — look for face/eye/teeth/tongue/hair sub-meshes:');
+    console.table(skinnedMeshes);
+    console.log('Static meshes:');
+    console.table(meshes);
+    console.groupEnd();
+  }, [open, sceneRef]);
+
   // Material override dispatch. Registered BEFORE the auto-render useEffect
   // (Bug 2 commit) so materials are swapped before the captured frame is
   // taken — no stale-frame flash on style change.
