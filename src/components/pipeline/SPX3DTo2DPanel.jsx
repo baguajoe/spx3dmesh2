@@ -862,46 +862,24 @@ function makeCelGradientMap(steps) {
   return tex;
 }
 
-// MeshToonMaterial inherits albedo (color, map, normalMap) from the source
-// PBR material — skin tone, hair color, eye whites all preserved. No spec /
-// metalness / roughness. SkinnedMesh-compatible out of the box (built-in).
+// MeshToonMaterial inherits albedo (color, map) from the source PBR material —
+// skin tone, hair color, eye whites all preserved. normalMap is intentionally
+// dropped: per-pixel normal perturbation smears the gradient bands across
+// every face and washes out the cel look. envMapIntensity = 0 cuts the IBL
+// flat-fill that otherwise drowns the Lambert N·L term the gradient quantizes.
 function makeCelMaterial(originalMat, steps) {
-  return new THREE.MeshToonMaterial({
+  const mat = new THREE.MeshToonMaterial({
     color:       originalMat?.color || new THREE.Color(0xffffff),
     map:         originalMat?.map || null,
-    normalMap:   originalMat?.normalMap || null,
+    normalMap:   null,
     gradientMap: makeCelGradientMap(steps),
     transparent: originalMat?.transparent || false,
     opacity:     originalMat?.opacity ?? 1,
     side:        originalMat?.side || THREE.FrontSide,
   });
-}
-
-// Inverted-hull outline. MeshBasicMaterial keeps built-in skinning chunks;
-// onBeforeCompile injects clip-space normal extrusion AFTER skinning_vertex
-// so the outline tracks animated bones. Multiplying by clipPos.w gives
-// constant screen-space thickness regardless of camera distance / model scale.
-function makeOutlineMaterial(widthClipSpace) {
-  const mat = new THREE.MeshBasicMaterial({
-    color: 0x000000,
-    side: THREE.BackSide,
-  });
-  mat.onBeforeCompile = (shader) => {
-    shader.uniforms.outlineWidth = { value: widthClipSpace };
-    shader.vertexShader = 'uniform float outlineWidth;\n' + shader.vertexShader;
-    shader.vertexShader = shader.vertexShader.replace(
-      '#include <project_vertex>',
-      `
-      vec4 spxClipPos = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
-      vec3 spxClipNormal = normalize(mat3(projectionMatrix) * mat3(modelViewMatrix) * objectNormal);
-      spxClipPos.xy += spxClipNormal.xy * outlineWidth * spxClipPos.w;
-      gl_Position = spxClipPos;
-      `
-    );
-  };
+  mat.envMapIntensity = 0;
   return mat;
 }
-
 
 export default function SPX3DTo2DPanel({ open, onClose, sceneRef, rendererRef, cameraRef, mixerRef }) {
   const [activeCat,    setActiveCat]    = useState('all');
@@ -1174,7 +1152,16 @@ function applyCelShading(style) {
   const cfg = CEL_SHADED_STYLES[style];
   if (!cfg) return;
 
-  const widthClip = (outlineWidth || 1.5) * 0.003 * cfg.outlineMul;
+  // Scale-based inverted-hull outline. A plain BackSide black mesh inflated
+  // uniformly along the mesh's local axes — visible at any viewport size,
+  // no shader injection, no projection-matrix math. Trade-off: thickness
+  // varies slightly with camera distance (constant in world space, not
+  // screen space). Acceptable for the demo.
+  //
+  // Slider mapping: scale factor = 1 + (outlineWidth * outlineMul * 0.02).
+  // outlineWidth=1.5, outlineMul=1.0 → 1.03 (subtle, default look).
+  // outlineWidth=2.5, outlineMul=1.5 → 1.075 (heavy, manga look).
+  const scaleFactor = 1 + ((outlineWidth || 1.5) * cfg.outlineMul * 0.02);
 
   scene.traverse(obj => {
     if (!obj.isMesh) return;
@@ -1185,18 +1172,23 @@ function applyCelShading(style) {
     materialBackupRef.current.set(obj, obj.material);
     obj.material = makeCelMaterial(obj.material, cfg.steps);
 
+    const outlineMat = new THREE.MeshBasicMaterial({
+      color: 0x000000,
+      side:  THREE.BackSide,
+    });
+
     let outline;
     if (obj.isSkinnedMesh) {
-      outline = new THREE.SkinnedMesh(obj.geometry, makeOutlineMaterial(widthClip));
+      outline = new THREE.SkinnedMesh(obj.geometry, outlineMat);
       outline.bind(obj.skeleton, obj.bindMatrix);
     } else {
-      outline = new THREE.Mesh(obj.geometry, makeOutlineMaterial(widthClip));
+      outline = new THREE.Mesh(obj.geometry, outlineMat);
     }
     outline.userData._spxNprOutline = true;
     outline.renderOrder = (obj.renderOrder || 0) - 1;
     outline.position.copy(obj.position);
     outline.rotation.copy(obj.rotation);
-    outline.scale.copy(obj.scale);
+    outline.scale.copy(obj.scale).multiplyScalar(scaleFactor);
     obj.parent.add(outline);
     outlineMeshesRef.current.push(outline);
   });
