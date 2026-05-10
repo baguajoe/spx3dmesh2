@@ -960,7 +960,7 @@ function posterizeLuminance(canvas, levels) {
 // Per-style configuration. Anime is the template; siblings (manga, comic,
 // cel, toon, pixar) ship in subsequent commits by adding rows to this table.
 const CEL_SHADED_STYLES = {
-  anime: { steps: 3, outlineMul: 1.0, halftone: false, monochrome: false },
+  anime: { steps: 3, outlineMul: 0.6, halftone: false, monochrome: false },
   manga: { steps: 2, outlineMul: 1.5, halftone: true,  monochrome: true  },
   comic: { steps: 3, outlineMul: 1.5, halftone: true,  monochrome: false },
   cel:   { steps: 2, outlineMul: 1.2, halftone: false, monochrome: false },
@@ -980,7 +980,7 @@ const CEL_SHADED_STYLES = {
 // thresholds were picking up skinning topology and mesh seams as internal
 // "bone-line" ink, which read as x-ray creepy on the avatar.
 const CEL_2D_PASS = {
-  anime: { posterizeLv: 4, bilateralRadius: 3, bilateralSigmaR: 45, edgeThreshold: 70, edgeBias: 1.0 },
+  anime: { posterizeLv: 5, bilateralRadius: 3, bilateralSigmaR: 45, edgeThreshold: 90, edgeBias: 1.0 },
   manga: { posterizeLv: 2, bilateralRadius: 5, bilateralSigmaR: 55, edgeThreshold: 55, edgeBias: 1.4 },
   comic: { posterizeLv: 3, bilateralRadius: 3, bilateralSigmaR: 45, edgeThreshold: 55, edgeBias: 1.4 },
   cel:   { posterizeLv: 2, bilateralRadius: 2, bilateralSigmaR: 35, edgeThreshold: 65, edgeBias: 1.0 },
