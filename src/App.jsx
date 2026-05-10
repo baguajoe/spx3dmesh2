@@ -935,6 +935,18 @@ export default function App() {
   // sceneObjects managed directly via addSceneObject/deleteSceneObject
 
   const selectSceneObject = (id) => {
+    // null/undefined → explicit deselect: clear active id, mesh/mixer refs,
+    // detach gizmo, reset stats. Used by viewport empty-space click.
+    if (id == null) {
+      setActiveObjId(null);
+      meshRef.current = null;
+      mixerRef.current = null;
+      mixerDurationRef.current = 0;
+      if (gizmoRef.current) gizmoRef.current.detach();
+      setStatus("Deselected");
+      return;
+    }
+
     const obj = sceneObjectsRef.current.find((o) => o.id === id);
     if (!obj) return;
 
@@ -4657,46 +4669,9 @@ export default function App() {
                   }
                 }
               }
-              // Always try object selection on mousedown
-              {
-                const _sel_canvas = canvasRef.current;
-                const _sel_camera = cameraRef.current;
-                if (_sel_canvas && _sel_camera && sceneObjectsRef.current.length > 0) {
-                  const _sel_rect = _sel_canvas.getBoundingClientRect();
-                  const _sel_mx = ((e.clientX - _sel_rect.left) / _sel_rect.width) * 2 - 1;
-                  const _sel_my = -((e.clientY - _sel_rect.top) / _sel_rect.height) * 2 + 1;
-                  const _sel_ray = new THREE.Raycaster();
-                  _sel_ray.setFromCamera(new THREE.Vector2(_sel_mx, _sel_my), _sel_camera);
-                  const _sel_candidates = [];
-                  sceneObjectsRef.current.forEach(o => {
-                    if (!o.mesh) return;
-                    o.mesh.updateMatrixWorld?.(true);
-                    o.mesh.traverse(c => {
-                      if (!c.isMesh || !c.visible || c.userData?.isHelper) return;
-                      if (c.geometry?.computeBoundingSphere) c.geometry.computeBoundingSphere();
-                      if (c.geometry?.computeBoundingBox) c.geometry.computeBoundingBox();
-                      const mat = Array.isArray(c.material) ? c.material[0] : c.material;
-                      if (mat && mat.side !== undefined) _sel_candidates.push(c);
-                    });
-                  });
-                  let _sel_hits = [];
-                  try { _sel_hits = _sel_candidates.length ? _sel_ray.intersectObjects(_sel_candidates, true) : []; } catch (_e) { }
-                  console.log("[MD-SELECT] candidates:", _sel_candidates.length, "hits:", _sel_hits.length);
-                  console.log("[MD-SELECT] rect:", JSON.stringify({ l: Math.round(_sel_rect.left), t: Math.round(_sel_rect.top), w: Math.round(_sel_rect.width), h: Math.round(_sel_rect.height) }));
-                  console.log("[MD-SELECT] mouse:", e.clientX, e.clientY, "ndc:", _sel_mx.toFixed(2), _sel_my.toFixed(2));
-                  if (_sel_hits.length > 0) {
-                    const _sel_hit = _sel_hits[0].object;
-                    const _sel_objs = sceneObjectsRef.current;
-                    let _sel_match = _sel_objs.find(o => o.mesh === _sel_hit || o.mesh?.uuid === _sel_hit.uuid);
-                    if (!_sel_match) _sel_objs.forEach(o => { if (!o.mesh) return; o.mesh.traverse(m => { if (m === _sel_hit) _sel_match = o; }); });
-                    if (!_sel_match && _sel_objs.length > 0) {
-                      let _d = Infinity;
-                      _sel_objs.forEach(o => { if (!o.mesh) return; const dd = o.mesh.position.distanceTo(_sel_hits[0].point); if (dd < _d) { _d = dd; _sel_match = o; } });
-                    }
-                    if (_sel_match) selectSceneObject(_sel_match.id);
-                  }
-                }
-              }
+              // Object selection moved to mouseup so drag-to-orbit and
+              // gizmo handle presses don't trigger spurious selection.
+              // See onMouseUp handler below for the click-vs-drag path.
               if (activeWorkspace === "Sculpt") {
                 if (!meshRef.current && sceneObjects.length > 0) {
                   const obj = sceneObjects.find(o => o.id === activeObjId) || sceneObjects[0];
@@ -4906,7 +4881,13 @@ export default function App() {
                   if (!o.mesh) return;
                   o.mesh.updateMatrixWorld?.(true);
                   o.mesh.traverse(c => {
-                    if (!c.isMesh || !c.visible || c.userData?.isHelper) return;
+                    if (!c.isMesh || !c.visible) return;
+                    // Skip infrastructure: helpers, NPR outline meshes, and
+                    // SPX-internal infra so the user can't accidentally
+                    // pick them through the avatar geometry.
+                    if (c.userData?.isHelper) return;
+                    if (c.userData?._spxNprOutline) return;
+                    if (c.userData?._spxInfrastructure) return;
                     if (c.geometry?.computeBoundingSphere) c.geometry.computeBoundingSphere();
                     if (c.geometry?.computeBoundingBox) c.geometry.computeBoundingBox();
                     const mat = Array.isArray(c.material) ? c.material[0] : c.material;
@@ -4916,18 +4897,26 @@ export default function App() {
                 let hits = [];
                 try { hits = candidates.length ? ray.intersectObjects(candidates, true) : []; } catch (_e) { }
                 if (hits.length > 0) {
-                  const hitMesh = hits[0].object;
+                  // Walk the parent chain from the topmost hit until we
+                  // find an entry in sceneObjectsRef whose .mesh matches.
+                  // No closest-by-distance fallback: if the ray hit a mesh
+                  // that doesn't belong to a sceneObjects root, treat it
+                  // as no-match (rather than mis-selecting some unrelated
+                  // root just because it was nearby in world space).
                   const objs = sceneObjectsRef.current;
-                  let matched = objs.find(o => o.mesh === hitMesh || o.mesh?.uuid === hitMesh.uuid);
-                  if (!matched && objs.length > 0) {
-                    let minD = Infinity;
-                    objs.forEach(o => { if (!o.mesh) return; const d = o.mesh.position.distanceTo(hits[0].point); if (d < minD) { minD = d; matched = o; } });
+                  let cur = hits[0].object;
+                  let matched = null;
+                  while (cur && !matched) {
+                    matched = objs.find(o => o.mesh === cur);
+                    if (matched) break;
+                    cur = cur.parent;
                   }
                   if (matched) selectSceneObject(matched.id);
+                  else selectSceneObject(null);
                 } else {
-                  sceneObjectsRef.current.forEach(o => { if (o.mesh) o.mesh.traverse(m => { if (m.isMesh && m.material?.emissive) { m.material.emissive.set(0x000000); m.material.emissiveIntensity = 0; } }); });
-                  setActiveObjId(null);
-                  meshRef.current = null;
+                  // Empty-space click: explicit deselect through
+                  // selectSceneObject so gizmo detach + ref cleanup runs.
+                  selectSceneObject(null);
                 }
               }
               boxSelectStart.current = null;
