@@ -160,11 +160,30 @@ function applyStyleFilter(srcCanvas, style, params) {
       if (cfg) {
         const pass = CEL_2D_PASS[style];
 
-        const lines   = makeLinePass(srcCanvas, pass.edgeThreshold, pass.edgeBias);
+        // Edge Threshold slider overrides per-style default; raises threshold
+        // → fewer/sparser ink lines, lowers → denser/manga-like.
+        const threshold = params.edgeThresholdSlider ?? pass.edgeThreshold;
+        const lines   = makeLinePass(srcCanvas, threshold, pass.edgeBias);
         const blurred = bilateralBlurSeparable(srcCanvas, pass.bilateralRadius, pass.bilateralSigmaR);
         // Toon Levels slider overrides the per-style default. Lets the
         // user push more or fewer cel bands without editing CEL_2D_PASS.
         posterizeLuminance(blurred, params.toonLevels ?? pass.posterizeLv);
+
+        // Exposure slider — post-posterize per-pixel multiplier. No-op at
+        // 1.0 so the loop is skipped entirely and there's no perf cost
+        // unless the user actually drags it off the default.
+        if (params.exposure && params.exposure !== 1.0) {
+          const ectx = blurred.getContext('2d');
+          const eid  = ectx.getImageData(0, 0, blurred.width, blurred.height);
+          const ed   = eid.data;
+          const mul  = params.exposure;
+          for (let i = 0; i < ed.length; i += 4) {
+            ed[i]   = Math.max(0, Math.min(255, ed[i]   * mul));
+            ed[i+1] = Math.max(0, Math.min(255, ed[i+1] * mul));
+            ed[i+2] = Math.max(0, Math.min(255, ed[i+2] * mul));
+          }
+          ectx.putImageData(eid, 0, 0);
+        }
 
         const bctx = blurred.getContext('2d');
         bctx.globalCompositeOperation = 'multiply';
@@ -1065,11 +1084,12 @@ function makeCelMaterial(originalMat, steps) {
   mat.clearcoatNormalMap      = null;
   mat.clearcoatRoughnessMap   = null;
 
-  // Low (not zero) IBL fill: 0 underexposes the character because the
-  // ambient + hemi alone don't compensate for the lost env contribution.
-  // 0.35 restores enough fill to read at proper exposure without drowning
-  // the Lambert N·L term the gradient quantizes.
-  mat.envMapIntensity = 0.35;
+  // 0.6 lifts the IBL fill enough that mid-tones read correctly across
+  // most avatars. The Lambert N·L term still drives gradient quantization
+  // (cel bands intact), but ambient contribution no longer crushes
+  // shadow-side mid-tones into the bottom band. Tunable per-render via
+  // the new Exposure slider in the PARAMETERS section.
+  mat.envMapIntensity = 0.6;
   return mat;
 }
 
@@ -1085,6 +1105,10 @@ const [edgeBias, setEdgeBias] = useState(1.0);
   const [toonLevels,   setToonLevels]   = useState(4);
 const [shadowBands, setShadowBands] = useState(3);
 const [highlightClamp, setHighlightClamp] = useState(0.85);
+// Cel-family-only knobs (separate state from edgeThreshold above which
+// drives pencil/blueprint paths — keeps non-cel tuning decoupled).
+const [exposure, setExposure] = useState(1.0);
+const [edgeThresholdSlider, setEdgeThresholdSlider] = useState(90);
   const [renderScale,  setRenderScale]  = useState(2);
   const [rendering,    setRendering]    = useState(false);
   const [exporting,    setExporting]    = useState(false);
@@ -1499,14 +1523,17 @@ const captureAndProcess = useCallback((scale = 1, cameraOverride = null) => {
     if (exportMode === 'flat') {
       return makeFlatColorPass(tmp, toonLevels);
     }
-    const result = applyStyleFilter(tmp, activeStyle, { outlineWidth, toonLevels, shadowBands, highlightClamp });
+    const result = applyStyleFilter(tmp, activeStyle, {
+      outlineWidth, toonLevels, shadowBands, highlightClamp,
+      edgeThresholdSlider, exposure,
+    });
 
 if(exportMode === 'final'){
   return temporalBlendCanvas(result, temporalBlend, prevFrameRef);
 }
 
 return result;
-  }, [activeStyle, outlineWidth, toonLevels, shadowBands, highlightClamp, exportMode, edgeThreshold, edgeBias, temporalBlend, rendererRef, sceneRef, cameraRef]);
+  }, [activeStyle, outlineWidth, toonLevels, shadowBands, highlightClamp, exportMode, edgeThreshold, edgeBias, edgeThresholdSlider, exposure, temporalBlend, rendererRef, sceneRef, cameraRef]);
 
   // Sync ref every render — runs after the captureAndProcess const initializer
   // above. No useEffect, no dep array. A dep-array reference to
@@ -1905,6 +1932,18 @@ const out = captureAndProcess(renderScale, previewCameraRef.current);
           <input type="range" min={2} max={8} step={1} value={toonLevels}
             onChange={e=>setToonLevels(+e.target.value)} className="s2d-slider"/>
           <span className="s2d-param-val">{toonLevels}</span>
+        </div>
+        <div className="s2d-param-row">
+          <span className="s2d-param-label">Edge Threshold</span>
+          <input type="range" min={20} max={150} step={5} value={edgeThresholdSlider}
+            onChange={e=>setEdgeThresholdSlider(+e.target.value)} className="s2d-slider"/>
+          <span className="s2d-param-val">{edgeThresholdSlider}</span>
+        </div>
+        <div className="s2d-param-row">
+          <span className="s2d-param-label">Exposure</span>
+          <input type="range" min={0.5} max={2.0} step={0.05} value={exposure}
+            onChange={e=>setExposure(+e.target.value)} className="s2d-slider"/>
+          <span className="s2d-param-val">{exposure.toFixed(2)}</span>
         </div>
         <div className="s2d-param-row">
           <span className="s2d-param-label">Export Resolution</span>
