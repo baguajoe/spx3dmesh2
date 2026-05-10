@@ -972,13 +972,20 @@ const CEL_SHADED_STYLES = {
 // what's left of the gradient on the MeshToon-rendered frame; luminance
 // posterize forces N hard cel bands; Sobel edges (computed on the ORIGINAL
 // captured frame, before bilateral wipes detail) composite as black ink lines.
+// sigmaR bumped (was 25-40) to flatten dense face features that the smaller
+// range was leaving as mottled noise instead of clean cel zones — higher
+// sigmaR makes the bilateral treat more luminance variation as "same region."
+// edgeThreshold bumped substantially (was 22-36) so the Sobel pass only
+// catches strong silhouettes and major feature boundaries; the previous
+// thresholds were picking up skinning topology and mesh seams as internal
+// "bone-line" ink, which read as x-ray creepy on the avatar.
 const CEL_2D_PASS = {
-  anime: { posterizeLv: 4, bilateralRadius: 3, bilateralSigmaR: 30, edgeThreshold: 28, edgeBias: 1.0 },
-  manga: { posterizeLv: 2, bilateralRadius: 5, bilateralSigmaR: 40, edgeThreshold: 22, edgeBias: 1.4 },
-  comic: { posterizeLv: 3, bilateralRadius: 3, bilateralSigmaR: 30, edgeThreshold: 22, edgeBias: 1.4 },
-  cel:   { posterizeLv: 2, bilateralRadius: 2, bilateralSigmaR: 25, edgeThreshold: 28, edgeBias: 1.0 },
-  toon:  { posterizeLv: 4, bilateralRadius: 3, bilateralSigmaR: 30, edgeThreshold: 28, edgeBias: 1.0 },
-  pixar: { posterizeLv: 5, bilateralRadius: 2, bilateralSigmaR: 25, edgeThreshold: 36, edgeBias: 0.7 },
+  anime: { posterizeLv: 4, bilateralRadius: 3, bilateralSigmaR: 45, edgeThreshold: 70, edgeBias: 1.0 },
+  manga: { posterizeLv: 2, bilateralRadius: 5, bilateralSigmaR: 55, edgeThreshold: 55, edgeBias: 1.4 },
+  comic: { posterizeLv: 3, bilateralRadius: 3, bilateralSigmaR: 45, edgeThreshold: 55, edgeBias: 1.4 },
+  cel:   { posterizeLv: 2, bilateralRadius: 2, bilateralSigmaR: 35, edgeThreshold: 65, edgeBias: 1.0 },
+  toon:  { posterizeLv: 4, bilateralRadius: 3, bilateralSigmaR: 45, edgeThreshold: 70, edgeBias: 1.0 },
+  pixar: { posterizeLv: 5, bilateralRadius: 2, bilateralSigmaR: 35, edgeThreshold: 80, edgeBias: 0.7 },
 };
 
 // 1×N DataTexture used by MeshToonMaterial.gradientMap. NearestFilter snaps
