@@ -2,7 +2,12 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import * as THREE from "three";
 import JSZip from "jszip";
 import { detectFaceRect } from "../../utils/faceDetection";
-import { isWebGL2Supported } from "./celPostProcess/celPostProcess.js";
+import {
+  isWebGL2Supported,
+  createCelPostProcessPipeline,
+  runCelPostProcess,
+  disposeCelPostProcessPipeline,
+} from "./celPostProcess/celPostProcess.js";
 
 const CATEGORIES = [
   { id:"all",      label:"All 20" },
@@ -1652,8 +1657,12 @@ const prevFrameRef = useRef(null);
   useEffect(() => {
     if (open) return;
     restoreNPRMaterials();
+    disposeCelPostProcessPipeline();
   }, [open]);
-  useEffect(() => () => { restoreNPRMaterials(); }, []);
+  useEffect(() => () => {
+    restoreNPRMaterials();
+    disposeCelPostProcessPipeline();
+  }, []);
 
   // STEP 0 — Bone + mesh name discovery for the face pipeline (Phase 1A/3A).
   // One-shot dump on every panel-open so we can lock the iClone matcher
@@ -2085,13 +2094,38 @@ const captureAndProcess = useCallback((scale = 1, cameraOverride = null) => {
     let precomputedLines = null;
     let silhouetteMask   = null;
     if (CEL_SHADED_STYLES[activeStyle]) {
-      // Stage 1 GPU cel pipeline scaffold. When the flag is on, log a
-      // diagnostic and fall through to the CPU path. Stage 2 replaces
-      // this guard with a route to runCelPostProcess.
+      // Stage 2 GPU cel pipeline. Anime only; other cel-family styles
+      // fall through to CPU until Stage 3 ports them. Any failure
+      // (WebGL2 missing, pipeline init throw, shader compile error)
+      // falls through to the CPU path with a console warning.
       if (useShaderCel) {
-        // eslint-disable-next-line no-console
-        console.log('[GPU_CEL_PATH]', { style: activeStyle });
-        // TODO Stage 2: return runCelPostProcess(...) result here.
+        if (!isWebGL2Supported()) {
+          // eslint-disable-next-line no-console
+          console.warn('[GPU_CEL_PATH] WebGL2 required, falling back to CPU');
+        } else if (activeStyle === 'anime') {
+          try {
+            const pipeline = createCelPostProcessPipeline(renderer);
+            if (pipeline) {
+              const pass = CEL_2D_PASS.anime;
+              const out = runCelPostProcess(renderer, scene, camera, {
+                style:               'anime',
+                posterizeLevels:     toonLevels ?? pass.posterizeLv,
+                bilateralSigmaSpace: pass.bilateralRadius,
+                bilateralSigmaRange: pass.bilateralSigmaR / 255,
+                edgeThreshold:       (edgeThresholdSlider ?? pass.edgeThreshold) / 255,
+                edgeBias:            pass.edgeBias,
+                dstCanvas:           tmp,
+              });
+              if (out) return out;
+            }
+          } catch (e) {
+            // eslint-disable-next-line no-console
+            console.warn('[GPU_CEL_PATH] init/render failed, falling back to CPU', e);
+          }
+        } else {
+          // eslint-disable-next-line no-console
+          console.log('[GPU_CEL_PATH] anime-only in Stage 2, falling through to CPU', { style: activeStyle });
+        }
       }
       const pass = CEL_2D_PASS[activeStyle];
       const threshold = edgeThresholdSlider ?? pass.edgeThreshold;
