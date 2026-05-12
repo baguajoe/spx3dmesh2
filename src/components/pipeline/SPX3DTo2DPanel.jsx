@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import * as THREE from "three";
 import JSZip from "jszip";
 import { detectFaceRect } from "../../utils/faceDetection";
+import { isWebGL2Supported } from "./celPostProcess/celPostProcess.js";
 
 const CATEGORIES = [
   { id:"all",      label:"All 20" },
@@ -1600,6 +1601,11 @@ const [activePreset, setActivePreset] = useState('default');
   const [exportingSequence, setExportingSequence] = useState(false);
   const [exportMode, setExportMode] = useState('final');
 const [temporalBlend, setTemporalBlend] = useState(0.35);
+// Stage 1 GPU cel pipeline feature flag. Default OFF — behavior is
+// identical to the pre-flag CPU pipeline. Toggle UI appears in
+// PARAMETERS sidebar only when activeStyle is cel-family. See
+// audit/cel_pipeline_rewrite_proposal.md for the rewrite plan.
+const [useShaderCel, setUseShaderCel] = useState(false);
   const [status,       setStatus]       = useState('Select a style and click Render');
 
   // Live styled preview playback (independent of main viewport timeline)
@@ -2079,6 +2085,14 @@ const captureAndProcess = useCallback((scale = 1, cameraOverride = null) => {
     let precomputedLines = null;
     let silhouetteMask   = null;
     if (CEL_SHADED_STYLES[activeStyle]) {
+      // Stage 1 GPU cel pipeline scaffold. When the flag is on, log a
+      // diagnostic and fall through to the CPU path. Stage 2 replaces
+      // this guard with a route to runCelPostProcess.
+      if (useShaderCel) {
+        // eslint-disable-next-line no-console
+        console.log('[GPU_CEL_PATH]', { style: activeStyle });
+        // TODO Stage 2: return runCelPostProcess(...) result here.
+      }
       const pass = CEL_2D_PASS[activeStyle];
       const threshold = edgeThresholdSlider ?? pass.edgeThreshold;
       precomputedLines = captureNormalEdges(renderer, scene, camera, threshold, pass.edgeBias);
@@ -2159,7 +2173,7 @@ if(exportMode === 'final'){
 }
 
 return result;
-  }, [activeStyle, outlineWidth, toonLevels, shadowBands, highlightClamp, exportMode, edgeThreshold, edgeBias, edgeThresholdSlider, exposure, temporalBlend, rendererRef, sceneRef, cameraRef]);
+  }, [activeStyle, outlineWidth, toonLevels, shadowBands, highlightClamp, exportMode, edgeThreshold, edgeBias, edgeThresholdSlider, exposure, temporalBlend, useShaderCel, rendererRef, sceneRef, cameraRef]);
 
   // Sync ref every render — runs after the captureAndProcess const initializer
   // above. No useEffect, no dep array. A dep-array reference to
@@ -2589,6 +2603,14 @@ const out = captureAndProcess(renderScale, previewCameraRef.current);
             onChange={e=>setExposure(+e.target.value)} className="s2d-slider"/>
           <span className="s2d-param-val">{exposure.toFixed(2)}</span>
         </div>
+        {CEL_SHADED_STYLES[activeStyle] && isWebGL2Supported() && (
+          <div className="s2d-param-row">
+            <span className="s2d-param-label">GPU Cel (experimental)</span>
+            <input type="checkbox" checked={useShaderCel}
+              onChange={e => setUseShaderCel(e.target.checked)} />
+            <span className="s2d-param-val">{useShaderCel ? 'on' : 'off'}</span>
+          </div>
+        )}
         <div className="s2d-param-row">
           <span className="s2d-param-label">Export Resolution</span>
           <input type="range" min={1} max={4} step={1} value={renderScale}
