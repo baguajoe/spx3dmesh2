@@ -1204,6 +1204,37 @@ const _blackMaterialForHairMask = new THREE.MeshBasicMaterial({
   side:  THREE.DoubleSide,
 });
 
+// Hide infrastructure helpers (grid, axes, gizmos, named infra) for the
+// duration of a capture. Used by Sobel-based passes and by
+// captureAndProcess's main scene render — GridHelper is a LineSegments,
+// so _swapAllMeshes (which only swaps isMesh objects) doesn't catch it,
+// and the grid's segments otherwise survive into the framebuffer and
+// ink as edges on every Sobel pass. Returns an array suitable for
+// _restoreInfraHelpers. CALLERS MUST restore in a try/finally.
+function _hideInfraHelpers(scene) {
+  const hidden = [];
+  scene.traverse(obj => {
+    if (
+      obj.isHelper ||
+      obj instanceof THREE.GridHelper ||
+      obj instanceof THREE.AxesHelper ||
+      obj.userData?.isHelper === true ||
+      obj.userData?.isInfra === true ||
+      obj.userData?._spxInfrastructure === true ||
+      /grid|helper|axis|gizmo/i.test(obj.name || '')
+    ) {
+      hidden.push({ obj, wasVisible: obj.visible });
+      obj.visible = false;
+    }
+  });
+  return hidden;
+}
+
+function _restoreInfraHelpers(hidden) {
+  if (!hidden) return;
+  for (const { obj, wasVisible } of hidden) obj.visible = wasVisible;
+}
+
 // Helper: traverse the scene, swap every visible non-infrastructure mesh
 // to `material`, hide outline meshes (they'd contaminate the pass).
 // Returns ({savedMaterials, savedVisibility}) for restoration.
@@ -1254,6 +1285,13 @@ function _findHairMeshes(scene) {
 // point. Try/finally guarantees material/visibility restore.
 function captureNormalEdges(renderer, scene, camera, threshold, bias) {
   if (!renderer || !scene || !camera) return null;
+  // B6 fix (audit/non_cel_styles_audit.md): hide scene helpers (grid,
+  // axes, gizmos, named infrastructure) before the normal-material
+  // render. GridHelper is a LineSegments — _swapAllMeshes only swaps
+  // isMesh objects, so it doesn't catch it. Without this, the grid's
+  // line geometry survives into the normal target and Sobel inks the
+  // grid as a cross-hatched floor.
+  const hiddenForEdges = _hideInfraHelpers(scene);
   let saved;
   try {
     saved = _swapAllMeshes(scene, _normalMaterialForEdges);
@@ -1269,6 +1307,7 @@ function captureNormalEdges(renderer, scene, camera, threshold, bias) {
       for (const { mesh, material } of saved.savedMaterials) mesh.material = material;
       for (const { mesh, visible }  of saved.savedVisibility) mesh.visible  = visible;
     }
+    _restoreInfraHelpers(hiddenForEdges);
   }
 }
 
@@ -1278,6 +1317,9 @@ function captureNormalEdges(renderer, scene, camera, threshold, bias) {
 // pattern + clearColor save/restore.
 function captureSilhouetteMask(renderer, scene, camera) {
   if (!renderer || !scene || !camera) return null;
+  // B6 fix: hide helpers so the silhouette mask doesn't paint grid
+  // lines white and treat them as foreground subject.
+  const hiddenForMask = _hideInfraHelpers(scene);
   let saved;
   const originalClearColor = new THREE.Color();
   renderer.getClearColor(originalClearColor);
@@ -1298,6 +1340,7 @@ function captureSilhouetteMask(renderer, scene, camera) {
       for (const { mesh, visible }  of saved.savedVisibility) mesh.visible  = visible;
     }
     renderer.setClearColor(originalClearColor, originalClearAlpha);
+    _restoreInfraHelpers(hiddenForMask);
   }
 }
 
@@ -2069,6 +2112,18 @@ const captureAndProcess = useCallback((scale = 1, cameraOverride = null) => {
     // (empty scene case).
     const camera   = cameraOverride || cameraRef?.current;
     if (!renderer || !scene || !camera) return null;
+
+    // B6 fix (audit/non_cel_styles_audit.md): hide infrastructure
+    // helpers (grid, axes, gizmos) for the entire capture. The
+    // non-cel Sobel styles (pencil/ink_wash/charcoal/blueprint/
+    // linocut/risograph) run makeLinePass on the framebuffer produced
+    // by the main render below — with helpers visible, the
+    // GridHelper's line segments ink as a cross-hatched floor.
+    // The live mirror (panel rAF, liveRef) re-renders after this with
+    // helpers restored, so the LEFT pane still shows the grid.
+    const hiddenForCapture = _hideInfraHelpers(scene);
+
+    try {
     renderer.render(scene, camera);
     const src = renderer.domElement;
     if (!src) return null;
@@ -2210,6 +2265,9 @@ if(exportMode === 'final'){
 }
 
 return result;
+    } finally {
+      _restoreInfraHelpers(hiddenForCapture);
+    }
   }, [activeStyle, outlineWidth, toonLevels, shadowBands, highlightClamp, exportMode, edgeThreshold, edgeBias, edgeThresholdSlider, exposure, temporalBlend, useShaderCel, rendererRef, sceneRef, cameraRef]);
 
   // Sync ref every render — runs after the captureAndProcess const initializer
