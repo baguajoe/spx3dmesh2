@@ -1214,15 +1214,40 @@ const _blackMaterialForHairMask = new THREE.MeshBasicMaterial({
 function _hideInfraHelpers(scene) {
   const hidden = [];
   scene.traverse(obj => {
-    if (
+    const name = obj.name || '';
+
+    const isInfra = (
       obj.isHelper ||
       obj instanceof THREE.GridHelper ||
       obj instanceof THREE.AxesHelper ||
+      obj instanceof THREE.ArrowHelper ||
+      obj instanceof THREE.BoxHelper ||
+      obj instanceof THREE.CameraHelper ||
+      obj instanceof THREE.DirectionalLightHelper ||
       obj.userData?.isHelper === true ||
       obj.userData?.isInfra === true ||
+      obj.userData?.isGizmo === true ||
       obj.userData?._spxInfrastructure === true ||
-      /grid|helper|axis|gizmo/i.test(obj.name || '')
-    ) {
+      /grid|helper|axis|gizmo|arrow|outline|transform/i.test(name)
+    );
+
+    // Walk ancestors to catch descendants of TransformControls — the
+    // XYZ arrow gizmos are children of a TransformControls instance,
+    // and the children themselves don't carry the helper flags. Cheap
+    // (gizmos sit shallow in the scene graph) and only runs for objects
+    // that didn't already match the direct predicate.
+    let inTransformControls = false;
+    if (!isInfra) {
+      let p = obj.parent;
+      while (p && !inTransformControls) {
+        if (p.isTransformControls || /transformcontrols/i.test(p.name || '')) {
+          inTransformControls = true;
+        }
+        p = p.parent;
+      }
+    }
+
+    if (isInfra || inTransformControls) {
       hidden.push({ obj, wasVisible: obj.visible });
       obj.visible = false;
     }
