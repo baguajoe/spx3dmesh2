@@ -9,21 +9,33 @@ import {
   disposeCelPostProcessPipeline,
 } from "./celPostProcess/celPostProcess.js";
 
+// Categories reduced to the cel-family set. The 2D panel's product
+// mission is "convert 3D scenes to drawn 2D animation for people who
+// can't draw" — only the cel-family styles serve that mission. The
+// removed categories are kept in source (commented) so they can be
+// re-enabled as experimental styles later.
 const CATEGORIES = [
-  { id:"all",      label:"All 20" },
-  { id:"photo",    label:"Photo" },
+  { id:"all",      label:"All 6" },
   { id:"cartoon",  label:"Cartoon" },
-  { id:"paint",    label:"Paint" },
-  { id:"sketch",   label:"Sketch" },
-  { id:"stylized", label:"Stylized" },
-  { id:"digital",  label:"Digital" },
+  // HIDDEN — non-cel, not core product. Re-enable by uncommenting.
+  // { id:"photo",    label:"Photo" },
+  // { id:"paint",    label:"Paint" },
+  // { id:"sketch",   label:"Sketch" },
+  // { id:"stylized", label:"Stylized" },
+  // { id:"digital",  label:"Digital" },
 ];
 
 
+// VISIBLE_STYLES filters which entries in STYLES surface in the panel
+// UI. The applyStyleFilter switch (and all helper functions like
+// applyHalftoneOverlay, makeLinePass, etc.) still hold the code paths
+// for the hidden styles — they are reachable programmatically and can
+// be re-enabled here by uncommenting.
 const VISIBLE_STYLES = [
-  "cinematic",
-  "film_noir",
-  "vintage_film",
+  // HIDDEN — non-cel, not core product. Re-enable by uncommenting.
+  // "cinematic",
+  // "film_noir",
+  // "vintage_film",
 
   "toon",
   "cel",
@@ -32,19 +44,20 @@ const VISIBLE_STYLES = [
   "comic",
   "pixar",
 
-  "oil",
-  "watercolor",
-  "gouache",
-  "impressionist",
-  "ink_wash",
-
-  "pencil",
-  "charcoal",
-  "blueprint",
-  "linocut",
-  "risograph",
-
-  "low_poly"
+  // HIDDEN — non-cel, not core product. Re-enable by uncommenting.
+  // "oil",
+  // "watercolor",
+  // "gouache",
+  // "impressionist",
+  // "ink_wash",
+  //
+  // "pencil",
+  // "charcoal",
+  // "blueprint",
+  // "linocut",
+  // "risograph",
+  //
+  // "low_poly",
 ];
 
 const STYLES = [
