@@ -39,7 +39,7 @@ export const CEL_FRAG_SHADER = /* glsl */ `
   uniform float uEdgeThreshold;
   uniform float uEdgeBias;
   uniform float uExposure;              // reserved
-  uniform float uMonochrome;            // reserved
+  uniform bool  uMonochrome;            // manga: desaturate to luminance
 
   float luma(vec3 c) {
     return dot(c, vec3(0.299, 0.587, 0.114));
@@ -127,6 +127,14 @@ export const CEL_FRAG_SHADER = /* glsl */ `
     // makeLinePass+multiply chain — edges become pure black, non-edges
     // pass through unchanged.
     vec3 inked = posterized * (1.0 - edge);
+
+    // (e2) Manga desaturation. Applied after ink so ink stays black
+    // and the underlying colored bands collapse to grayscale. Matches
+    // the CPU branch at SPX3DTo2DPanel.jsx:201-206.
+    if (uMonochrome) {
+      float lum = luma(inked);
+      inked = vec3(lum);
+    }
 
     // (f) Write.
     gl_FragColor = vec4(inked, 1.0);

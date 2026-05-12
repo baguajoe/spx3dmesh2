@@ -2094,26 +2094,32 @@ const captureAndProcess = useCallback((scale = 1, cameraOverride = null) => {
     let precomputedLines = null;
     let silhouetteMask   = null;
     if (CEL_SHADED_STYLES[activeStyle]) {
-      // Stage 2 GPU cel pipeline. Anime only; other cel-family styles
-      // fall through to CPU until Stage 3 ports them. Any failure
+      // Stage 3 GPU cel pipeline. All 6 cel-family styles route through
+      // the shader. Per-style params come from CEL_2D_PASS — same table
+      // the CPU branch reads. monochrome=true on manga drives the
+      // luminance desaturation in the fragment. Halftone overlay
+      // (manga/comic dots) is NOT yet ported — Stage 4 adds it; for
+      // now manga ships as monochrome cel with no dots and comic ships
+      // as cel without dots when the GPU flag is on. Any failure
       // (WebGL2 missing, pipeline init throw, shader compile error)
       // falls through to the CPU path with a console warning.
       if (useShaderCel) {
         if (!isWebGL2Supported()) {
           // eslint-disable-next-line no-console
           console.warn('[GPU_CEL_PATH] WebGL2 required, falling back to CPU');
-        } else if (activeStyle === 'anime') {
+        } else {
           try {
             const pipeline = createCelPostProcessPipeline(renderer);
             if (pipeline) {
-              const pass = CEL_2D_PASS.anime;
+              const pass = CEL_2D_PASS[activeStyle];
               const out = runCelPostProcess(renderer, scene, camera, {
-                style:               'anime',
+                style:               activeStyle,
                 posterizeLevels:     toonLevels ?? pass.posterizeLv,
                 bilateralSigmaSpace: pass.bilateralRadius,
-                bilateralSigmaRange: pass.bilateralSigmaR / 255,
-                edgeThreshold:       (edgeThresholdSlider ?? pass.edgeThreshold) / 255,
+                bilateralSigmaRange: pass.bilateralSigmaR,
+                edgeThreshold:       edgeThresholdSlider ?? pass.edgeThreshold,
                 edgeBias:            pass.edgeBias,
+                monochrome:          activeStyle === 'manga',
                 dstCanvas:           tmp,
               });
               if (out) return out;
@@ -2122,9 +2128,6 @@ const captureAndProcess = useCallback((scale = 1, cameraOverride = null) => {
             // eslint-disable-next-line no-console
             console.warn('[GPU_CEL_PATH] init/render failed, falling back to CPU', e);
           }
-        } else {
-          // eslint-disable-next-line no-console
-          console.log('[GPU_CEL_PATH] anime-only in Stage 2, falling through to CPU', { style: activeStyle });
         }
       }
       const pass = CEL_2D_PASS[activeStyle];

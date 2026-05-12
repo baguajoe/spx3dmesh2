@@ -95,7 +95,7 @@ export function createCelPostProcessPipeline(renderer) {
     uEdgeThreshold:       { value: 90 / 255 },
     uEdgeBias:            { value: 1.0 },
     uExposure:            { value: 1.0 },
-    uMonochrome:          { value: 0 },
+    uMonochrome:          { value: false },
   };
 
   const material = new THREE.ShaderMaterial({
@@ -189,14 +189,20 @@ function _restoreFromNormalSwap(saved) {
 // dstCanvas on success, null on failure. Failure path is non-fatal —
 // the panel falls back to the CPU pipeline.
 //
-// params shape (Stage 2):
-//   style:               'anime' (other cel styles fall back to CPU)
-//   posterizeLevels:     number
-//   edgeThreshold:       number in [0,1]
+// params shape (Stage 3):
+//   style:               one of CEL_SHADED_STYLES keys (anime/manga/comic/cel/toon/pixar)
+//   posterizeLevels:     number — cel band count
+//   edgeThreshold:       number in [0, 255] (raw CEL_2D_PASS units; converted to [0,1] internally)
 //   edgeBias:            number (multiplier on Sobel magnitude)
 //   bilateralSigmaSpace: number (pixels, 0 disables)
-//   bilateralSigmaRange: number in [0,1]
+//   bilateralSigmaRange: number in [0, 255] (raw CEL_2D_PASS units; converted internally)
+//   monochrome:          bool — manga desaturation to luminance
 //   dstCanvas:           HTMLCanvasElement — receives the final image
+//
+// Edge threshold and bilateral range arrive in raw CEL_2D_PASS units
+// (0-255 luminance distance) and are normalized to [0,1] at the
+// boundary. The shader operates in [0,1] color space because
+// texture2D samples return [0,1].
 export function runCelPostProcess(renderer, scene, camera, params) {
   if (!_pipeline)            return null;
   if (!renderer || !scene)   return null;
@@ -214,9 +220,10 @@ export function runCelPostProcess(renderer, scene, camera, params) {
   // pass partial params during early integration.
   if (params.posterizeLevels     != null) uniforms.uPosterizeLevels.value     = params.posterizeLevels;
   if (params.bilateralSigmaSpace != null) uniforms.uBilateralSigmaSpace.value = params.bilateralSigmaSpace;
-  if (params.bilateralSigmaRange != null) uniforms.uBilateralSigmaRange.value = params.bilateralSigmaRange;
-  if (params.edgeThreshold       != null) uniforms.uEdgeThreshold.value       = params.edgeThreshold;
+  if (params.bilateralSigmaRange != null) uniforms.uBilateralSigmaRange.value = params.bilateralSigmaRange / 255;
+  if (params.edgeThreshold       != null) uniforms.uEdgeThreshold.value       = params.edgeThreshold / 255;
   if (params.edgeBias            != null) uniforms.uEdgeBias.value            = params.edgeBias;
+  if (params.monochrome          != null) uniforms.uMonochrome.value          = !!params.monochrome;
 
   // Save renderer state we mutate.
   const prevRenderTarget = renderer.getRenderTarget();
