@@ -1047,13 +1047,19 @@ const CEL_SHADED_STYLES = {
 // catches strong silhouettes and major feature boundaries; the previous
 // thresholds were picking up skinning topology and mesh seams as internal
 // "bone-line" ink, which read as x-ray creepy on the avatar.
+// lineWeight (Stage 4a, GPU pipeline only) controls how much the Sobel
+// ink mask varies with surface lighting and depth: 0 = uniform 1px lines
+// (binary Sobel, prior behavior); 1 = max variation (shadow side and
+// silhouettes get noticeably bolder). Per-style values target the visual
+// register of each ink language — manga is heavily inked, pixar is near
+// uniform-thin. CPU branch ignores the field (no shader to consume it).
 const CEL_2D_PASS = {
-  anime: { posterizeLv: 5, bilateralRadius: 3, bilateralSigmaR: 45, edgeThreshold: 90, edgeBias: 1.0 },
-  manga: { posterizeLv: 2, bilateralRadius: 5, bilateralSigmaR: 55, edgeThreshold: 55, edgeBias: 1.4 },
-  comic: { posterizeLv: 3, bilateralRadius: 3, bilateralSigmaR: 45, edgeThreshold: 55, edgeBias: 1.4 },
-  cel:   { posterizeLv: 2, bilateralRadius: 2, bilateralSigmaR: 35, edgeThreshold: 65, edgeBias: 1.0 },
-  toon:  { posterizeLv: 4, bilateralRadius: 3, bilateralSigmaR: 45, edgeThreshold: 70, edgeBias: 1.0 },
-  pixar: { posterizeLv: 5, bilateralRadius: 2, bilateralSigmaR: 35, edgeThreshold: 80, edgeBias: 0.7 },
+  anime: { posterizeLv: 5, bilateralRadius: 3, bilateralSigmaR: 45, edgeThreshold: 90, edgeBias: 1.0, lineWeight: 0.7 },
+  manga: { posterizeLv: 2, bilateralRadius: 5, bilateralSigmaR: 55, edgeThreshold: 55, edgeBias: 1.4, lineWeight: 0.9 },
+  comic: { posterizeLv: 3, bilateralRadius: 3, bilateralSigmaR: 45, edgeThreshold: 55, edgeBias: 1.4, lineWeight: 0.8 },
+  cel:   { posterizeLv: 2, bilateralRadius: 2, bilateralSigmaR: 35, edgeThreshold: 65, edgeBias: 1.0, lineWeight: 0.5 },
+  toon:  { posterizeLv: 4, bilateralRadius: 3, bilateralSigmaR: 45, edgeThreshold: 70, edgeBias: 1.0, lineWeight: 0.5 },
+  pixar: { posterizeLv: 5, bilateralRadius: 2, bilateralSigmaR: 35, edgeThreshold: 80, edgeBias: 0.7, lineWeight: 0.2 },
 };
 
 // Cel-family presets. Keys are "<style>:<preset-name>". Each entry is
@@ -2212,6 +2218,7 @@ const captureAndProcess = useCallback((scale = 1, cameraOverride = null) => {
                 bilateralSigmaRange: pass.bilateralSigmaR,
                 edgeThreshold:       edgeThresholdSlider ?? pass.edgeThreshold,
                 edgeBias:            pass.edgeBias,
+                lineWeightStrength:  pass.lineWeight,
                 monochrome:          activeStyle === 'manga',
                 dstCanvas:           tmp,
               });

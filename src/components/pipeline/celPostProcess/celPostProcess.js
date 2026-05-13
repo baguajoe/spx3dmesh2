@@ -94,6 +94,7 @@ export function createCelPostProcessPipeline(renderer) {
     uBilateralSigmaRange: { value: 45 / 255 },
     uEdgeThreshold:       { value: 90 / 255 },
     uEdgeBias:            { value: 1.0 },
+    uLineWeightStrength:  { value: 0.6 },
     uExposure:            { value: 1.0 },
     uMonochrome:          { value: false },
   };
@@ -196,6 +197,13 @@ function _restoreFromNormalSwap(saved) {
 //   edgeBias:            number (multiplier on Sobel magnitude)
 //   bilateralSigmaSpace: number (pixels, 0 disables)
 //   bilateralSigmaRange: number in [0, 255] (raw CEL_2D_PASS units; converted internally)
+//   lineWeightStrength:  number in [0, 1] — Stage 4a variable line weight.
+//                        0 = uniform 1px ink (binary Sobel, prior behavior),
+//                        1 = max variation. Lines thicken on shadow side
+//                        (view-normal vs approximate key light) and at
+//                        silhouettes (depth Sobel). Stage 4b can wire the
+//                        scene's real DirectionalLight in place of the
+//                        fixed light dir hardcoded in the fragment shader.
 //   monochrome:          bool — manga desaturation to luminance
 //   dstCanvas:           HTMLCanvasElement — receives the final image
 //
@@ -223,6 +231,7 @@ export function runCelPostProcess(renderer, scene, camera, params) {
   if (params.bilateralSigmaRange != null) uniforms.uBilateralSigmaRange.value = params.bilateralSigmaRange / 255;
   if (params.edgeThreshold       != null) uniforms.uEdgeThreshold.value       = params.edgeThreshold / 255;
   if (params.edgeBias            != null) uniforms.uEdgeBias.value            = params.edgeBias;
+  if (params.lineWeightStrength  != null) uniforms.uLineWeightStrength.value  = params.lineWeightStrength;
   if (params.monochrome          != null) uniforms.uMonochrome.value          = !!params.monochrome;
 
   // Save renderer state we mutate.

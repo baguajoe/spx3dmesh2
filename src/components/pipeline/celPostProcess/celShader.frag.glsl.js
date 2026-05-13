@@ -38,6 +38,7 @@ export const CEL_FRAG_SHADER = /* glsl */ `
   uniform float uBilateralSigmaRange;
   uniform float uEdgeThreshold;
   uniform float uEdgeBias;
+  uniform float uLineWeightStrength;    // 0 = uniform 1px ink, 1 = max variation
   uniform float uExposure;              // reserved
   uniform bool  uMonochrome;            // manga: desaturate to luminance
 
@@ -121,7 +122,28 @@ export const CEL_FRAG_SHADER = /* glsl */ `
     float depthEdge = (abs(gxD) + abs(gyD)) * 0.125 * uEdgeBias;
 
     float edgeMag = max(normalEdge, depthEdge);
-    float edge    = step(uEdgeThreshold, edgeMag);
+
+    // Variable line weight (Stage 4a). Modulate the threshold by
+    // surface lighting and depth gradient so lines are thicker on the
+    // shadow side and at silhouettes — closer to hand-drawn ink.
+    //   shadowFactor    : 0 fully lit → 1 fully in shadow (view-normal vs
+    //                     approximate key light dir; see Stage 4b note in
+    //                     celPostProcess.js docstring for wiring real light)
+    //   silhouetteFactor: boosted where the depth Sobel fires (silhouette
+    //                     and major depth discontinuities). depthEdge is
+    //                     already scaled by uEdgeBias / 0.125; ×4 here
+    //                     pushes the typical silhouette response toward 1.
+    // Lower the threshold by lineWeight so the step() catches a wider
+    // halo around qualifying edges. Result still 0/1 — ink composite
+    // unchanged.
+    vec3 viewNormal = texture2D(tNormalDepth, vUv).rgb * 2.0 - 1.0;
+    float lightDot     = dot(viewNormal, normalize(vec3(0.3, 0.5, 1.0)));
+    float shadowFactor = 1.0 - clamp(lightDot, 0.0, 1.0);
+    float silhouetteFactor = clamp(depthEdge * 4.0, 0.0, 1.0);
+    float lineWeight = 1.0 + uLineWeightStrength *
+                       (shadowFactor * 0.6 + silhouetteFactor * 0.8);
+    float scaledThreshold = uEdgeThreshold / lineWeight;
+    float edge    = step(scaledThreshold, edgeMag);
 
     // (e) Ink composite. Binary 0/255 behavior matches the CPU
     // makeLinePass+multiply chain — edges become pure black, non-edges
