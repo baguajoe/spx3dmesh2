@@ -2301,7 +2301,34 @@ const captureAndProcess = useCallback((scale = 1, cameraOverride = null) => {
                 monochrome:          activeStyle === 'manga',
                 dstCanvas:           tmp,
               });
-              if (out) return out;
+              if (out) {
+                // audit/face_rendering_audit.md found the GPU branch was
+                // returning here without running the CPU branch's face
+                // sub-pass — so eyes, mouths, glasses got body-tuned
+                // bilateral + posterize and melted at zoom. Run the same
+                // captureFacePass + compositeFaceOntoBody used by the CPU
+                // branch below (see SPX3DTo2DPanel.jsx:2354-2371). Caught
+                // & logged to fall back gracefully to body params on any
+                // failure — the body cel render below `out` is intact.
+                try {
+                  const faceRect = detectFaceRect(scene, camera, out.width, out.height, faceDetectCacheRef.current);
+                  if (faceRect && faceRect.w > 20 && faceRect.h > 20) {
+                    const facePass = CEL_FACE_PASS[activeStyle];
+                    if (facePass) {
+                      const faceCanvas = captureFacePass(
+                        renderer, scene, camera, faceRect, facePass, out.width, out.height,
+                      );
+                      if (faceCanvas) {
+                        compositeFaceOntoBody(out, faceCanvas, faceRect);
+                      }
+                    }
+                  }
+                } catch (e) {
+                  // eslint-disable-next-line no-console
+                  console.warn('[GPU_CEL_PATH] face pass failed, using body params for face', e);
+                }
+                return out;
+              }
             }
           } catch (e) {
             // eslint-disable-next-line no-console
