@@ -1962,14 +1962,22 @@ const prevFrameRef = useRef(null);
       // not maximum visual fidelity. Export path uses scale=1 (or the
       // user's renderScale multiplier) for full quality.
       reframePreviewCamera();
-      // Export Resolution slider (renderScale) drives preview density too:
-      // capture at 0.33×renderScale of renderer.domElement, write into a
-      // canvas pixel buffer at CSS-size×renderScale. At rs=2 the preview is
-      // 1532×1556 (was 766×778) so wheel-zoom has real pixels to magnify
-      // instead of bilinearly upscaling a small image.
+      // Export Resolution slider (renderScale) drives the renderer-size
+      // multiplier inside captureAndProcess: at rs=2 the renderer is
+      // resized to viewport×2 for the duration of the capture, so the
+      // GPU cel pipeline's render targets reallocate to viewport×2 via
+      // celPostProcess.js:_ensureSize and the cel/normal/edge passes
+      // actually render at higher resolution — not a bilinear upscale.
+      // The display canvas pixel buffer below picks up the same factor
+      // so out and c match 1:1 with no resampling.
+      //
+      // 0.33× downsample baseline was dropped: it traded animation
+      // playback perf for blurry preview, and the same trade-off can be
+      // brought back later as a play-vs-pause toggle (see commit body).
+      // For now, rs is the only multiplier the rAF applies.
       const rs = renderScaleRef.current;
       const out = captureRef.current
-        ? captureRef.current(0.33 * rs, previewCameraRef.current)
+        ? captureRef.current(rs, previewCameraRef.current)
         : null;
       if (out && previewRef.current) {
         const c = previewRef.current;
@@ -2198,13 +2206,34 @@ const captureAndProcess = useCallback((scale = 1, cameraOverride = null) => {
     // helpers restored, so the LEFT pane still shows the grid.
     const hiddenForCapture = _hideInfraHelpers(scene);
 
+    // 50d3628 only resized the display canvas — the renderer (and the
+    // GPU cel pipeline's render targets, which read renderer.getSize via
+    // _ensureSize in celPostProcess.js) stayed at viewport size, so the
+    // bigger display canvas was just bilinearly upscaling a 766×778
+    // source. Resize the renderer to viewport×scale for the duration of
+    // this capture and restore on the way out. captureFacePass /
+    // captureHairPass nest inside this; they save and restore relative
+    // to the current size, so they correctly land back at viewport×scale
+    // before the outer restore returns the renderer to true viewport.
+    const originalCaptureSize = new THREE.Vector2();
+    renderer.getSize(originalCaptureSize);
+    const scaledW = Math.max(1, Math.floor(originalCaptureSize.x * scale));
+    const scaledH = Math.max(1, Math.floor(originalCaptureSize.y * scale));
+    if (scaledW !== originalCaptureSize.x || scaledH !== originalCaptureSize.y) {
+      renderer.setSize(scaledW, scaledH, false);
+    }
+
     try {
     renderer.render(scene, camera);
     const src = renderer.domElement;
     if (!src) return null;
     const tmp = document.createElement('canvas');
-    tmp.width  = src.width  * scale;
-    tmp.height = src.height * scale;
+    // src is now at viewport×scale (renderer was resized above), so tmp
+    // matches it directly — no further multiplier, that would be a
+    // double-scale (the old `src.width * scale` was the only thing the
+    // scale arg ever affected, hence the lock).
+    tmp.width  = src.width;
+    tmp.height = src.height;
     const ctx = tmp.getContext('2d');
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
@@ -2362,6 +2391,13 @@ if(exportMode === 'final'){
 return result;
     } finally {
       _restoreInfraHelpers(hiddenForCapture);
+      // Restore renderer to the size it had on entry. The main App owns
+      // the renderer for the user's 3D viewport; we hijacked it for the
+      // capture render and must hand it back at the original dimensions
+      // or the next App animate tick will draw at the wrong aspect.
+      if (scaledW !== originalCaptureSize.x || scaledH !== originalCaptureSize.y) {
+        renderer.setSize(originalCaptureSize.x, originalCaptureSize.y, false);
+      }
     }
   }, [activeStyle, outlineWidth, toonLevels, shadowBands, highlightClamp, exportMode, edgeThreshold, edgeBias, edgeThresholdSlider, exposure, temporalBlend, useShaderCel, rendererRef, sceneRef, cameraRef]);
 
@@ -2379,7 +2415,7 @@ return result;
     try {
       
 applyNPRIfNeeded(activeStyle, sceneRef);
-const out = captureAndProcess(1, previewCameraRef.current);
+const out = captureAndProcess(renderScale, previewCameraRef.current);
 
       if (out && previewRef.current) {
         const c = previewRef.current;
