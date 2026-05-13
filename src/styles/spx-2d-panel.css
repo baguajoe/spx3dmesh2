@@ -82,6 +82,52 @@
   align-items: center !important;
 }
 
+/* Zoom/pan overlay on the 2D output viewer. Sits inside
+   .s2d-canvas-wrap (which is overflow:hidden + position:relative) and
+   is anchored to the top-right corner regardless of the inner
+   transform layer's pan/scale. */
+.s2d-zoom-controls {
+  position: absolute !important;
+  top: 8px !important;
+  right: 8px !important;
+  z-index: 20 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 4px 6px !important;
+  background: rgba(10, 13, 19, 0.85) !important;
+  border: 1px solid #21262d !important;
+  border-radius: 4px !important;
+  cursor: default !important;
+}
+.s2d-zoom-btn {
+  background: #0d1117 !important;
+  border: 1px solid #21262d !important;
+  border-radius: 3px !important;
+  color: #b8c5d6 !important;
+  font-family: inherit !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px !important;
+  padding: 3px 6px !important;
+  min-width: 22px !important;
+  cursor: pointer !important;
+  transition: all 0.15s !important;
+}
+.s2d-zoom-btn:hover {
+  color: #ccc !important;
+  border-color: #444 !important;
+}
+.s2d-zoom-pct {
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  color: #b8c5d6 !important;
+  letter-spacing: 0.5px !important;
+  min-width: 36px !important;
+  text-align: center !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
 .s2d-status {
   font-size: 10px !important;
   color: #b8c5d6 !important;

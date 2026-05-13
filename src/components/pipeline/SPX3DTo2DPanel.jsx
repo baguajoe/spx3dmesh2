@@ -1698,6 +1698,14 @@ const [temporalBlend, setTemporalBlend] = useState(0.35);
 // PARAMETERS sidebar only when activeStyle is cel-family. See
 // audit/cel_pipeline_rewrite_proposal.md for the rewrite plan.
 const [useShaderCel, setUseShaderCel] = useState(false);
+  // 2D output viewer zoom/pan. Display-only — never feeds back into
+  // captureAndProcess, the GPU pipeline, or any export path. Range
+  // 0.1×–8× (10%–800%); resets to identity on style change and on
+  // panel open so each style starts at "fit."
+  const [zoom,      setZoom]      = useState(1);
+  const [pan,       setPan]       = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const panStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const [status,       setStatus]       = useState('Select a style and click Render');
 
   // Live styled preview playback (independent of main viewport timeline)
@@ -1738,6 +1746,15 @@ const prevFrameRef = useRef(null);
 
   const filtered = (activeCat === 'all' ? STYLES : STYLES.filter(s => s.cat === activeCat)).filter(s => VISIBLE_STYLES.includes(s.id));
   const currentStyle = STYLES.find(s => s.id === activeStyle && VISIBLE_STYLES.includes(s.id)) || STYLES.find(s => VISIBLE_STYLES.includes(s.id)) || STYLES[0];
+
+  // Reset zoom/pan when the user switches style or opens the panel so
+  // each style/session starts at fit. Doing this in a single effect
+  // keyed on both inputs avoids two renders for the common open+style
+  // case.
+  useEffect(() => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }, [activeStyle, open]);
 
   // Restore scene materials when the panel closes or unmounts. Lives in its
   // own effect so it runs on `open` going false even if other effects don't.
@@ -2642,6 +2659,55 @@ const out = captureAndProcess(renderScale, previewCameraRef.current);
     setExportingSequence(false);
   }, [captureAndProcess, activeStyle, sceneRef, rendererRef]);
 
+  // 2D output viewer interaction. Wheel zooms toward cursor (anchor
+  // math: keep the world-space point under the cursor stationary across
+  // the zoom step). Mouse drag pans by deltas tracked from mousedown.
+  // All values are CSS-pixel offsets on the s2d-canvas-wrap element;
+  // the canvas's intrinsic resolution is unchanged so exports remain
+  // native res.
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const delta = -e.deltaY * 0.001;
+    const newZoom = Math.max(0.1, Math.min(8, zoom + delta * zoom));
+    if (newZoom === zoom) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const ratio = newZoom / zoom;
+    setPan({
+      x: mouseX - (mouseX - pan.x) * ratio,
+      y: mouseY - (mouseY - pan.y) * ratio,
+    });
+    setZoom(newZoom);
+  };
+  const handleMouseDown = (e) => {
+    if (e.button !== 0) return;
+    setIsPanning(true);
+    panStartRef.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
+  };
+  const handleMouseMove = (e) => {
+    if (!isPanning) return;
+    setPan({
+      x: panStartRef.current.panX + (e.clientX - panStartRef.current.x),
+      y: panStartRef.current.panY + (e.clientY - panStartRef.current.y),
+    });
+  };
+  const handleMouseUp = () => setIsPanning(false);
+  const zoomReset = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
+  const zoomTo100 = () => {
+    // "Native pixel" view: scale so one canvas pixel maps to one CSS
+    // pixel. Falls back to zoomReset if either DOM ref is missing.
+    const cv = previewRef.current;
+    const wrap = cv?.parentElement?.parentElement;  // canvas → inner → wrap
+    if (!cv || !wrap || !cv.width || !wrap.clientWidth) { zoomReset(); return; }
+    setZoom(cv.width / wrap.clientWidth);
+    setPan({ x: 0, y: 0 });
+  };
+  const zoomStep = (factor) => {
+    const newZoom = Math.max(0.1, Math.min(8, zoom * factor));
+    setZoom(newZoom);
+  };
+
   if (!open) return null;
 
   return (
@@ -2662,15 +2728,43 @@ const out = captureAndProcess(renderScale, previewCameraRef.current);
           2D OUTPUT —&nbsp;
           <span style={{color: currentStyle.color}}>{currentStyle.label.toUpperCase()}</span>
         </div>
-        <div className="s2d-canvas-wrap">
-          <canvas ref={previewRef} className="s2d-viewport-canvas" />
-          <div ref={faceRectOverlayRef} style={{
-            position:      'absolute',
-            display:       'none',
-            border:        '2px solid red',
-            pointerEvents: 'none',
-            zIndex:        10,
-          }} />
+        <div
+          className="s2d-canvas-wrap"
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          style={{ cursor: isPanning ? 'grabbing' : 'grab' }}
+        >
+          {/* Inner transform layer. Canvas keeps its existing absolute-
+              fill sizing; we apply translate+scale here so the face-rect
+              debug overlay tracks the canvas in the same coordinate
+              space. The zoom-controls overlay sits OUTSIDE this layer
+              so it stays anchored to the viewport. */}
+          <div style={{
+            position:        'absolute',
+            inset:           0,
+            transform:       `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            transformOrigin: '0 0',
+            willChange:      'transform',
+          }}>
+            <canvas ref={previewRef} className="s2d-viewport-canvas" />
+            <div ref={faceRectOverlayRef} style={{
+              position:      'absolute',
+              display:       'none',
+              border:        '2px solid red',
+              pointerEvents: 'none',
+              zIndex:        10,
+            }} />
+          </div>
+          <div className="s2d-zoom-controls" onMouseDown={(e) => e.stopPropagation()}>
+            <button className="s2d-zoom-btn" onClick={zoomReset} title="Fit to viewport">FIT</button>
+            <button className="s2d-zoom-btn" onClick={zoomTo100} title="View at native pixel resolution">100%</button>
+            <button className="s2d-zoom-btn" onClick={() => zoomStep(0.9)} title="Zoom out 10%">−</button>
+            <span className="s2d-zoom-pct">{Math.round(zoom * 100)}%</span>
+            <button className="s2d-zoom-btn" onClick={() => zoomStep(1.1)} title="Zoom in 10%">+</button>
+          </div>
         </div>
         <div className="s2d-output-actions">
           <button className="s2d-btn s2d-btn--render" onClick={handleRender} disabled={rendering}>
