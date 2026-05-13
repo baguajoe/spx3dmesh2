@@ -1687,6 +1687,11 @@ const [exposure, setExposure] = useState(1.0);
 const [edgeThresholdSlider, setEdgeThresholdSlider] = useState(90);
 const [activePreset, setActivePreset] = useState('default');
   const [renderScale,  setRenderScale]  = useState(2);
+  // The preview rAF (set up below) doesn't list renderScale in its deps
+  // so a slider drag doesn't tear down and rebuild the animation loop.
+  // Mirror the latest value into a ref so each frame picks it up.
+  const renderScaleRef = useRef(renderScale);
+  useEffect(() => { renderScaleRef.current = renderScale; }, [renderScale]);
   const [rendering,    setRendering]    = useState(false);
   const [exporting,    setExporting]    = useState(false);
   const [exportFormat, setExportFormat] = useState('png');
@@ -1957,13 +1962,19 @@ const prevFrameRef = useRef(null);
       // not maximum visual fidelity. Export path uses scale=1 (or the
       // user's renderScale multiplier) for full quality.
       reframePreviewCamera();
+      // Export Resolution slider (renderScale) drives preview density too:
+      // capture at 0.33×renderScale of renderer.domElement, write into a
+      // canvas pixel buffer at CSS-size×renderScale. At rs=2 the preview is
+      // 1532×1556 (was 766×778) so wheel-zoom has real pixels to magnify
+      // instead of bilinearly upscaling a small image.
+      const rs = renderScaleRef.current;
       const out = captureRef.current
-        ? captureRef.current(0.33, previewCameraRef.current)
+        ? captureRef.current(0.33 * rs, previewCameraRef.current)
         : null;
       if (out && previewRef.current) {
         const c = previewRef.current;
-        c.width  = c.offsetWidth  || out.width;
-        c.height = c.offsetHeight || out.height;
+        c.width  = (c.offsetWidth  * rs) || out.width;
+        c.height = (c.offsetHeight * rs) || out.height;
         c.getContext('2d').drawImage(out, 0, 0, c.width, c.height);
 
         // (3b) Face rect detection (Step 1, Phase 1A). Computed in the
@@ -1982,14 +1993,17 @@ const prevFrameRef = useRef(null);
         const overlay = faceRectOverlayRef.current;
         if (overlay) {
           if (window.__SPX_DEBUG_FACE_RECT && rect) {
+            // Overlay is positioned in CSS pixels; rect is in canvas
+            // pixels (rs× the CSS dim). Divide so the debug box still
+            // lines up with the face after the renderScale change.
             overlay.style.display   = 'block';
-            overlay.style.left      = `${rect.x}px`;
-            overlay.style.top       = `${rect.y}px`;
-            overlay.style.width     = `${rect.w}px`;
-            overlay.style.height    = `${rect.h}px`;
+            overlay.style.left      = `${rect.x / rs}px`;
+            overlay.style.top       = `${rect.y / rs}px`;
+            overlay.style.width     = `${rect.w / rs}px`;
+            overlay.style.height    = `${rect.h / rs}px`;
             // boxShadow inset visualizes the feather falloff zone in one
             // overlay (rect outline + feather band).
-            overlay.style.boxShadow = `inset 0 0 0 ${rect.featherPx}px rgba(255,0,0,0.25)`;
+            overlay.style.boxShadow = `inset 0 0 0 ${rect.featherPx / rs}px rgba(255,0,0,0.25)`;
           } else {
             overlay.style.display = 'none';
           }
@@ -2369,14 +2383,14 @@ const out = captureAndProcess(1, previewCameraRef.current);
 
       if (out && previewRef.current) {
         const c = previewRef.current;
-        c.width  = c.offsetWidth  || out.width;
-        c.height = c.offsetHeight || out.height;
+        c.width  = (c.offsetWidth  * renderScale) || out.width;
+        c.height = (c.offsetHeight * renderScale) || out.height;
         c.getContext('2d').drawImage(out, 0, 0, c.width, c.height);
       }
       setStatus(`✓ ${currentStyle.label} — ${out?.width}×${out?.height}`);
     } catch(e) { setStatus(`Error: ${e.message}`); }
     setRendering(false);
-  }, [captureAndProcess, currentStyle, rendererRef]);
+  }, [captureAndProcess, currentStyle, renderScale, rendererRef]);
 
   // Auto-render whenever the chosen style changes (or panel opens with one).
   // handleRender already guards on rendererRef, but checking it here too
