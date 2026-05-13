@@ -95,6 +95,7 @@ export function createCelPostProcessPipeline(renderer) {
     uEdgeThreshold:       { value: 90 / 255 },
     uEdgeBias:            { value: 1.0 },
     uLineWeightStrength:  { value: 0.6 },
+    uLightDirView:        { value: new THREE.Vector3(0.3, 0.5, 1.0).normalize() },
     uExposure:            { value: 1.0 },
     uMonochrome:          { value: false },
   };
@@ -200,10 +201,16 @@ function _restoreFromNormalSwap(saved) {
 //   lineWeightStrength:  number in [0, 1] — Stage 4a variable line weight.
 //                        0 = uniform 1px ink (binary Sobel, prior behavior),
 //                        1 = max variation. Lines thicken on shadow side
-//                        (view-normal vs approximate key light) and at
-//                        silhouettes (depth Sobel). Stage 4b can wire the
-//                        scene's real DirectionalLight in place of the
-//                        fixed light dir hardcoded in the fragment shader.
+//                        (view-normal vs key light direction) and at
+//                        silhouettes (depth Sobel).
+//   lightDirView:        THREE.Vector3 — view-space, points surface→light
+//                        source (Stage 4b). Caller computes from the
+//                        scene's primary DirectionalLight via
+//                        (light.position - target.position) then
+//                        .transformDirection(camera.matrixWorldInverse).
+//                        If omitted, the uniform retains its last value
+//                        (default vec3(0.3, 0.5, 1.0) — the Stage 4a
+//                        approximate direction).
 //   monochrome:          bool — manga desaturation to luminance
 //   dstCanvas:           HTMLCanvasElement — receives the final image
 //
@@ -232,6 +239,7 @@ export function runCelPostProcess(renderer, scene, camera, params) {
   if (params.edgeThreshold       != null) uniforms.uEdgeThreshold.value       = params.edgeThreshold / 255;
   if (params.edgeBias            != null) uniforms.uEdgeBias.value            = params.edgeBias;
   if (params.lineWeightStrength  != null) uniforms.uLineWeightStrength.value  = params.lineWeightStrength;
+  if (params.lightDirView        != null) uniforms.uLightDirView.value.copy(params.lightDirView);
   if (params.monochrome          != null) uniforms.uMonochrome.value          = !!params.monochrome;
 
   // Save renderer state we mutate.

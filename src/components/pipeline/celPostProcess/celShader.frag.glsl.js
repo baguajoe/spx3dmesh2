@@ -39,6 +39,7 @@ export const CEL_FRAG_SHADER = /* glsl */ `
   uniform float uEdgeThreshold;
   uniform float uEdgeBias;
   uniform float uLineWeightStrength;    // 0 = uniform 1px ink, 1 = max variation
+  uniform vec3  uLightDirView;          // view-space, points surface→light source
   uniform float uExposure;              // reserved
   uniform bool  uMonochrome;            // manga: desaturate to luminance
 
@@ -123,12 +124,15 @@ export const CEL_FRAG_SHADER = /* glsl */ `
 
     float edgeMag = max(normalEdge, depthEdge);
 
-    // Variable line weight (Stage 4a). Modulate the threshold by
+    // Variable line weight (Stage 4a + 4b). Modulate the threshold by
     // surface lighting and depth gradient so lines are thicker on the
     // shadow side and at silhouettes — closer to hand-drawn ink.
-    //   shadowFactor    : 0 fully lit → 1 fully in shadow (view-normal vs
-    //                     approximate key light dir; see Stage 4b note in
-    //                     celPostProcess.js docstring for wiring real light)
+    //   shadowFactor    : 0 fully lit → 1 fully in shadow. Uses
+    //                     uLightDirView, the scene's primary
+    //                     DirectionalLight transformed into view space
+    //                     by the panel (Stage 4b). Falls back to the
+    //                     Stage 4a constant (0.3, 0.5, 1.0) when the
+    //                     panel finds no DirectionalLight.
     //   silhouetteFactor: boosted where the depth Sobel fires (silhouette
     //                     and major depth discontinuities). depthEdge is
     //                     already scaled by uEdgeBias / 0.125; ×4 here
@@ -137,7 +141,7 @@ export const CEL_FRAG_SHADER = /* glsl */ `
     // halo around qualifying edges. Result still 0/1 — ink composite
     // unchanged.
     vec3 viewNormal = texture2D(tNormalDepth, vUv).rgb * 2.0 - 1.0;
-    float lightDot     = dot(viewNormal, normalize(vec3(0.3, 0.5, 1.0)));
+    float lightDot     = dot(viewNormal, normalize(uLightDirView));
     float shadowFactor = 1.0 - clamp(lightDot, 0.0, 1.0);
     float silhouetteFactor = clamp(depthEdge * 4.0, 0.0, 1.0);
     float lineWeight = 1.0 + uLineWeightStrength *

@@ -1054,12 +1054,12 @@ const CEL_SHADED_STYLES = {
 // register of each ink language — manga is heavily inked, pixar is near
 // uniform-thin. CPU branch ignores the field (no shader to consume it).
 const CEL_2D_PASS = {
-  anime: { posterizeLv: 5, bilateralRadius: 3, bilateralSigmaR: 45, edgeThreshold: 90, edgeBias: 1.0, lineWeight: 0.7 },
-  manga: { posterizeLv: 2, bilateralRadius: 5, bilateralSigmaR: 55, edgeThreshold: 55, edgeBias: 1.4, lineWeight: 0.9 },
-  comic: { posterizeLv: 3, bilateralRadius: 3, bilateralSigmaR: 45, edgeThreshold: 55, edgeBias: 1.4, lineWeight: 0.8 },
-  cel:   { posterizeLv: 2, bilateralRadius: 2, bilateralSigmaR: 35, edgeThreshold: 65, edgeBias: 1.0, lineWeight: 0.5 },
-  toon:  { posterizeLv: 4, bilateralRadius: 3, bilateralSigmaR: 45, edgeThreshold: 70, edgeBias: 1.0, lineWeight: 0.5 },
-  pixar: { posterizeLv: 5, bilateralRadius: 2, bilateralSigmaR: 35, edgeThreshold: 80, edgeBias: 0.7, lineWeight: 0.2 },
+  anime: { posterizeLv: 5, bilateralRadius: 3, bilateralSigmaR: 45, edgeThreshold: 90, edgeBias: 1.0, lineWeight: 1.2 },
+  manga: { posterizeLv: 2, bilateralRadius: 5, bilateralSigmaR: 55, edgeThreshold: 55, edgeBias: 1.4, lineWeight: 1.5 },
+  comic: { posterizeLv: 3, bilateralRadius: 3, bilateralSigmaR: 45, edgeThreshold: 55, edgeBias: 1.4, lineWeight: 1.3 },
+  cel:   { posterizeLv: 2, bilateralRadius: 2, bilateralSigmaR: 35, edgeThreshold: 65, edgeBias: 1.0, lineWeight: 1.0 },
+  toon:  { posterizeLv: 4, bilateralRadius: 3, bilateralSigmaR: 45, edgeThreshold: 70, edgeBias: 1.0, lineWeight: 1.0 },
+  pixar: { posterizeLv: 5, bilateralRadius: 2, bilateralSigmaR: 35, edgeThreshold: 80, edgeBias: 0.7, lineWeight: 0.4 },
 };
 
 // Cel-family presets. Keys are "<style>:<preset-name>". Each entry is
@@ -2211,6 +2211,24 @@ const captureAndProcess = useCallback((scale = 1, cameraOverride = null) => {
             const pipeline = createCelPostProcessPipeline(renderer);
             if (pipeline) {
               const pass = CEL_2D_PASS[activeStyle];
+              // Stage 4b: pull the scene's primary DirectionalLight and
+              // transform its world direction into view space so the
+              // shader's shadowFactor reflects the actual key light, not
+              // the Stage 4a hardcoded approximation. Sign convention:
+              // (light.position - target.position) points surface→source,
+              // matching the shader's `dot(viewNormal, uLightDirView) > 0
+              // = lit` semantic. Falls back to the default uniform value
+              // (Stage 4a constant) if no DirectionalLight is in scene.
+              let lightDirView = null;
+              scene.traverse((obj) => {
+                if (lightDirView) return;
+                if (obj.isDirectionalLight) {
+                  const v = new THREE.Vector3()
+                    .subVectors(obj.position, obj.target ? obj.target.position : new THREE.Vector3())
+                    .transformDirection(camera.matrixWorldInverse);
+                  if (v.lengthSq() > 0) lightDirView = v;
+                }
+              });
               const out = runCelPostProcess(renderer, scene, camera, {
                 style:               activeStyle,
                 posterizeLevels:     toonLevels ?? pass.posterizeLv,
@@ -2219,6 +2237,7 @@ const captureAndProcess = useCallback((scale = 1, cameraOverride = null) => {
                 edgeThreshold:       edgeThresholdSlider ?? pass.edgeThreshold,
                 edgeBias:            pass.edgeBias,
                 lineWeightStrength:  pass.lineWeight,
+                lightDirView,
                 monochrome:          activeStyle === 'manga',
                 dstCanvas:           tmp,
               });
