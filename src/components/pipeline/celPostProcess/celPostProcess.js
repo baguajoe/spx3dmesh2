@@ -19,18 +19,21 @@
 import * as THREE from 'three';
 import { CEL_VERT_SHADER } from './celShader.vert.glsl.js';
 import { CEL_FRAG_SHADER } from './celShader.frag.glsl.js';
+import { createNormalDepthMaterial } from './normalDepthMaterial.js';
 
 let _pipeline = null;
 
-// Shared module-level normal-pass material. Allocated once, reused
-// every frame — zero per-frame GC. Modern Three.js (r152+) auto-
-// detects skinning when bound to a SkinnedMesh, so no `skinning: true`
-// flag needed. DoubleSide so back-facing triangles also write normals,
-// otherwise hair caps / open garment shells produce Sobel false-edges
-// at the front/back boundary.
-const _normalMaterial = new THREE.MeshNormalMaterial({
-  side: THREE.DoubleSide,
-});
+// Shared module-level normal+depth material (Stage 4c). Built via
+// createNormalDepthMaterial(), which patches MeshNormalMaterial with
+// onBeforeCompile to write linearized view-space depth into alpha.
+// Allocated once at module load, reused every frame — zero per-frame
+// GC. Skinning, morph targets, instancing all work because the patch
+// rides on top of MeshNormalMaterial's existing chunks. DoubleSide so
+// back-facing triangles also write normals; otherwise hair caps and
+// open garment shells produce Sobel false-edges at the front/back
+// boundary. Per-frame uFarPlane update happens inside runCelPostProcess
+// before the normal-target render.
+const _normalMaterial = createNormalDepthMaterial();
 
 // WebGL2 detection. Tested at flag-toggle time so the panel can hide
 // the "GPU Cel" toggle on WebGL1-only clients (rare in 2026 — <3% of
@@ -255,8 +258,13 @@ export function runCelPostProcess(renderer, scene, camera, params) {
     renderer.setRenderTarget(colorTarget);
     renderer.render(scene, camera);
 
-    // (2) Normal render → normalTarget. Swap to MeshNormalMaterial,
-    // hide outlines (they'd write geometry-orthogonal normals), render.
+    // (2) Normal+depth render → normalTarget. Swap to the patched
+    // MeshNormalMaterial (RGB=normal, A=linearized view-Z), hide
+    // outlines (they'd write geometry-orthogonal normals), render.
+    // setFar must be called before render so the depth normalization
+    // matches the current camera; otherwise scenes with cameras whose
+    // far plane != 100 lose silhouette resolution.
+    _normalMaterial.setFar(camera.far);
     normalSwap = _swapToNormalMaterial(scene);
     renderer.setRenderTarget(normalTarget);
     renderer.render(scene, camera);
