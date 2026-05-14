@@ -1282,6 +1282,15 @@ export default function App() {
   const [selectedVerts, setSelectedVerts] = useState(new Set());
   const [selectedEdges, setSelectedEdges] = useState(new Set());
   const [selectedFaces, setSelectedFaces] = useState(new Set());
+  // SPX_SEL_REFS_V1 — mirror selection sets into refs so getActiveSelectionVertIds()
+  //                    can read live values from inside undo/redo's useCallback(..., [])
+  //                    closure (which would otherwise see the initial empty Sets forever).
+  const selectedVertsRef = useRef(new Set());
+  const selectedEdgesRef = useRef(new Set());
+  const selectedFacesRef = useRef(new Set());
+  useEffect(() => { selectedVertsRef.current = selectedVerts; }, [selectedVerts]);
+  useEffect(() => { selectedEdgesRef.current = selectedEdges; }, [selectedEdges]);
+  useEffect(() => { selectedFacesRef.current = selectedFaces; }, [selectedFaces]);
   const [showPathTracerPanel, setShowPathTracerPanel] = useState(false);
   const [showPipelinePanel, setShowPipelinePanel] = useState(false);
   const [showPluginPanel, setShowPluginPanel] = useState(false);
@@ -3371,13 +3380,14 @@ export default function App() {
   // SPX_EDIT_GIZMO_PROXY_V1 — selection-proxy helpers
   // SPX_EDIT_GIZMO_EDGEFACE_V1 — resolve current select-mode selection to a flat Set of unique vert IDs
   const getActiveSelectionVertIds = () => {
+    // SPX_SEL_REFS_V1 — read from selection refs, not state, so callers with frozen closures see live values
     const heMesh = heMeshRef.current;
     if (!heMesh) return new Set();
     const mode = selectModeRef.current;
-    if (mode === "vert") return new Set(selectedVerts);
+    if (mode === "vert") return new Set(selectedVertsRef.current);
     if (mode === "edge") {
       const ids = new Set();
-      selectedEdges.forEach((eid) => {
+      selectedEdgesRef.current.forEach((eid) => {
         const e = heMesh.halfEdges.get?.(eid) || heMesh.halfEdges[eid];
         if (e) {
           if (e.vertex) ids.add(e.vertex.id);
@@ -3388,7 +3398,7 @@ export default function App() {
     }
     if (mode === "face") {
       const ids = new Set();
-      selectedFaces.forEach((faceIdx) => {
+      selectedFacesRef.current.forEach((faceIdx) => {
         const face = heMesh.faces.get?.(faceIdx) || heMesh.faces[faceIdx];
         if (face && face.halfEdge) {
           let he = face.halfEdge;
