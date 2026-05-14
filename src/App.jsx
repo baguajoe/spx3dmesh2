@@ -2348,17 +2348,6 @@ export default function App() {
       geo.setIndex(new THREE.Uint32BufferAttribute(next.indices, 1));
       geo.computeVertexNormals();
       if (mesh.isMesh) { mesh.geometry.dispose(); mesh.geometry = geo; }
-      // SPX_UNDO_REDO_OVERLAY_V1 — rebuild heMeshRef from restored geometry so overlays match
-      heMeshRef.current = HalfEdgeMesh.fromBufferGeometry(geo);
-      setStats(heMeshRef.current.stats());
-      // SPX_UNDO_REDO_OVERLAY_V1 — defer overlay rebuild until heMeshRef is current
-      setTimeout(() => {
-        if (editModeRef.current === "edit") {
-          if (selectModeRef.current === "vert") buildVertexOverlay();
-          else if (selectModeRef.current === "edge") buildEdgeOverlay();
-          else if (selectModeRef.current === "face") buildFaceOverlay();
-        }
-      }, 0);
       return r.slice(0, -1);
     });
   }, []);
@@ -2382,9 +2371,6 @@ export default function App() {
       const heMesh = heMeshRef.current;
       const mesh = meshRef.current;
       if (!heMesh || !mesh) return h;
-      // SPX_UNDO_REDO_OVERLAY_V1 — capture current state for redoStack before overwriting
-      const { positions: cp, indices: ci } = heMesh.toBufferGeometry();
-      setRedoStack((r) => [...r.slice(-20), { positions: [...cp], indices: [...ci] }]);
       const geo = new THREE.BufferGeometry();
       geo.setAttribute(
         "position",
@@ -2399,14 +2385,6 @@ export default function App() {
       heMeshRef.current = HalfEdgeMesh.fromBufferGeometry(geo);
       setStats(heMeshRef.current.stats());
       setStatus("Undo");
-      // SPX_UNDO_REDO_OVERLAY_V1 — defer overlay rebuild until heMeshRef is current
-      setTimeout(() => {
-        if (editModeRef.current === "edit") {
-          if (selectModeRef.current === "vert") buildVertexOverlay();
-          else if (selectModeRef.current === "edge") buildEdgeOverlay();
-          else if (selectModeRef.current === "face") buildFaceOverlay();
-        }
-      }, 0);
       return h.slice(0, -1);
     });
   }, []);
