@@ -1619,6 +1619,9 @@ export default function App() {
 
   const fileInputRef = useRef(null);
   const gizmoRef = useRef(null);
+  // SPX_EDIT_GIZMO_PROXY_V1 — edit-mode gizmo target + drag-start snapshot
+  const editGizmoProxyRef = useRef(null);
+  const editGizmoStartRef = useRef(null);
   const [gizmoMode, setGizmoMode] = useState("select"); // move|rotate|scale
   const [gizmoActive, setGizmoActive] = useState(false);
 
@@ -3321,6 +3324,46 @@ export default function App() {
   }, [wireframe]);
 
   // ── Toggle edit mode ───────────────────────────────────────────────────────
+  // SPX_EDIT_GIZMO_PROXY_V1 — selection-proxy helpers (vert mode only for now)
+  const computeSelectionCentroid = () => {
+    const heMesh = heMeshRef.current;
+    if (!heMesh) return null;
+    const ids = [...selectedVerts];
+    if (ids.length === 0) return null;
+    let cx = 0, cy = 0, cz = 0, n = 0;
+    ids.forEach((id) => {
+      const v = heMesh.vertices.get?.(id) || heMesh.vertices[id];
+      if (v) { cx += v.x; cy += v.y; cz += v.z; n++; }
+    });
+    if (n === 0) return null;
+    return new THREE.Vector3(cx / n, cy / n, cz / n);
+  };
+  const ensureEditGizmoProxy = () => {
+    const scene = sceneRef.current;
+    const parent = meshRef.current;
+    if (!scene || !parent) return null;
+    const centroid = computeSelectionCentroid();
+    if (!centroid) return null;
+    centroid.add(parent.position);
+    if (!editGizmoProxyRef.current) {
+      const proxy = new THREE.Object3D();
+      proxy.name = "_spxEditGizmoProxy";
+      proxy.userData._spxInfrastructure = true;
+      scene.add(proxy);
+      editGizmoProxyRef.current = proxy;
+    }
+    editGizmoProxyRef.current.position.copy(centroid);
+    return editGizmoProxyRef.current;
+  };
+  const disposeEditGizmoProxy = () => {
+    const scene = sceneRef.current;
+    if (editGizmoProxyRef.current && scene) {
+      scene.remove(editGizmoProxyRef.current);
+      editGizmoProxyRef.current = null;
+    }
+    editGizmoStartRef.current = null;
+  };
+
   const toggleEditMode = useCallback(() => {
     setEditMode((m) => {
       const next = m === "object" ? "edit" : "object";
@@ -3340,6 +3383,11 @@ export default function App() {
         }
         setTimeout(() => buildVertexOverlay(), 50);
       } else {
+        // SPX_EDIT_GIZMO_PROXY_V1 — leaving edit mode: tear down proxy
+        disposeEditGizmoProxy();
+        if (gizmoRef.current && gizmoRef.current.target === editGizmoProxyRef.current) {
+          gizmoRef.current.detach();
+        }
         // Restore mesh opacity
         if (mesh && mesh.material) {
           const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
@@ -3877,14 +3925,34 @@ export default function App() {
         // Force rebuild even if mode matches (handles edge cases)
         gizmoRef.current.mode = "_pending_";
         gizmoRef.current.setMode(newMode);
-        const activeMesh = meshRef.current;
-        if (activeMesh) {
-          gizmoRef.current.attach(activeMesh);
-          console.log("[SPX gizmo]", newMode, "attached to", activeMesh.name || activeMesh.type, "scale:", gizmoRef.current.group.scale.toArray());
+        // SPX_EDIT_GIZMO_PROXY_V1 — edit mode attaches gizmo to selection proxy,
+        // not the parent mesh; only Move is fully wired this pass.
+        if (editModeRef.current === "edit" && selectedVerts.size > 0) {
+          if (newMode !== "move") {
+            gizmoRef.current.detach();
+            setActiveTool("select");
+            setGizmoMode("select");
+            setStatus("Rotate/Scale on selection coming soon");
+            return;
+          }
+          const proxy = ensureEditGizmoProxy();
+          if (proxy) {
+            gizmoRef.current.attach(proxy);
+          } else {
+            gizmoRef.current.detach();
+            setStatus("Select verts first");
+            return;
+          }
         } else {
-          gizmoRef.current.detach();
-          setStatus(`Gizmo: ${newMode} armed — click an object to transform`);
-          return;
+          const activeMesh = meshRef.current;
+          if (activeMesh) {
+            gizmoRef.current.attach(activeMesh);
+            console.log("[SPX gizmo]", newMode, "attached to", activeMesh.name || activeMesh.type, "scale:", gizmoRef.current.group.scale.toArray());
+          } else {
+            gizmoRef.current.detach();
+            setStatus(`Gizmo: ${newMode} armed — click an object to transform`);
+            return;
+          }
         }
       }
       setStatus("Gizmo: " + newMode.charAt(0).toUpperCase() + newMode.slice(1));
@@ -4649,7 +4717,8 @@ export default function App() {
               if (e.button !== 0) return;
               mouseDownPos.current = { x: e.clientX, y: e.clientY };
               // Check gizmo handle click first
-              if (gizmoRef.current && cameraRef.current && canvasRef.current) {
+              // SPX_EDIT_GIZMO_PROXY_V1 — allow gizmo handle hits in edit mode only when proxy is armed
+              if (gizmoRef.current && cameraRef.current && canvasRef.current && (editModeRef.current === "object" || (editModeRef.current === "edit" && editGizmoProxyRef.current))) {
                 const rect = canvasRef.current.getBoundingClientRect();
                 const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
                 const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -4663,6 +4732,17 @@ export default function App() {
                   if (axis) {
                     gizmoRef.current.startDrag(axis, hits[0].point);
                     gizmoDragging.current = true;
+                    // SPX_EDIT_GIZMO_PROXY_V1 — snapshot vert positions for delta application during drag
+                    if (editModeRef.current === "edit" && editGizmoProxyRef.current && heMeshRef.current) {
+                      const _heMesh = heMeshRef.current;
+                      editGizmoStartRef.current = {
+                        proxyPos: editGizmoProxyRef.current.position.clone(),
+                        vertSnapshot: new Map([...selectedVerts].map((id) => {
+                          const v = _heMesh.vertices.get?.(id) || _heMesh.vertices[id];
+                          return [id, v ? { x: v.x, y: v.y, z: v.z } : null];
+                        })),
+                      };
+                    }
                     // Proportional editing: capture start positions of all scene objects so we can apply delta with falloff.
                     if (proportionalEnabled && gizmoRef.current?.target) {
                       const tgt = gizmoRef.current.target;
@@ -4824,6 +4904,21 @@ export default function App() {
                     pt.z = Math.round(pt.z / snapSize) * snapSize;
                   }
                   gizmoRef.current.drag(pt);
+                  // SPX_EDIT_GIZMO_PROXY_V1 — apply proxy delta to selected verts each frame
+                  if (editModeRef.current === "edit" && editGizmoStartRef.current && editGizmoProxyRef.current && heMeshRef.current) {
+                    const _start = editGizmoStartRef.current;
+                    const _cur = editGizmoProxyRef.current.position;
+                    const _dx = _cur.x - _start.proxyPos.x;
+                    const _dy = _cur.y - _start.proxyPos.y;
+                    const _dz = _cur.z - _start.proxyPos.z;
+                    const _heMesh = heMeshRef.current;
+                    _start.vertSnapshot.forEach((p0, id) => {
+                      if (!p0) return;
+                      const v = _heMesh.vertices.get?.(id) || _heMesh.vertices[id];
+                      if (v) { v.x = p0.x + _dx; v.y = p0.y + _dy; v.z = p0.z + _dz; }
+                    });
+                    rebuildMeshGeometry();
+                  }
                   // Proportional editing: apply falloff-scaled delta to neighbor objects within radius.
                   if (proportionalEnabled && window._propStart && gizmoRef.current?.target) {
                     const tgt = gizmoRef.current.target;
@@ -4870,6 +4965,11 @@ export default function App() {
             onMouseUp={(e) => {
               if (gizmoDragging.current) {
                 if (gizmoRef.current) gizmoRef.current.endDrag?.();
+                // SPX_EDIT_GIZMO_PROXY_V1 — clear snapshot and resnap proxy to new centroid
+                if (editModeRef.current === "edit") {
+                  editGizmoStartRef.current = null;
+                  ensureEditGizmoProxy();
+                }
                 // Auto-key: capture transform at drag-end if AUTO toggle is on.
                 // Use currentFrameRef (not currentFrame from closure) to avoid stale-closure bug.
                 if (isAutoKey && gizmoRef.current?.target && typeof window.keyAllTransform === "function") {
