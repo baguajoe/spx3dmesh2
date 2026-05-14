@@ -4865,6 +4865,16 @@ export default function App() {
                 setBoxSelect(null);
                 return;
               }
+              // Edit-mode clicks select verts/edges/faces via onCanvasClick (fired
+              // from onMouseDown). Running the object-mode raycast here would
+              // either rebuild heMeshRef (invalidating the IDs just stored) or
+              // null meshRef.current on an off-mesh click. Skip it entirely.
+              if (editModeRef.current === "edit") {
+                boxSelectStart.current = null;
+                boxSelectActive.current = false;
+                setBoxSelect(null);
+                return;
+              }
               const canvas = canvasRef.current;
               const camera = cameraRef.current;
               if (!canvas || !camera) { boxSelectStart.current = null; setBoxSelect(null); return; }
