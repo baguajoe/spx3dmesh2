@@ -1098,7 +1098,8 @@ export default function App() {
   };
 
   // Selection overlays
-  const vertDotsRef = useRef(null);   // THREE.Points
+  const vertDotsRef = useRef(null);   // THREE.Points (unselected)
+  const vertSelectedDotsRef = useRef(null); // THREE.Points (selected — larger/brighter)
   const edgeLinesRef = useRef(null);  // THREE.LineSegments
   const faceMeshRef = useRef(null);   // THREE.Mesh (transparent)
   const faceOverlayRef = useRef(null); // THREE.Mesh — selection highlight overlay
@@ -2615,7 +2616,7 @@ export default function App() {
   const clearOverlays = () => {
     const scene = sceneRef.current;
     if (!scene) return;
-    [vertDotsRef, edgeLinesRef, faceMeshRef, previewLineRef].forEach((r) => {
+    [vertDotsRef, vertSelectedDotsRef, edgeLinesRef, faceMeshRef, previewLineRef].forEach((r) => {
       if (r.current) {
         scene.remove(r.current);
         r.current = null;
@@ -2632,36 +2633,55 @@ export default function App() {
       if (!scene || !heMesh || !parent) return;
 
       if (vertDotsRef.current) scene.remove(vertDotsRef.current);
+      if (vertSelectedDotsRef.current) scene.remove(vertSelectedDotsRef.current);
 
-      const positions = [];
-      const colors = [];
+      // Split into two Points objects so selected dots can render larger.
+      // PointsMaterial.size is uniform per material — color alone can't
+      // make selected verts read distinctly at any unselected-visible size.
+      const unselPos = [];
+      const selPos = [];
       heMesh.vertices.forEach((v) => {
-        positions.push(v.x, v.y, v.z);
-        const sel = selVerts.has(v.id);
-        // Medium-gray unselected dots recede into the mesh, SPX-orange
-        // selected dots pop. Pure black at size 0.06 was too dense on
-        // higher-poly meshes — read as "everything selected."
-        colors.push(sel ? 1.0 : 0.55, sel ? 0.5 : 0.55, sel ? 0.1 : 0.55);
+        if (selVerts.has(v.id)) selPos.push(v.x, v.y, v.z);
+        else unselPos.push(v.x, v.y, v.z);
       });
 
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute(
-        "position",
-        new THREE.Float32BufferAttribute(positions, 3)
-      );
-      geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
-      const mat = new THREE.PointsMaterial({
-        size: 0.06,
-        vertexColors: true,
-        depthTest: true,
-        sizeAttenuation: true,
-      });
+      if (unselPos.length) {
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute(
+          "position",
+          new THREE.Float32BufferAttribute(unselPos, 3)
+        );
+        const mat = new THREE.PointsMaterial({
+          size: 0.02,
+          color: 0x555555,
+          depthTest: true,
+          sizeAttenuation: true,
+        });
+        const pts = new THREE.Points(geo, mat);
+        pts.position.copy(parent.position);
+        pts.renderOrder = 2;
+        scene.add(pts);
+        vertDotsRef.current = pts;
+      }
 
-      const pts = new THREE.Points(geo, mat);
-      pts.position.copy(parent.position);
-      pts.renderOrder = 2;
-      scene.add(pts);
-      vertDotsRef.current = pts;
+      if (selPos.length) {
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute(
+          "position",
+          new THREE.Float32BufferAttribute(selPos, 3)
+        );
+        const mat = new THREE.PointsMaterial({
+          size: 0.08,
+          color: 0xff8019,
+          depthTest: true,
+          sizeAttenuation: true,
+        });
+        const pts = new THREE.Points(geo, mat);
+        pts.position.copy(parent.position);
+        pts.renderOrder = 3;
+        scene.add(pts);
+        vertSelectedDotsRef.current = pts;
+      }
     },
     [selectedVerts]
   );
@@ -3873,8 +3893,8 @@ export default function App() {
 
     // ── Select mode ───────────────────────────────────────────────────────────
     if (fn === "selectMode_vert") { setSelectMode("vert"); if (edgeLinesRef.current) { sceneRef.current?.remove(edgeLinesRef.current); edgeLinesRef.current = null; } if (faceOverlayRef.current) { sceneRef.current?.remove(faceOverlayRef.current); faceOverlayRef.current = null; } buildVertexOverlay(); setStatus("Vertex select"); return; }
-    if (fn === "selectMode_edge") { setSelectMode("edge"); if (vertDotsRef.current) { sceneRef.current?.remove(vertDotsRef.current); vertDotsRef.current = null; } if (faceOverlayRef.current) { sceneRef.current?.remove(faceOverlayRef.current); faceOverlayRef.current = null; } buildEdgeOverlay(); setStatus("Edge select"); return; }
-    if (fn === "selectMode_face") { setSelectMode("face"); if (vertDotsRef.current) { sceneRef.current?.remove(vertDotsRef.current); vertDotsRef.current = null; } if (edgeLinesRef.current) { sceneRef.current?.remove(edgeLinesRef.current); edgeLinesRef.current = null; } setTimeout(() => buildFaceOverlay(), 50); setStatus("Face select"); return; }
+    if (fn === "selectMode_edge") { setSelectMode("edge"); if (vertDotsRef.current) { sceneRef.current?.remove(vertDotsRef.current); vertDotsRef.current = null; } if (vertSelectedDotsRef.current) { sceneRef.current?.remove(vertSelectedDotsRef.current); vertSelectedDotsRef.current = null; } if (faceOverlayRef.current) { sceneRef.current?.remove(faceOverlayRef.current); faceOverlayRef.current = null; } buildEdgeOverlay(); setStatus("Edge select"); return; }
+    if (fn === "selectMode_face") { setSelectMode("face"); if (vertDotsRef.current) { sceneRef.current?.remove(vertDotsRef.current); vertDotsRef.current = null; } if (vertSelectedDotsRef.current) { sceneRef.current?.remove(vertSelectedDotsRef.current); vertSelectedDotsRef.current = null; } if (edgeLinesRef.current) { sceneRef.current?.remove(edgeLinesRef.current); edgeLinesRef.current = null; } setTimeout(() => buildFaceOverlay(), 50); setStatus("Face select"); return; }
 
     // ── Boolean ───────────────────────────────────────────────────────────────
     if (fn === "bool_union") { if (meshRef.current && meshBRef.current) { const r = booleanUnion(meshRef.current, meshBRef.current); sceneRef.current?.add(r); setStatus("Boolean Union applied"); } else setStatus("Need 2 meshes"); return; }
