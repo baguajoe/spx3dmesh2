@@ -2366,8 +2366,16 @@ export default function App() {
         if (selectModeRef.current === "vert") buildVertexOverlay();
         else if (selectModeRef.current === "edge") buildEdgeOverlay();
         else if (selectModeRef.current === "face") buildFaceOverlay();
-        if (editGizmoProxyRef.current && gizmoRef.current?.target === editGizmoProxyRef.current) {
-          ensureEditGizmoProxy();
+        // SPX_UNDO_GIZMO_REATTACH_V1 — re-arm the gizmo on the proxy if any transform tool is
+        // armed, regardless of whether the gizmo currently has the proxy as its target. The
+        // gizmo may have been detached during the drag/release cycle leading up to this undo.
+        const _activeTool = activeToolRef.current;
+        const _isGizmoTool = _activeTool === "gizmo_move" || _activeTool === "gizmo_rotate" || _activeTool === "gizmo_scale";
+        if (editGizmoProxyRef.current && _isGizmoTool && gizmoRef.current) {
+          const _proxy = ensureEditGizmoProxy();
+          if (_proxy && gizmoRef.current.target !== _proxy) {
+            gizmoRef.current.attach(_proxy);
+          }
         }
       }
     });
@@ -2410,8 +2418,16 @@ export default function App() {
         if (selectModeRef.current === "vert") buildVertexOverlay();
         else if (selectModeRef.current === "edge") buildEdgeOverlay();
         else if (selectModeRef.current === "face") buildFaceOverlay();
-        if (editGizmoProxyRef.current && gizmoRef.current?.target === editGizmoProxyRef.current) {
-          ensureEditGizmoProxy();
+        // SPX_UNDO_GIZMO_REATTACH_V1 — re-arm the gizmo on the proxy if any transform tool is
+        // armed, regardless of whether the gizmo currently has the proxy as its target. The
+        // gizmo may have been detached during the drag/release cycle leading up to this undo.
+        const _activeTool = activeToolRef.current;
+        const _isGizmoTool = _activeTool === "gizmo_move" || _activeTool === "gizmo_rotate" || _activeTool === "gizmo_scale";
+        if (editGizmoProxyRef.current && _isGizmoTool && gizmoRef.current) {
+          const _proxy = ensureEditGizmoProxy();
+          if (_proxy && gizmoRef.current.target !== _proxy) {
+            gizmoRef.current.attach(_proxy);
+          }
         }
       }
     });
