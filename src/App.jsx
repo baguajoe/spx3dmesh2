@@ -2350,6 +2350,14 @@ export default function App() {
       if (mesh.isMesh) { mesh.geometry.dispose(); mesh.geometry = geo; }
       return r.slice(0, -1);
     });
+    // SPX_UNDO_REDO_V2 — overlay refresh deferred to next frame, OUTSIDE any setState updater
+    requestAnimationFrame(() => {
+      if (editModeRef.current === "edit") {
+        if (selectModeRef.current === "vert") buildVertexOverlay();
+        else if (selectModeRef.current === "edge") buildEdgeOverlay();
+        else if (selectModeRef.current === "face") buildFaceOverlay();
+      }
+    });
   }, []);
 
   // ── Push history ───────────────────────────────────────────────────────────
@@ -2365,12 +2373,15 @@ export default function App() {
   }, []);
 
   const undo = useCallback(() => {
+    // SPX_UNDO_REDO_V2 — capture redo snapshot OUTSIDE setHistory; never nest setState updaters
+    const heMesh = heMeshRef.current;
+    const mesh = meshRef.current;
+    if (!heMesh || !mesh) return;
+    const { positions: cp, indices: ci } = heMesh.toBufferGeometry();
+    const currentSnapshot = { positions: [...cp], indices: [...ci] };
     setHistory((h) => {
       if (h.length === 0) return h;
       const prev = h[h.length - 1];
-      const heMesh = heMeshRef.current;
-      const mesh = meshRef.current;
-      if (!heMesh || !mesh) return h;
       const geo = new THREE.BufferGeometry();
       geo.setAttribute(
         "position",
@@ -2386,6 +2397,16 @@ export default function App() {
       setStats(heMeshRef.current.stats());
       setStatus("Undo");
       return h.slice(0, -1);
+    });
+    // SPX_UNDO_REDO_V2 — separate top-level state update (not nested in setHistory)
+    setRedoStack((r) => [...r.slice(-20), currentSnapshot]);
+    // SPX_UNDO_REDO_V2 — overlay refresh deferred to next frame, OUTSIDE any setState updater
+    requestAnimationFrame(() => {
+      if (editModeRef.current === "edit") {
+        if (selectModeRef.current === "vert") buildVertexOverlay();
+        else if (selectModeRef.current === "edge") buildEdgeOverlay();
+        else if (selectModeRef.current === "face") buildFaceOverlay();
+      }
     });
   }, []);
 
