@@ -847,28 +847,192 @@ export class HalfEdgeMesh {
   }
 
   // ── Bevel edges ───────────────────────────────────────────────────────────
-  // SPX_BEVEL_FIX_V1 — chamfer-fallback: until true edge-bevel ships,
-  //                   chamfer the endpoints of each selected edge so the
-  //                   button has a visible, undo-able effect.
+  // SPX_BEVEL_REAL_V1 — proper edge bevel matching Blender/Maya default behavior:
+  //                    1 segment, n-gon corner handling for shared verts,
+  //                    skip open-boundary edges.
   bevelEdges(amount = 0.1, edgeIds = null) {
-    const ids = (edgeIds && edgeIds.length) ? edgeIds : [...this.halfEdges.keys()];
-    const seenVerts = new Set();
-    let chamfered = 0;
-    for (const eid of ids) {
+    if (amount <= 0) return 0;
+    const allIds = (edgeIds && edgeIds.length) ? edgeIds : [...this.halfEdges.keys()];
+
+    // Deduplicate twin pairs: only process one half-edge per undirected edge.
+    const undirected = new Set();
+    const selectedPairs = [];
+    for (const eid of allIds) {
       const e = this.halfEdges.get?.(eid) || this.halfEdges[eid];
-      if (!e) continue;
-      const a = e.vertex?.id;
-      const b = e.twin?.vertex?.id;
-      if (a != null && !seenVerts.has(a)) {
-        seenVerts.add(a);
-        try { this.chamferVertex(a, amount); chamfered++; } catch (_) {}
+      if (!e || !e.twin) continue;
+      const key = Math.min(eid, e.twin.id) + ":" + Math.max(eid, e.twin.id);
+      if (undirected.has(key)) continue;
+      undirected.add(key);
+      if (!e.face || !e.twin.face) continue; // skip open-boundary edges
+      selectedPairs.push(e);
+    }
+    if (selectedPairs.length === 0) return 0;
+
+    const cross = (ax, ay, az, bx, by, bz) => [ay*bz - az*by, az*bx - ax*bz, ax*by - ay*bx];
+    const sub   = (a, b) => [a.x - b.x, a.y - b.y, a.z - b.z];
+    const norm  = (v) => { const L = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0]/L, v[1]/L, v[2]/L]; };
+
+    const faceNormal = (face) => {
+      let nx = 0, ny = 0, nz = 0;
+      let he = face.halfEdge, start = he, guard = 0;
+      do {
+        const a = he.vertex, b = he.next?.vertex;
+        if (!a || !b) break;
+        nx += (a.y - b.y) * (a.z + b.z);
+        ny += (a.z - b.z) * (a.x + b.x);
+        nz += (a.x - b.x) * (a.y + b.y);
+        he = he.next;
+        if (++guard > 1024) break;
+      } while (he && he !== start);
+      return norm([nx, ny, nz]);
+    };
+
+    // Offset `vert` along a direction perpendicular to (vert→otherEnd), lying IN `face`,
+    // pointing into the face interior, by `amount`.
+    const offsetInFace = (vert, otherEnd, face) => {
+      const edgeDir = norm(sub(otherEnd, vert));
+      const fn = faceNormal(face);
+      let perp = cross(fn[0], fn[1], fn[2], edgeDir[0], edgeDir[1], edgeDir[2]);
+      perp = norm(perp);
+      // Flip perp if it points away from the face interior (use a 3rd vert to disambiguate).
+      let he = face.halfEdge, start = he, third = null, guard = 0;
+      do {
+        if (he.vertex !== vert && he.vertex !== otherEnd) { third = he.vertex; break; }
+        he = he.next;
+        if (++guard > 1024) break;
+      } while (he && he !== start);
+      if (third) {
+        const toThird = sub(third, vert);
+        const dot = perp[0]*toThird[0] + perp[1]*toThird[1] + perp[2]*toThird[2];
+        if (dot < 0) { perp[0] = -perp[0]; perp[1] = -perp[1]; perp[2] = -perp[2]; }
       }
-      if (b != null && !seenVerts.has(b)) {
-        seenVerts.add(b);
-        try { this.chamferVertex(b, amount); chamfered++; } catch (_) {}
+      return { x: vert.x + perp[0]*amount, y: vert.y + perp[1]*amount, z: vert.z + perp[2]*amount };
+    };
+
+    // Local face builder — HalfEdgeMesh exposes addFace() (no args) and addHalfEdge();
+    // mirrors the construction pattern used by mirror() and fromBufferGeometry().
+    const buildFace = (vertArray) => {
+      if (!vertArray || vertArray.length < 3) return null;
+      const f = this.addFace();
+      const edges = vertArray.map(() => this.addHalfEdge());
+      for (let i = 0; i < vertArray.length; i++) {
+        edges[i].vertex = vertArray[i];
+        edges[i].face   = f;
+        edges[i].next   = edges[(i + 1) % edges.length];
+        edges[i].prev   = edges[(i - 1 + edges.length) % edges.length];
+        if (!vertArray[i].halfEdge) vertArray[i].halfEdge = edges[i];
+      }
+      f.halfEdge = edges[0];
+      return f;
+    };
+
+    // Per selected edge: compute 4 new vertex positions and record per-old-vert replacements.
+    const offsetsByVert = new Map(); // oldVertId -> [ { newVert, face } ]
+    const bridgeQuads = [];
+
+    for (const e of selectedPairs) {
+      const a = e.vertex, b = e.twin.vertex;
+      const fA = e.face, fB = e.twin.face;
+      const pa_fA = offsetInFace(a, b, fA);
+      const pa_fB = offsetInFace(a, b, fB);
+      const pb_fA = offsetInFace(b, a, fA);
+      const pb_fB = offsetInFace(b, a, fB);
+      const va_fA = this.addVertex(pa_fA.x, pa_fA.y, pa_fA.z);
+      const va_fB = this.addVertex(pa_fB.x, pa_fB.y, pa_fB.z);
+      const vb_fA = this.addVertex(pb_fA.x, pb_fA.y, pb_fA.z);
+      const vb_fB = this.addVertex(pb_fB.x, pb_fB.y, pb_fB.z);
+      if (!offsetsByVert.has(a.id)) offsetsByVert.set(a.id, []);
+      if (!offsetsByVert.has(b.id)) offsetsByVert.set(b.id, []);
+      offsetsByVert.get(a.id).push({ newVert: va_fA, face: fA });
+      offsetsByVert.get(a.id).push({ newVert: va_fB, face: fB });
+      offsetsByVert.get(b.id).push({ newVert: vb_fA, face: fA });
+      offsetsByVert.get(b.id).push({ newVert: vb_fB, face: fB });
+      bridgeQuads.push({ a, b, fA, fB, va_fA, va_fB, vb_fA, vb_fB });
+    }
+
+    // Rebuild affected faces: snapshot each face's current ring, swap old verts for new.
+    const facesToRebuild = new Map();
+    for (const [oldVertId, replacements] of offsetsByVert) {
+      for (const { newVert, face } of replacements) {
+        if (!facesToRebuild.has(face.id)) {
+          const ring = [];
+          let he = face.halfEdge, start = he, guard = 0;
+          do { ring.push(he.vertex); he = he.next; if (++guard > 1024) break; } while (he && he !== start);
+          facesToRebuild.set(face.id, { face, ring });
+        }
+        const entry = facesToRebuild.get(face.id);
+        for (let i = 0; i < entry.ring.length; i++) {
+          if (entry.ring[i] && entry.ring[i].id === oldVertId) {
+            entry.ring[i] = newVert;
+            break;
+          }
+        }
       }
     }
-    return chamfered;
+
+    // Delete old face + its half-edges, build replacement from the swapped ring.
+    for (const { face, ring } of facesToRebuild.values()) {
+      const validRing = ring.filter(Boolean);
+      if (face.halfEdge) {
+        let he = face.halfEdge, start = he, guard = 0;
+        do {
+          const nxt = he.next;
+          this.halfEdges.delete(he.id);
+          he = nxt;
+          if (++guard > 1024) break;
+        } while (he && he !== start);
+      }
+      this.faces.delete(face.id);
+      try { buildFace(validRing); } catch (err) { console.warn("[bevel] face rebuild failed", err); }
+    }
+
+    // Bridge quads: each selected edge gets a quad face connecting its 4 new verts.
+    for (const q of bridgeQuads) {
+      try {
+        buildFace([q.va_fA, q.vb_fA, q.vb_fB, q.va_fB]);
+      } catch (err) { console.warn("[bevel] bridge quad failed", err); }
+    }
+
+    // Corner n-gons: for each old vert touched by 3+ bevel replacements, fan a corner face
+    // through the clustered new verts (sorted by angle in the local tangent plane).
+    for (const [oldVertId, replacements] of offsetsByVert) {
+      if (replacements.length < 3) continue;
+      const oldVert = this.vertices.get(oldVertId);
+      if (!oldVert) continue;
+      const avgN = [0, 0, 0];
+      for (const r of replacements) {
+        const fn = faceNormal(r.face);
+        avgN[0] += fn[0]; avgN[1] += fn[1]; avgN[2] += fn[2];
+      }
+      const N = norm(avgN);
+      const refV = Math.abs(N[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0];
+      const T = norm(cross(N[0], N[1], N[2], refV[0], refV[1], refV[2]));
+      const B = cross(N[0], N[1], N[2], T[0], T[1], T[2]);
+      const angleOf = (v) => {
+        const dx = v.x - oldVert.x, dy = v.y - oldVert.y, dz = v.z - oldVert.z;
+        const x = dx*T[0] + dy*T[1] + dz*T[2];
+        const y = dx*B[0] + dy*B[1] + dz*B[2];
+        return Math.atan2(y, x);
+      };
+      const sorted = replacements.slice().sort((a, b) => angleOf(a.newVert) - angleOf(b.newVert));
+      const seen = new Set();
+      const ring = [];
+      for (const r of sorted) {
+        if (seen.has(r.newVert.id)) continue;
+        seen.add(r.newVert.id);
+        ring.push(r.newVert);
+      }
+      if (ring.length >= 3) {
+        try { buildFace(ring); } catch (err) { console.warn("[bevel] corner ngon failed", err); }
+      }
+    }
+
+    // Remove old verts that have been replaced.
+    for (const oldVertId of offsetsByVert.keys()) {
+      try { this.vertices.delete(oldVertId); } catch (_) {}
+    }
+
+    return selectedPairs.length;
   }
 
   // ── Inset faces ───────────────────────────────────────────────────────────
