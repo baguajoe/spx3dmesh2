@@ -3339,6 +3339,9 @@ export default function App() {
     return new THREE.Vector3(cx / n, cy / n, cz / n);
   };
   const ensureEditGizmoProxy = () => {
+    // SPX_EDIT_GIZMO_PROXY_V2_FIX — always recompute centroid + snap position,
+    // even when the proxy already exists; force matrixWorld refresh so the
+    // gizmo's getWorldPosition() reads the new location on the next frame.
     const scene = sceneRef.current;
     const parent = meshRef.current;
     if (!scene || !parent) return null;
@@ -3352,8 +3355,13 @@ export default function App() {
       scene.add(proxy);
       editGizmoProxyRef.current = proxy;
     }
-    editGizmoProxyRef.current.position.copy(centroid);
-    return editGizmoProxyRef.current;
+    const _proxy = editGizmoProxyRef.current;
+    _proxy.position.copy(centroid);
+    _proxy.updateMatrixWorld(true);
+    if (gizmoRef.current && gizmoRef.current.target === _proxy && typeof gizmoRef.current._syncPosition === "function") {
+      gizmoRef.current._syncPosition();
+    }
+    return _proxy;
   };
   const disposeEditGizmoProxy = () => {
     const scene = sceneRef.current;
@@ -4733,6 +4741,7 @@ export default function App() {
                     gizmoRef.current.startDrag(axis, hits[0].point);
                     gizmoDragging.current = true;
                     // SPX_EDIT_GIZMO_PROXY_V1 — snapshot vert positions for delta application during drag
+                    // SPX_EDIT_GIZMO_PROXY_V2_FIX — also pushHistory so Ctrl+Z reverts the drag
                     if (editModeRef.current === "edit" && editGizmoProxyRef.current && heMeshRef.current) {
                       const _heMesh = heMeshRef.current;
                       editGizmoStartRef.current = {
@@ -4742,6 +4751,7 @@ export default function App() {
                           return [id, v ? { x: v.x, y: v.y, z: v.z } : null];
                         })),
                       };
+                      pushHistory();
                     }
                     // Proportional editing: capture start positions of all scene objects so we can apply delta with falloff.
                     if (proportionalEnabled && gizmoRef.current?.target) {
