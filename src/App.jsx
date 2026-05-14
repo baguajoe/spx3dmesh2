@@ -3652,7 +3652,19 @@ export default function App() {
     if (fn === "loop_cut") { if (editModeRef.current !== "edit") { toggleEditMode(); } setActiveTool("loop_cut"); applyLoopCut(); return; }
     if (fn === "knife") { if (editModeRef.current !== "edit") { toggleEditMode(); } setActiveTool("knife"); setStatus("Knife — K"); return; }
     if (fn === "edge_slide") { if (editModeRef.current !== "edit") { toggleEditMode(); } startEdgeSlide(); return; }
-    if (fn === "bevel") { if (editModeRef.current !== "edit") { toggleEditMode(); } if (heMeshRef.current) { pushHistory(); heMeshRef.current.bevelEdges(0.1); rebuildMeshGeometry(); setStatus("Bevel applied"); } return; }
+    if (fn === "bevel") {
+      if (editModeRef.current !== "edit") { toggleEditMode(); }
+      if (heMeshRef.current) {
+        // SPX_BEVEL_FIX_V1 — pass the live edge selection so chamfer-fallback
+        //                   actually targets the user's selection, not all edges.
+        pushHistory();
+        const _selEdges = [...selectedEdgesRef.current];
+        const _n = heMeshRef.current.bevelEdges(bevelAmt || 0.1, _selEdges.length ? _selEdges : null);
+        rebuildMeshGeometry();
+        setStatus(`Bevel applied — ${_n} vertices chamfered (${_selEdges.length} edges)`);
+      }
+      return;
+    }
     if (fn === "inset") { if (editModeRef.current !== "edit") { toggleEditMode(); } if (heMeshRef.current && selectedFaces.size > 0) { pushHistory(); heMeshRef.current.insetFaces([...selectedFaces], 0.1); rebuildMeshGeometry(); setStatus("Inset applied"); } return; }
     if (fn === "grab") {
       if (proportionalEnabled && heMeshRef.current && selectedVerts.size > 0) {

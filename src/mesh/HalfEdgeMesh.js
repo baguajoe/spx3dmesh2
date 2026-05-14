@@ -847,22 +847,28 @@ export class HalfEdgeMesh {
   }
 
   // ── Bevel edges ───────────────────────────────────────────────────────────
-  bevelEdges(amount=0.1) {
-    const newVerts = [];
-    const seen = new Set();
-    this.halfEdges.forEach(e => {
-      if (!e.twin || seen.has(e.id) || seen.has(e.twin.id)) return;
-      seen.add(e.id); seen.add(e.twin.id);
-      const a = e.vertex, b = e.twin.vertex;
-      // Create two new verts offset from each end
-      const dx=b.x-a.x, dy=b.y-a.y, dz=b.z-a.z;
-      const len=Math.sqrt(dx*dx+dy*dy+dz*dz)||1;
-      const nx=dx/len, ny=dy/len, nz=dz/len;
-      const va = this.addVertex(a.x+nx*amount, a.y+ny*amount, a.z+nz*amount);
-      const vb = this.addVertex(b.x-nx*amount, b.y-ny*amount, b.z-nz*amount);
-      newVerts.push({orig_a:a, orig_b:b, va, vb, edge:e});
-    });
-    return newVerts.length;
+  // SPX_BEVEL_FIX_V1 — chamfer-fallback: until true edge-bevel ships,
+  //                   chamfer the endpoints of each selected edge so the
+  //                   button has a visible, undo-able effect.
+  bevelEdges(amount = 0.1, edgeIds = null) {
+    const ids = (edgeIds && edgeIds.length) ? edgeIds : [...this.halfEdges.keys()];
+    const seenVerts = new Set();
+    let chamfered = 0;
+    for (const eid of ids) {
+      const e = this.halfEdges.get?.(eid) || this.halfEdges[eid];
+      if (!e) continue;
+      const a = e.vertex?.id;
+      const b = e.twin?.vertex?.id;
+      if (a != null && !seenVerts.has(a)) {
+        seenVerts.add(a);
+        try { this.chamferVertex(a, amount); chamfered++; } catch (_) {}
+      }
+      if (b != null && !seenVerts.has(b)) {
+        seenVerts.add(b);
+        try { this.chamferVertex(b, amount); chamfered++; } catch (_) {}
+      }
+    }
+    return chamfered;
   }
 
   // ── Inset faces ───────────────────────────────────────────────────────────
