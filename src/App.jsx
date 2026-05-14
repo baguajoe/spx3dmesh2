@@ -2356,6 +2356,10 @@ export default function App() {
         if (selectModeRef.current === "vert") buildVertexOverlay();
         else if (selectModeRef.current === "edge") buildEdgeOverlay();
         else if (selectModeRef.current === "face") buildFaceOverlay();
+        // SPX_EDIT_GIZMO_EDGEFACE_V1 — keep gizmo attached to restored centroid
+        if (editGizmoProxyRef.current && gizmoRef.current?.target === editGizmoProxyRef.current) {
+          ensureEditGizmoProxy();
+        }
       }
     });
   }, []);
@@ -2406,6 +2410,10 @@ export default function App() {
         if (selectModeRef.current === "vert") buildVertexOverlay();
         else if (selectModeRef.current === "edge") buildEdgeOverlay();
         else if (selectModeRef.current === "face") buildFaceOverlay();
+        // SPX_EDIT_GIZMO_EDGEFACE_V1 — keep gizmo attached to restored centroid
+        if (editGizmoProxyRef.current && gizmoRef.current?.target === editGizmoProxyRef.current) {
+          ensureEditGizmoProxy();
+        }
       }
     });
   }, []);
@@ -3345,11 +3353,45 @@ export default function App() {
   }, [wireframe]);
 
   // ── Toggle edit mode ───────────────────────────────────────────────────────
-  // SPX_EDIT_GIZMO_PROXY_V1 — selection-proxy helpers (vert mode only for now)
+  // SPX_EDIT_GIZMO_PROXY_V1 — selection-proxy helpers
+  // SPX_EDIT_GIZMO_EDGEFACE_V1 — resolve current select-mode selection to a flat Set of unique vert IDs
+  const getActiveSelectionVertIds = () => {
+    const heMesh = heMeshRef.current;
+    if (!heMesh) return new Set();
+    const mode = selectModeRef.current;
+    if (mode === "vert") return new Set(selectedVerts);
+    if (mode === "edge") {
+      const ids = new Set();
+      selectedEdges.forEach((eid) => {
+        const e = heMesh.halfEdges.get?.(eid) || heMesh.halfEdges[eid];
+        if (e) {
+          if (e.vertex) ids.add(e.vertex.id);
+          if (e.twin?.vertex) ids.add(e.twin.vertex.id);
+        }
+      });
+      return ids;
+    }
+    if (mode === "face") {
+      const ids = new Set();
+      selectedFaces.forEach((faceIdx) => {
+        const face = heMesh.faces.get?.(faceIdx) || heMesh.faces[faceIdx];
+        if (face && face.halfEdge) {
+          let he = face.halfEdge;
+          const start = he;
+          do {
+            if (he.vertex) ids.add(he.vertex.id);
+            he = he.next;
+          } while (he && he !== start);
+        }
+      });
+      return ids;
+    }
+    return new Set();
+  };
   const computeSelectionCentroid = () => {
     const heMesh = heMeshRef.current;
     if (!heMesh) return null;
-    const ids = [...selectedVerts];
+    const ids = [...getActiveSelectionVertIds()];
     if (ids.length === 0) return null;
     let cx = 0, cy = 0, cz = 0, n = 0;
     ids.forEach((id) => {
@@ -3956,7 +3998,9 @@ export default function App() {
         gizmoRef.current.setMode(newMode);
         // SPX_EDIT_GIZMO_PROXY_V1 — edit mode attaches gizmo to selection proxy,
         // not the parent mesh; only Move is fully wired this pass.
-        if (editModeRef.current === "edit" && selectedVerts.size > 0) {
+        // SPX_EDIT_GIZMO_EDGEFACE_V1 — gate uses active selection (vert/edge/face)
+        const _activeIds = getActiveSelectionVertIds();
+        if (editModeRef.current === "edit" && _activeIds.size > 0) {
           if (newMode !== "move") {
             gizmoRef.current.detach();
             setActiveTool("select");
@@ -4767,7 +4811,8 @@ export default function App() {
                       const _heMesh = heMeshRef.current;
                       editGizmoStartRef.current = {
                         proxyPos: editGizmoProxyRef.current.position.clone(),
-                        vertSnapshot: new Map([...selectedVerts].map((id) => {
+                        // SPX_EDIT_GIZMO_EDGEFACE_V1 — snapshot whichever verts back the active selection
+                        vertSnapshot: new Map([...getActiveSelectionVertIds()].map((id) => {
                           const v = _heMesh.vertices.get?.(id) || _heMesh.vertices[id];
                           return [id, v ? { x: v.x, y: v.y, z: v.z } : null];
                         })),
