@@ -4507,12 +4507,59 @@ export default function App() {
     if (fn === "mod_triangulate") { if (meshRef?.current?.geometry) { applyTriangulate(meshRef.current.geometry); } return; }
     if (fn === "mod_wireframe") { if (meshRef?.current?.geometry) { applyWireframe(meshRef.current.geometry); } return; }
     if (fn === "mod_laplacian") { if (meshRef?.current?.geometry) { applyLaplacianSmooth(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate = true; } return; }
-    if (fn === "mod_lattice") { if (meshRef?.current?.geometry) { applyLattice(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate = true; setStatus("Lattice applied"); } return; }
+    // SPX_MOD_ARGS_FIX_V1 — pass required options/target args so these buttons actually run.
+    if (fn === "mod_lattice") {
+      if (meshRef?.current?.geometry) {
+        pushHistory();
+        try {
+          applyLattice(meshRef.current.geometry, { divisions: [3, 3, 3], strength: 0.5 });
+          meshRef.current.geometry.attributes.position.needsUpdate = true;
+          meshRef.current.geometry.computeVertexNormals();
+          setStatus("Lattice applied — 3×3×3, strength 0.5");
+        } catch (err) {
+          setStatus("Lattice failed: " + (err?.message || "see console"));
+          console.error("[mod_lattice]", err);
+        }
+      }
+      return;
+    }
     if (fn === "mod_screw") { if (meshRef?.current?.geometry) { applyScrew(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate = true; setStatus("Screw applied"); } return; }
     if (fn === "mod_build") { if (meshRef?.current?.geometry) { applyBuild(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate = true; setStatus("Build applied"); } return; }
     if (fn === "mod_ocean") { if (meshRef?.current?.geometry) { applyOcean(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate = true; setStatus("Ocean applied"); } return; }
-    if (fn === "mod_deform") { if (meshRef?.current?.geometry) { applySimpleDeform(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate = true; setStatus("Deform applied"); } return; }
-    if (fn === "mod_shrinkwrap") { if (meshRef?.current?.geometry) { applyShrinkwrap(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate = true; setStatus("Shrinkwrap applied"); } return; }
+    if (fn === "mod_deform") {
+      if (meshRef?.current?.geometry) {
+        pushHistory();
+        try {
+          applySimpleDeform(meshRef.current.geometry, { mode: "twist", amount: 0.5, axis: "y" });
+          meshRef.current.geometry.attributes.position.needsUpdate = true;
+          meshRef.current.geometry.computeVertexNormals();
+          setStatus("Deform applied — twist, amount 0.5, Y");
+        } catch (err) {
+          setStatus("Deform failed: " + (err?.message || "see console"));
+          console.error("[mod_deform]", err);
+        }
+      }
+      return;
+    }
+    if (fn === "mod_shrinkwrap") {
+      if (!meshRef?.current?.geometry) return;
+      const _target = meshBRef.current?.geometry || null;
+      if (!_target) {
+        setStatus("Shrinkwrap: load a second mesh (target) first");
+        return;
+      }
+      pushHistory();
+      try {
+        applyShrinkwrap(meshRef.current.geometry, _target, { offset: 0.0, mode: "nearest" });
+        meshRef.current.geometry.attributes.position.needsUpdate = true;
+        meshRef.current.geometry.computeVertexNormals();
+        setStatus("Shrinkwrap applied — nearest, offset 0");
+      } catch (err) {
+        setStatus("Shrinkwrap failed: " + (err?.message || "see console"));
+        console.error("[mod_shrinkwrap]", err);
+      }
+      return;
+    }
     if (fn === "mod_hook") { if (meshRef?.current?.geometry) { applyHook(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate = true; setStatus("Hook applied"); } return; }
     if (fn === "mod_volume") { if (meshRef?.current?.geometry) { applyVolumeDisplace(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate = true; setStatus("Volume displace applied"); } return; }
     if (fn === "mod_normal_edit") { if (meshRef?.current?.geometry) { applyNormalEdit(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate = true; setStatus("Normal edit applied"); } return; }
