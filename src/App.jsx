@@ -1294,6 +1294,13 @@ export default function App() {
   const [slideAmount, setSlideAmount] = useState(0);
   const [history, setHistory] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
+  // SPX_UNDO_REDO_V3 — mirror history/redoStack into refs so undo/redo can read current length
+  //                   from the outer function body without re-invoking setState updaters
+  //                   (which React strict mode double-invokes in dev).
+  const historyRef = useRef([]);
+  const redoStackRef = useRef([]);
+  useEffect(() => { historyRef.current = history; }, [history]);
+  useEffect(() => { redoStackRef.current = redoStack; }, [redoStack]);
   const [environmentOpen, setEnvironmentOpen] = useState(false);
   const [crowdOpen, setCrowdOpen] = useState(false);
   const [panel3DTo2DOpen, setPanel3DTo2DOpen] = useState(false);
@@ -2335,28 +2342,30 @@ export default function App() {
   }, [activeObjId]);
 
   const redo = useCallback(() => {
-    setRedoStack((r) => {
-      if (r.length === 0) return r;
-      const next = r[r.length - 1];
-      const heMesh = heMeshRef.current;
-      const mesh = meshRef.current;
-      if (!heMesh || !mesh) return r;
-      const { positions: cp, indices: ci } = heMesh.toBufferGeometry();
-      setHistory((h) => [...h.slice(-20), { positions: [...cp], indices: [...ci] }]);
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute("position", new THREE.Float32BufferAttribute(next.positions, 3));
-      geo.setIndex(new THREE.Uint32BufferAttribute(next.indices, 1));
-      geo.computeVertexNormals();
-      if (mesh.isMesh) { mesh.geometry.dispose(); mesh.geometry = geo; }
-      return r.slice(0, -1);
-    });
-    // SPX_UNDO_REDO_V2 — overlay refresh deferred to next frame, OUTSIDE any setState updater
+    // SPX_UNDO_REDO_V3 — all side effects run ONCE in the outer body; setState updaters are pure
+    const r = redoStackRef.current;
+    if (r.length === 0) return;
+    const heMesh = heMeshRef.current;
+    const mesh = meshRef.current;
+    if (!heMesh || !mesh) return;
+    const next = r[r.length - 1];
+    const { positions: cp, indices: ci } = heMesh.toBufferGeometry();
+    const currentSnapshot = { positions: [...cp], indices: [...ci] };
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(next.positions, 3));
+    geo.setIndex(new THREE.Uint32BufferAttribute(next.indices, 1));
+    geo.computeVertexNormals();
+    if (mesh.isMesh) { mesh.geometry.dispose(); mesh.geometry = geo; }
+    heMeshRef.current = HalfEdgeMesh.fromBufferGeometry(geo);
+    setStats(heMeshRef.current.stats());
+    setStatus("Redo");
+    setHistory((prevH) => [...prevH.slice(-20), currentSnapshot]);
+    setRedoStack((prevR) => prevR.slice(0, -1));
     requestAnimationFrame(() => {
       if (editModeRef.current === "edit") {
         if (selectModeRef.current === "vert") buildVertexOverlay();
         else if (selectModeRef.current === "edge") buildEdgeOverlay();
         else if (selectModeRef.current === "face") buildFaceOverlay();
-        // SPX_EDIT_GIZMO_EDGEFACE_V1 — keep gizmo attached to restored centroid
         if (editGizmoProxyRef.current && gizmoRef.current?.target === editGizmoProxyRef.current) {
           ensureEditGizmoProxy();
         }
@@ -2377,40 +2386,30 @@ export default function App() {
   }, []);
 
   const undo = useCallback(() => {
-    // SPX_UNDO_REDO_V2 — capture redo snapshot OUTSIDE setHistory; never nest setState updaters
+    // SPX_UNDO_REDO_V3 — read stack from ref so we can run side effects ONCE in outer body
+    const h = historyRef.current;
+    if (h.length === 0) return;
     const heMesh = heMeshRef.current;
     const mesh = meshRef.current;
     if (!heMesh || !mesh) return;
+    const prev = h[h.length - 1];
     const { positions: cp, indices: ci } = heMesh.toBufferGeometry();
     const currentSnapshot = { positions: [...cp], indices: [...ci] };
-    setHistory((h) => {
-      if (h.length === 0) return h;
-      const prev = h[h.length - 1];
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute(
-        "position",
-        new THREE.Float32BufferAttribute(prev.positions, 3)
-      );
-      geo.setIndex(new THREE.Uint32BufferAttribute(prev.indices, 1));
-      geo.computeVertexNormals();
-      if (mesh.isMesh) {
-        mesh.geometry.dispose();
-        mesh.geometry = geo;
-      }
-      heMeshRef.current = HalfEdgeMesh.fromBufferGeometry(geo);
-      setStats(heMeshRef.current.stats());
-      setStatus("Undo");
-      return h.slice(0, -1);
-    });
-    // SPX_UNDO_REDO_V2 — separate top-level state update (not nested in setHistory)
-    setRedoStack((r) => [...r.slice(-20), currentSnapshot]);
-    // SPX_UNDO_REDO_V2 — overlay refresh deferred to next frame, OUTSIDE any setState updater
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(prev.positions, 3));
+    geo.setIndex(new THREE.Uint32BufferAttribute(prev.indices, 1));
+    geo.computeVertexNormals();
+    if (mesh.isMesh) { mesh.geometry.dispose(); mesh.geometry = geo; }
+    heMeshRef.current = HalfEdgeMesh.fromBufferGeometry(geo);
+    setStats(heMeshRef.current.stats());
+    setStatus("Undo");
+    setHistory((prevH) => prevH.slice(0, -1));
+    setRedoStack((prevR) => [...prevR.slice(-20), currentSnapshot]);
     requestAnimationFrame(() => {
       if (editModeRef.current === "edit") {
         if (selectModeRef.current === "vert") buildVertexOverlay();
         else if (selectModeRef.current === "edge") buildEdgeOverlay();
         else if (selectModeRef.current === "face") buildFaceOverlay();
-        // SPX_EDIT_GIZMO_EDGEFACE_V1 — keep gizmo attached to restored centroid
         if (editGizmoProxyRef.current && gizmoRef.current?.target === editGizmoProxyRef.current) {
           ensureEditGizmoProxy();
         }
