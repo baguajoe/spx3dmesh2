@@ -3859,9 +3859,9 @@ export default function App() {
     }
 
     // ── Select mode ───────────────────────────────────────────────────────────
-    if (fn === "selectMode_vert") { setSelectMode("vert"); buildVertexOverlay(); setStatus("Vertex select"); return; }
-    if (fn === "selectMode_edge") { setSelectMode("edge"); buildEdgeOverlay(); setStatus("Edge select"); return; }
-    if (fn === "selectMode_face") { setSelectMode("face"); setTimeout(() => buildFaceOverlay(), 50); setStatus("Face select"); return; }
+    if (fn === "selectMode_vert") { setSelectMode("vert"); if (edgeLinesRef.current) { sceneRef.current?.remove(edgeLinesRef.current); edgeLinesRef.current = null; } if (faceOverlayRef.current) { sceneRef.current?.remove(faceOverlayRef.current); faceOverlayRef.current = null; } buildVertexOverlay(); setStatus("Vertex select"); return; }
+    if (fn === "selectMode_edge") { setSelectMode("edge"); if (vertDotsRef.current) { sceneRef.current?.remove(vertDotsRef.current); vertDotsRef.current = null; } if (faceOverlayRef.current) { sceneRef.current?.remove(faceOverlayRef.current); faceOverlayRef.current = null; } buildEdgeOverlay(); setStatus("Edge select"); return; }
+    if (fn === "selectMode_face") { setSelectMode("face"); if (vertDotsRef.current) { sceneRef.current?.remove(vertDotsRef.current); vertDotsRef.current = null; } if (edgeLinesRef.current) { sceneRef.current?.remove(edgeLinesRef.current); edgeLinesRef.current = null; } setTimeout(() => buildFaceOverlay(), 50); setStatus("Face select"); return; }
 
     // ── Boolean ───────────────────────────────────────────────────────────────
     if (fn === "bool_union") { if (meshRef.current && meshBRef.current) { const r = booleanUnion(meshRef.current, meshBRef.current); sceneRef.current?.add(r); setStatus("Boolean Union applied"); } else setStatus("Need 2 meshes"); return; }
