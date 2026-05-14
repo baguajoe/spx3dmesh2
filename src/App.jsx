@@ -2638,9 +2638,10 @@ export default function App() {
       heMesh.vertices.forEach((v) => {
         positions.push(v.x, v.y, v.z);
         const sel = selVerts.has(v.id);
-        // Pure-black unselected so the SPX-orange selected dot reads
-        // clearly at small sizes; gray/gray was visual noise.
-        colors.push(sel ? 1.0 : 0.0, sel ? 0.5 : 0.0, sel ? 0.1 : 0.0);
+        // Medium-gray unselected dots recede into the mesh, SPX-orange
+        // selected dots pop. Pure black at size 0.06 was too dense on
+        // higher-poly meshes — read as "everything selected."
+        colors.push(sel ? 1.0 : 0.55, sel ? 0.5 : 0.55, sel ? 0.1 : 0.55);
       });
 
       const geo = new THREE.BufferGeometry();
