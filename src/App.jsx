@@ -2638,8 +2638,9 @@ export default function App() {
       heMesh.vertices.forEach((v) => {
         positions.push(v.x, v.y, v.z);
         const sel = selVerts.has(v.id);
-        // Blender-style: dim gray unselected, bright SPX orange selected
-        colors.push(sel ? 1.0 : 0.2, sel ? 0.5 : 0.2, sel ? 0.1 : 0.2);
+        // Pure-black unselected so the SPX-orange selected dot reads
+        // clearly at small sizes; gray/gray was visual noise.
+        colors.push(sel ? 1.0 : 0.0, sel ? 0.5 : 0.0, sel ? 0.1 : 0.0);
       });
 
       const geo = new THREE.BufferGeometry();
@@ -2649,7 +2650,7 @@ export default function App() {
       );
       geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
       const mat = new THREE.PointsMaterial({
-        size: 0.02,
+        size: 0.06,
         vertexColors: true,
         depthTest: true,
         sizeAttenuation: true,
@@ -2933,7 +2934,7 @@ export default function App() {
           const sx = ((sp.x + 1) / 2) * rect.width + rect.left;
           const sy = ((-sp.y + 1) / 2) * rect.height + rect.top;
           const d = Math.hypot(e.clientX - sx, e.clientY - sy);
-          if (d < minDist && d < 20) {
+          if (d < minDist && d < 40) {
             minDist = d;
             closest = v;
           }
