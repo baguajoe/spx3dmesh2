@@ -2986,10 +2986,10 @@ export default function App() {
             const next = new Set(sf);
             if (next.has(faceIdx)) next.delete(faceIdx);
             else next.add(faceIdx);
+            buildFaceOverlay(next);
             return next;
           });
           setStatus(`Face ${faceIdx} selected`);
-          buildFaceOverlay(next);
         }
       }
     },
