@@ -3087,8 +3087,29 @@ export default function App() {
 
   // ── Knife tool ─────────────────────────────────────────────────────────────
   const onKnifeClick = useCallback((e) => {
+    // SPX_VCOLOR_FIX_V1 — applyVertexPaint was never defined; route through engine bridge
     if (vcPaintingRef.current && editModeRef.current === "paint") {
-      applyVertexPaint(e);
+      if (typeof window.paintVCAdvanced === "function" && meshRef.current) {
+        const canvas = canvasRef.current;
+        const camera = cameraRef.current;
+        if (canvas && camera) {
+          const rect = canvas.getBoundingClientRect();
+          const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+          const my = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+          const ray = new THREE.Raycaster();
+          ray.setFromCamera(new THREE.Vector2(mx, my), camera);
+          const hits = ray.intersectObject(meshRef.current, true);
+          if (hits.length > 0) {
+            window.paintVCAdvanced(meshRef.current, hits[0].point, {
+              color: vcPaintColor, radius: vcRadius,
+              strength: vcStrength, falloff: vcFalloff,
+            });
+            if (meshRef.current.geometry.attributes.color) {
+              meshRef.current.geometry.attributes.color.needsUpdate = true;
+            }
+          }
+        }
+      }
       return;
     }
     if (sculptingRef.current && editModeRef.current === "sculpt") {
