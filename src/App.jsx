@@ -2652,8 +2652,8 @@ export default function App() {
           new THREE.Float32BufferAttribute(unselPos, 3)
         );
         const mat = new THREE.PointsMaterial({
-          size: 0.02,
-          color: 0x555555,
+          size: 0.035,
+          color: 0xa6a6a6,
           depthTest: true,
           sizeAttenuation: true,
         });
