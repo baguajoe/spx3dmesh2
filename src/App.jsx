@@ -2916,8 +2916,17 @@ export default function App() {
       if (selectModeRef.current === "vert") {
         let closest = null,
           minDist = Infinity;
+        // buildVertexOverlay applies pts.position.copy(parent.position) to
+        // the dot cloud. Mirror the same offset here so click-space matches
+        // dot-render-space; otherwise picks miss by the mesh world offset
+        // whenever the mesh isn't at the origin.
+        const _parent = meshRef.current;
         heMesh.vertices.forEach((v) => {
-          const wp = new THREE.Vector3(v.x, v.y, v.z);
+          const wp = new THREE.Vector3(
+            v.x + (_parent?.position.x || 0),
+            v.y + (_parent?.position.y || 0),
+            v.z + (_parent?.position.z || 0)
+          );
           const sp = wp.clone().project(cameraRef.current);
           const canvas = canvasRef.current;
           const rect = canvas.getBoundingClientRect();
