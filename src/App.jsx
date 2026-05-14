@@ -4736,6 +4736,15 @@ export default function App() {
                   boxSelectActive.current = false;
                 }
               } else if (editModeRef.current === "edit") {
+                // Track potential box-select drag. boxSelectActive only flips
+                // true once drag exceeds threshold (onMouseMove), so the
+                // onCanvasClick single-pick path is unaffected for true clicks.
+                const _canvas = canvasRef.current;
+                if (_canvas) {
+                  const _r = _canvas.getBoundingClientRect();
+                  boxSelectStart.current = { x: e.clientX - _r.left, y: e.clientY - _r.top };
+                  boxSelectActive.current = false;
+                }
                 onCanvasClick(e);
                 onKnifeClick(e);
               }
@@ -4837,7 +4846,7 @@ export default function App() {
               }
               if (activeWorkspace === "Sculpt" && sculptingRef.current && meshRef.current) {
                 applySculpt(e);
-              } else if (editModeRef.current === "object" && boxSelectStart.current && !orbitDragging.current) {
+              } else if (boxSelectStart.current && !orbitDragging.current && (editModeRef.current === "object" || (editModeRef.current === "edit" && selectModeRef.current === "vert"))) {
                 const canvas = canvasRef.current;
                 if (canvas) {
                   const rect = canvas.getBoundingClientRect();
@@ -4893,6 +4902,51 @@ export default function App() {
                 return;
               }
               if (wasDragging && !wasBox && _moveDist > 5) {
+                boxSelectStart.current = null;
+                boxSelectActive.current = false;
+                setBoxSelect(null);
+                return;
+              }
+              // Edit + Vert box-select: project each vert to canvas-local
+              // screen space, additively merge those inside the rect into
+              // selectedVerts, then rebuild the overlay. Mirrors the click
+              // handler's mesh.position offset so picks line up with the
+              // rendered dot cloud when the mesh isn't at the origin.
+              if (
+                wasBox &&
+                boxSnap &&
+                editModeRef.current === "edit" &&
+                selectModeRef.current === "vert" &&
+                heMeshRef.current &&
+                cameraRef.current &&
+                canvasRef.current
+              ) {
+                const _canvas = canvasRef.current;
+                const _camera = cameraRef.current;
+                const _rect = _canvas.getBoundingClientRect();
+                const _parent = meshRef.current;
+                const _px = _parent?.position.x || 0;
+                const _py = _parent?.position.y || 0;
+                const _pz = _parent?.position.z || 0;
+                const picks = new Set();
+                heMeshRef.current.vertices.forEach((v) => {
+                  const wp = new THREE.Vector3(v.x + _px, v.y + _py, v.z + _pz).project(_camera);
+                  const sx = ((wp.x + 1) / 2) * _rect.width;
+                  const sy = ((-wp.y + 1) / 2) * _rect.height;
+                  if (sx >= boxSnap.x && sx <= boxSnap.x + boxSnap.w &&
+                      sy >= boxSnap.y && sy <= boxSnap.y + boxSnap.h) {
+                    picks.add(v.id);
+                  }
+                });
+                if (picks.size) {
+                  setSelectedVerts((sv) => {
+                    const next = new Set(sv);
+                    picks.forEach((id) => next.add(id));
+                    buildVertexOverlay(next);
+                    return next;
+                  });
+                  setStatus(`Box-select: +${picks.size} verts`);
+                }
                 boxSelectStart.current = null;
                 boxSelectActive.current = false;
                 setBoxSelect(null);
