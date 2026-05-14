@@ -2979,8 +2979,10 @@ export default function App() {
         if (closest) {
           setSelectedEdges((se) => {
             const next = new Set(se);
-            if (next.has(closest.id)) next.delete(closest.id);
-            else {
+            if (next.has(closest.id)) {
+              next.delete(closest.id);
+              if (closest.twin) next.delete(closest.twin.id);
+            } else {
               next.add(closest.id);
               if (closest.twin) next.add(closest.twin.id);
             }
