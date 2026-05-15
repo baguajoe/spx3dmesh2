@@ -4107,17 +4107,11 @@ export default function App() {
         gizmoRef.current.mode = "_pending_";
         gizmoRef.current.setMode(newMode);
         // SPX_EDIT_GIZMO_PROXY_V1 — edit mode attaches gizmo to selection proxy,
-        // not the parent mesh; only Move is fully wired this pass.
+        // not the parent mesh.
         // SPX_EDIT_GIZMO_EDGEFACE_V1 — gate uses active selection (vert/edge/face)
+        // SPX_EDIT_ROTSCALE_V1 — Rotate/Scale now also attach to proxy
         const _activeIds = getActiveSelectionVertIds();
         if (editModeRef.current === "edit" && _activeIds.size > 0) {
-          if (newMode !== "move") {
-            gizmoRef.current.detach();
-            setActiveTool("select");
-            setGizmoMode("select");
-            setStatus("Rotate/Scale on selection coming soon");
-            return;
-          }
           const proxy = ensureEditGizmoProxy();
           if (proxy) {
             gizmoRef.current.attach(proxy);
