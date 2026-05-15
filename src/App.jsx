@@ -1187,6 +1187,12 @@ export default function App() {
   const [vcFalloff, setVcFalloff] = useState("smooth");
   const vcPaintingRef = useRef(false);
 
+  // SPX_VCOLOR_LAYERS_V1
+  const [vcActiveLayer, setVcActiveLayer] = useState(0);
+  const [vcLayerVersion, setVcLayerVersion] = useState(0);
+  const vcActiveLayerRef = useRef(0);
+  useEffect(() => { vcActiveLayerRef.current = vcActiveLayer; }, [vcActiveLayer]);
+
   // ── Sessions 9-10: Shape Keys state ──────────────────────────────────────
   const [shapeKeys, setShapeKeys] = useState([]);
   const shapeKeysRef = useRef([]);
@@ -6276,6 +6282,118 @@ export default function App() {
         </FloatPanel>}
         {vcolorPanelOpen && <FloatPanel title="VERTEX COLOR" onClose={() => setVcolorPanelOpen(false)} width={320}>
           <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10, color: COLORS.text, fontSize: 11, fontFamily: "monospace" }}>
+            {/* SPX_VCOLOR_LAYERS_V1 */}
+            <div style={{ borderBottom: "1px solid " + COLORS.border, paddingBottom: 10, marginBottom: 4, display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ color: COLORS.textDim, fontSize: 10, letterSpacing: "1.5px" }}>LAYERS</span>
+                <button
+                  onClick={() => {
+                    const m = meshRef.current;
+                    if (!m) { setStatus("No active mesh"); return; }
+                    if (!_ensureVCLayers(m)) { setStatus("Could not init VC layers"); return; }
+                    if (typeof window.addVCLayer === "function") {
+                      const idx = m._vcLayers?.length || 0;
+                      window.addVCLayer(m, `Layer ${idx + 1}`);
+                      setVcActiveLayer((m._vcLayers?.length || 1) - 1);
+                      setVcLayerVersion(v => v + 1);
+                      setStatus(`Added Layer ${idx + 1}`);
+                    }
+                  }}
+                  style={{ width: 22, height: 22, background: COLORS.panel, color: COLORS.text, border: "1px solid " + COLORS.border, cursor: "pointer", fontFamily: "monospace", fontSize: 14, lineHeight: "18px" }}
+                  title="Add layer"
+                >+</button>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2, maxHeight: 160, overflowY: "auto" }}>
+                {(() => {
+                  void vcLayerVersion;
+                  const layers = meshRef.current?._vcLayers || [];
+                  if (layers.length === 0) {
+                    return <div style={{ color: COLORS.textDim, fontSize: 10, fontStyle: "italic", padding: "4px 8px" }}>No layers — paint or Fill to create one</div>;
+                  }
+                  return layers.map((layer, idx) => {
+                    const isActive = idx === vcActiveLayer;
+                    return (
+                      <div
+                        key={layer.id || idx}
+                        onClick={() => setVcActiveLayer(idx)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          padding: "4px 6px",
+                          background: isActive ? "rgba(255, 136, 0, 0.15)" : "transparent",
+                          border: "1px solid " + (isActive ? "#ff8800" : "transparent"),
+                          cursor: "pointer",
+                          fontSize: 11,
+                        }}
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            layer.visible = layer.visible === false ? true : false;
+                            if (typeof window.flattenVCLayers === "function") window.flattenVCLayers(meshRef.current);
+                            if (meshRef.current?.geometry?.attributes?.color) meshRef.current.geometry.attributes.color.needsUpdate = true;
+                            setVcLayerVersion(v => v + 1);
+                          }}
+                          style={{ width: 18, height: 18, background: "transparent", color: layer.visible !== false ? COLORS.text : COLORS.textDim, border: "none", cursor: "pointer", padding: 0, fontSize: 13 }}
+                          title={layer.visible !== false ? "Hide layer" : "Show layer"}
+                        >
+                          {layer.visible !== false ? "👁" : "—"}
+                        </button>
+                        <span
+                          style={{ flex: 1, color: isActive ? "#ff8800" : COLORS.text, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                          onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            const newName = window.prompt("Rename layer", layer.name || `Layer ${idx + 1}`);
+                            if (newName && newName.trim()) {
+                              layer.name = newName.trim();
+                              setVcLayerVersion(v => v + 1);
+                            }
+                          }}
+                          title="Double-click to rename"
+                        >{layer.name || `Layer ${idx + 1}`}</span>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.05"
+                          value={layer.opacity ?? 1}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => {
+                            layer.opacity = parseFloat(e.target.value);
+                            if (typeof window.flattenVCLayers === "function") window.flattenVCLayers(meshRef.current);
+                            if (meshRef.current?.geometry?.attributes?.color) meshRef.current.geometry.attributes.color.needsUpdate = true;
+                            setVcLayerVersion(v => v + 1);
+                          }}
+                          style={{ width: 50 }}
+                          title={`Opacity ${Math.round((layer.opacity ?? 1) * 100)}%`}
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const m = meshRef.current;
+                            if (!m || !m._vcLayers) return;
+                            if (m._vcLayers.length <= 1) {
+                              setStatus("Cannot delete the last layer");
+                              return;
+                            }
+                            if (!window.confirm(`Delete "${layer.name || `Layer ${idx + 1}`}"?`)) return;
+                            m._vcLayers.splice(idx, 1);
+                            if (typeof window.flattenVCLayers === "function") window.flattenVCLayers(m);
+                            if (m.geometry?.attributes?.color) m.geometry.attributes.color.needsUpdate = true;
+                            setVcActiveLayer(prev => Math.max(0, Math.min(prev, m._vcLayers.length - 1)));
+                            setVcLayerVersion(v => v + 1);
+                            setStatus("Layer deleted");
+                          }}
+                          style={{ width: 18, height: 18, background: "transparent", color: COLORS.textDim, border: "none", cursor: "pointer", padding: 0, fontSize: 11 }}
+                          title="Delete layer"
+                        >🗑</button>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ width: 70 }}>Color</span>
               <input type="color" value={vcPaintColor} onChange={(e) => setVcPaintColor(e.target.value)} style={{ width: 50, height: 24, background: "transparent", border: "1px solid " + COLORS.border, cursor: "pointer" }} />
@@ -6342,7 +6460,7 @@ export default function App() {
                   return;
                 }
                 if (typeof window.fillVCLayer === "function") {
-                  window.fillVCLayer(meshRef.current, 0, _hexToRgba(vcPaintColor));
+                  window.fillVCLayer(meshRef.current, vcActiveLayerRef.current, _hexToRgba(vcPaintColor));
                   if (meshRef.current.geometry.attributes.color) {
                     meshRef.current.geometry.attributes.color.needsUpdate = true;
                   }
