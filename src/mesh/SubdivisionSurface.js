@@ -42,12 +42,22 @@ export function catmullClarkSubdivide(geometry, iterations = 1) {
 }
 
 function _subdividOnce(geometry) {
-  // SPX_SUBDIV_WELD_V1 — merge coincident verts so split-vert primitives
-  // (e.g. THREE.BoxGeometry, which uses 24 indices with per-face splits) are
-  // treated as a single connected mesh by the index-keyed edgeMap below.
-  // Without this, each cube face is subdivided independently and the result
-  // is 6 disconnected face-island patches.
-  geometry = mergeVertices(geometry, 1e-6);
+  // SPX_SUBDIV_WELD_V2 — strip non-position attrs so coincident verts with
+  // divergent normals/UVs (BoxGeometry's per-face split) actually merge.
+  // mergeVertices requires ALL attributes to match for a weld; BoxGeometry
+  // deliberately diverges on normal/uv per face, so a naked merge was a no-op.
+  // The subdivision algorithm only reads positions + indices, and
+  // catmullClarkSubdivide rebuilds normals on the output, so dropping
+  // input attrs here is safe.
+  {
+    const _stripped = new THREE.BufferGeometry();
+    _stripped.setAttribute("position", geometry.attributes.position.clone());
+    if (geometry.index) _stripped.setIndex(geometry.index.clone());
+    geometry = mergeVertices(_stripped, 1e-6);
+  }
+  if (typeof window !== "undefined" && window.__SPX_DEBUG_SUBDIV) {
+    console.log("[SUBDIV] post-merge verts:", geometry.attributes.position.count, "indices:", geometry.index?.count);
+  }
   const pos = geometry.attributes.position;
   const idx = geometry.index ? Array.from(geometry.index.array) : null;
   if (!idx) return geometry; // non-indexed not supported yet
