@@ -940,6 +940,173 @@ export class HalfEdgeMesh {
     return face;
   }
 
+  // SPX_DELETE_OPS_V1 — Blender-style edit-mode delete (vert/edge/face)
+  deleteVertices(vertIds) {
+    const ids = Array.isArray(vertIds) ? vertIds : [...vertIds];
+    if (ids.length === 0) return 0;
+    const idSet = new Set(ids);
+    const facesToDelete = new Set();
+    for (const face of this.faces.values()) {
+      let he = face.halfEdge, start = he, guard = 0;
+      if (!he) continue;
+      do {
+        if (he.vertex && idSet.has(he.vertex.id)) {
+          facesToDelete.add(face.id);
+          break;
+        }
+        he = he.next;
+        if (++guard > 1024) break;
+      } while (he && he !== start);
+    }
+    for (const fid of facesToDelete) {
+      const face = this.faces.get(fid);
+      if (!face) continue;
+      let he = face.halfEdge, start = he, guard = 0;
+      const toDelete = [];
+      if (he) {
+        do {
+          toDelete.push(he.id);
+          if (he.twin) he.twin.twin = null;
+          he = he.next;
+          if (++guard > 1024) break;
+        } while (he && he !== start);
+      }
+      for (const heid of toDelete) this.halfEdges.delete(heid);
+      this.faces.delete(fid);
+    }
+    for (const vid of ids) this.vertices.delete(vid);
+    this._restitchTwins();
+    this._rebindVertexHalfEdges();
+    return ids.length;
+  }
+
+  // SPX_DELETE_OPS_V1
+  deleteEdges(edgeIds) {
+    const ids = Array.isArray(edgeIds) ? edgeIds : [...edgeIds];
+    if (ids.length === 0) return 0;
+    const facesToDelete = new Set();
+    for (const eid of ids) {
+      const e = this.halfEdges.get(eid);
+      if (!e) continue;
+      if (e.face) facesToDelete.add(e.face.id);
+      if (e.twin?.face) facesToDelete.add(e.twin.face.id);
+    }
+    for (const fid of facesToDelete) {
+      const face = this.faces.get(fid);
+      if (!face) continue;
+      let he = face.halfEdge, start = he, guard = 0;
+      const toDelete = [];
+      if (he) {
+        do {
+          toDelete.push(he.id);
+          if (he.twin) he.twin.twin = null;
+          he = he.next;
+          if (++guard > 1024) break;
+        } while (he && he !== start);
+      }
+      for (const heid of toDelete) this.halfEdges.delete(heid);
+      this.faces.delete(fid);
+    }
+    this._restitchTwins();
+    this._rebindVertexHalfEdges();
+    return facesToDelete.size;
+  }
+
+  // SPX_DELETE_OPS_V1
+  deleteFaces(faceIds) {
+    const ids = Array.isArray(faceIds) ? faceIds : [...faceIds];
+    if (ids.length === 0) return 0;
+    let removed = 0;
+    for (const fid of ids) {
+      const face = this.faces.get(fid);
+      if (!face) continue;
+      let he = face.halfEdge, start = he, guard = 0;
+      const toDelete = [];
+      if (he) {
+        do {
+          toDelete.push(he.id);
+          if (he.twin) he.twin.twin = null;
+          he = he.next;
+          if (++guard > 1024) break;
+        } while (he && he !== start);
+      }
+      for (const heid of toDelete) this.halfEdges.delete(heid);
+      this.faces.delete(fid);
+      removed++;
+    }
+    this._restitchTwins();
+    this._rebindVertexHalfEdges();
+    return removed;
+  }
+
+  // SPX_DELETE_OPS_V1 — twin restitch using directed-edge map (fromBufferGeometry idiom)
+  _restitchTwins() {
+    const edgeKey = (aId, bId) => aId + "_" + bId;
+    const dirMap = new Map();
+    for (const he of this.halfEdges.values()) {
+      if (!he.vertex || !he.next || !he.next.vertex) continue;
+      dirMap.set(edgeKey(he.vertex.id, he.next.vertex.id), he);
+    }
+    for (const he of this.halfEdges.values()) {
+      if (!he.vertex || !he.next || !he.next.vertex) continue;
+      const twin = dirMap.get(edgeKey(he.next.vertex.id, he.vertex.id));
+      if (twin && twin !== he) {
+        he.twin = twin;
+        twin.twin = he;
+      } else if (!twin) {
+        he.twin = null;
+      }
+    }
+  }
+
+  // SPX_DELETE_OPS_V1 — point every surviving vertex.halfEdge at a live HE
+  _rebindVertexHalfEdges() {
+    for (const v of this.vertices.values()) v.halfEdge = null;
+    for (const he of this.halfEdges.values()) {
+      if (he.vertex && !he.vertex.halfEdge) he.vertex.halfEdge = he;
+    }
+  }
+
+  // SPX_FILL_OP_V1 — Blender F-key fill from selected verts (3+ → n-gon)
+  fillFromVertices(vertIds) {
+    const ids = Array.isArray(vertIds) ? vertIds : [...vertIds];
+    if (ids.length < 3) return null;
+    const verts = ids.map((id) => this.vertices.get(id)).filter((v) => v);
+    if (verts.length < 3) return null;
+    const cx = verts.reduce((s, v) => s + v.x, 0) / verts.length;
+    const cy = verts.reduce((s, v) => s + v.y, 0) / verts.length;
+    const cz = verts.reduce((s, v) => s + v.z, 0) / verts.length;
+    let nx = 0, ny = 0, nz = 0;
+    for (let i = 0; i < verts.length; i++) {
+      const a = verts[i], b = verts[(i + 1) % verts.length];
+      nx += (a.y - cy) * (b.z - cz) - (a.z - cz) * (b.y - cy);
+      ny += (a.z - cz) * (b.x - cx) - (a.x - cx) * (b.z - cz);
+      nz += (a.x - cx) * (b.y - cy) - (a.y - cy) * (b.x - cx);
+    }
+    const nL = Math.hypot(nx, ny, nz) || 1;
+    nx /= nL; ny /= nL; nz /= nL;
+    const refV = Math.abs(ny) < 0.9 ? [0, 1, 0] : [1, 0, 0];
+    const tx = ny * refV[2] - nz * refV[1];
+    const ty = nz * refV[0] - nx * refV[2];
+    const tz = nx * refV[1] - ny * refV[0];
+    const tL = Math.hypot(tx, ty, tz) || 1;
+    const Tx = tx / tL, Ty = ty / tL, Tz = tz / tL;
+    const Bx = ny * Tz - nz * Ty;
+    const By = nz * Tx - nx * Tz;
+    const Bz = nx * Ty - ny * Tx;
+    const sorted = verts.slice().sort((a, b) => {
+      const dax = a.x - cx, day = a.y - cy, daz = a.z - cz;
+      const dbx = b.x - cx, dby = b.y - cy, dbz = b.z - cz;
+      const aAngle = Math.atan2(dax * Bx + day * By + daz * Bz, dax * Tx + day * Ty + daz * Tz);
+      const bAngle = Math.atan2(dbx * Bx + dby * By + dbz * Bz, dbx * Tx + dby * Ty + dbz * Tz);
+      return aAngle - bAngle;
+    });
+    const face = this.addFaceFromVertices(sorted);
+    this._restitchTwins();
+    this._rebindVertexHalfEdges();
+    return face;
+  }
+
   // ── Session 7: Triangulate all faces (for export) ─────────────────────────
   triangulateAll() {
     const tris = new HalfEdgeMesh();

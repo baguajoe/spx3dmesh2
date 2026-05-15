@@ -3643,35 +3643,94 @@ export default function App() {
   };
 
   // SPX_OBJ_DELETE_V1 — Delete/Backspace removes active object in object mode
+  // SPX_EDIT_DELETE_V1 / SPX_FILL_KEY_V1 — X/Delete + F in edit mode
   // (placed after pushHistory + refreshSelectionOutline so deps array doesn't TDZ)
   useEffect(() => {
     const handler = (e) => {
-      if (editModeRef.current !== "object") return;
-      if (e.key !== "Delete" && e.key !== "Backspace") return;
       const tag = (e.target?.tagName || "").toLowerCase();
       if (tag === "input" || tag === "textarea" || e.target?.isContentEditable) return;
-      const obj = meshRef.current;
-      if (!obj || !sceneRef.current) return;
-      e.preventDefault();
-      e.stopPropagation();
-      pushHistory();
-      try { obj.geometry?.dispose(); } catch (_) {}
-      try {
-        if (Array.isArray(obj.material)) obj.material.forEach((m) => m?.dispose?.());
-        else obj.material?.dispose?.();
-      } catch (_) {}
-      const _activeId = activeObjId;
-      sceneRef.current.remove(obj);
-      meshRef.current = null;
-      if (gizmoRef.current) gizmoRef.current.detach();
-      setActiveObjId(null);
-      setSceneObjects((prev) => prev.filter((o) => o.id !== _activeId && o.mesh !== obj && o.mesh?.uuid !== obj.uuid));
-      refreshSelectionOutline();
-      setStatus("Object deleted");
+
+      if (editModeRef.current === "object") {
+        if (e.key !== "Delete" && e.key !== "Backspace") return;
+        const obj = meshRef.current;
+        if (!obj || !sceneRef.current) return;
+        e.preventDefault();
+        e.stopPropagation();
+        pushHistory();
+        try { obj.geometry?.dispose(); } catch (_) {}
+        try {
+          if (Array.isArray(obj.material)) obj.material.forEach((m) => m?.dispose?.());
+          else obj.material?.dispose?.();
+        } catch (_) {}
+        const _activeId = activeObjId;
+        sceneRef.current.remove(obj);
+        meshRef.current = null;
+        if (gizmoRef.current) gizmoRef.current.detach();
+        setActiveObjId(null);
+        setSceneObjects((prev) => prev.filter((o) => o.id !== _activeId && o.mesh !== obj && o.mesh?.uuid !== obj.uuid));
+        refreshSelectionOutline();
+        setStatus("Object deleted");
+        return;
+      }
+
+      if (editModeRef.current === "edit" && heMeshRef.current) {
+        // SPX_EDIT_DELETE_V1 — X/Delete deletes selected verts/edges/faces
+        if (e.key === "Delete" || e.key === "x" || e.key === "X") {
+          const mode = selectModeRef.current;
+          const sel =
+            mode === "vert" ? selectedVertsRef.current :
+            mode === "edge" ? selectedEdgesRef.current :
+            mode === "face" ? selectedFacesRef.current : null;
+          if (!sel || sel.size === 0) {
+            setStatus("Nothing selected to delete");
+            return;
+          }
+          e.preventDefault();
+          e.stopPropagation();
+          pushHistory();
+          let count = 0;
+          if (mode === "vert") {
+            count = heMeshRef.current.deleteVertices([...selectedVertsRef.current]);
+            setSelectedVerts(new Set());
+          } else if (mode === "edge") {
+            count = heMeshRef.current.deleteEdges([...selectedEdgesRef.current]);
+            setSelectedEdges(new Set());
+          } else if (mode === "face") {
+            count = heMeshRef.current.deleteFaces([...selectedFacesRef.current]);
+            setSelectedFaces(new Set());
+          }
+          rebuildMeshGeometry();
+          if (selectModeRef.current === "vert") buildVertexOverlay(new Set());
+          else if (selectModeRef.current === "edge") buildEdgeOverlay(new Set());
+          else if (selectModeRef.current === "face") buildFaceOverlay(new Set());
+          setStatus(`Deleted ${count} ${mode === "vert" ? "verts (+faces)" : mode === "edge" ? "edges (+faces)" : "faces"}`);
+          return;
+        }
+        // SPX_FILL_KEY_V1 — F fills selected verts into a face
+        if (e.key === "f" || e.key === "F") {
+          if (selectModeRef.current !== "vert") {
+            setStatus("Fill: switch to Vert mode and select 3+ verts");
+            return;
+          }
+          const vertIds = [...selectedVertsRef.current];
+          if (vertIds.length < 3) {
+            setStatus("Fill: select 3 or more verts");
+            return;
+          }
+          e.preventDefault();
+          e.stopPropagation();
+          pushHistory();
+          const face = heMeshRef.current.fillFromVertices(vertIds);
+          rebuildMeshGeometry();
+          buildVertexOverlay();
+          setStatus(face ? `Fill: created face from ${vertIds.length} verts` : "Fill failed");
+          return;
+        }
+      }
     };
     window.addEventListener("keydown", handler, { capture: true });
     return () => window.removeEventListener("keydown", handler, { capture: true });
-  }, [activeObjId, pushHistory]);
+  }, [activeObjId, pushHistory, rebuildMeshGeometry, buildVertexOverlay, buildEdgeOverlay, buildFaceOverlay]);
 
   const toggleEditMode = useCallback(() => {
     setEditMode((m) => {
