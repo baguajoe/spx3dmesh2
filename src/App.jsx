@@ -3087,14 +3087,15 @@ export default function App() {
             setStatus("Selection cleared");
           }
         } else if (_shift) {
-          setSelectedVerts((sv) => {
-            const next = new Set(sv);
-            if (next.has(closest.id)) next.delete(closest.id);
-            else next.add(closest.id);
-            buildVertexOverlay(next);
-            return next;
-          });
-          setStatus(`Vertex ${closest.id} ${_shift ? "toggled" : "selected"}`);
+          // SPX_DESELECT_TOGGLE_V2 — read from ref to avoid stale state
+          const currentSet = selectedVertsRef.current;
+          const isCurrentlySelected = currentSet.has(closest.id);
+          const next = new Set(currentSet);
+          if (isCurrentlySelected) next.delete(closest.id);
+          else next.add(closest.id);
+          setSelectedVerts(next);
+          buildVertexOverlay(next);
+          setStatus(`Vertex ${closest.id} ${isCurrentlySelected ? "deselected" : "added"}`);
         } else {
           setSelectedVerts(() => {
             const next = new Set([closest.id]);
@@ -3141,19 +3142,20 @@ export default function App() {
             setStatus("Selection cleared");
           }
         } else if (_eshift) {
-          setSelectedEdges((se) => {
-            const next = new Set(se);
-            if (next.has(closest.id)) {
-              next.delete(closest.id);
-              if (closest.twin) next.delete(closest.twin.id);
-            } else {
-              next.add(closest.id);
-              if (closest.twin) next.add(closest.twin.id);
-            }
-            buildEdgeOverlay(next);
-            return next;
-          });
-          setStatus(`Edge ${closest.id} toggled`);
+          // SPX_DESELECT_TOGGLE_V2 — read from ref to avoid stale state
+          const currentSet = selectedEdgesRef.current;
+          const isCurrentlySelected = currentSet.has(closest.id);
+          const next = new Set(currentSet);
+          if (isCurrentlySelected) {
+            next.delete(closest.id);
+            if (closest.twin) next.delete(closest.twin.id);
+          } else {
+            next.add(closest.id);
+            if (closest.twin) next.add(closest.twin.id);
+          }
+          setSelectedEdges(next);
+          buildEdgeOverlay(next);
+          setStatus(`Edge ${closest.id} ${isCurrentlySelected ? "deselected" : "added"}`);
         } else {
           setSelectedEdges(() => {
             const next = new Set([closest.id]);
@@ -3179,14 +3181,15 @@ export default function App() {
         } else {
           const faceIdx = hits[0].faceIndex;
           if (_fshift) {
-            setSelectedFaces((sf) => {
-              const next = new Set(sf);
-              if (next.has(faceIdx)) next.delete(faceIdx);
-              else next.add(faceIdx);
-              buildFaceOverlay(next);
-              return next;
-            });
-            setStatus(`Face ${faceIdx} toggled`);
+            // SPX_DESELECT_TOGGLE_V2 — read from ref to avoid stale state
+            const currentSet = selectedFacesRef.current;
+            const isCurrentlySelected = currentSet.has(faceIdx);
+            const next = new Set(currentSet);
+            if (isCurrentlySelected) next.delete(faceIdx);
+            else next.add(faceIdx);
+            setSelectedFaces(next);
+            buildFaceOverlay(next);
+            setStatus(`Face ${faceIdx} ${isCurrentlySelected ? "deselected" : "added"}`);
           } else {
             setSelectedFaces(() => {
               const next = new Set([faceIdx]);
