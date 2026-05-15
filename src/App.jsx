@@ -846,12 +846,16 @@ export default function App() {
     return () => { };
   }, []);
 
+  // SPX_VCOLOR_UI_V1 — V.Color paint panel toggle
+  const [vcolorPanelOpen, setVcolorPanelOpen] = useState(false);
+
 
 
 
   const closeAllWorkspacePanels = () => {
     setUvPanelOpen(false);
     setMaterialPanelOpen(false);
+    setVcolorPanelOpen(false);
     setPaintPanelOpen(false);
     setClothingPanelOpen(false);
     setFabricPanelOpen(false);
@@ -5451,6 +5455,7 @@ export default function App() {
               <SpxTabGroup label="SURFACE" color="#00ffc8" tabs={[
                 { label: "UV", fn: () => { closeAllWorkspacePanels(); setUvPanelOpen(true); } },
                 { label: "Materials", fn: () => { closeAllWorkspacePanels(); setMaterialPanelOpen(true); setPaintPanelOpen(true); } },
+                { label: "V.Color", fn: () => { closeAllWorkspacePanels(); setVcolorPanelOpen(true); } },
                 { label: "Node Mat", fn: () => { closeAllWorkspacePanels(); setNodeEditorOpen(true); } },
                 { label: "Clothing", fn: () => { closeAllWorkspacePanels(); setClothingPanelOpen(true); setPatternPanelOpen(true); } },
                 { label: "Hair", fn: () => { closeAllWorkspacePanels(); setHairPanelOpen(true); } },
@@ -5906,6 +5911,77 @@ export default function App() {
         )}
         {materialPanelOpen && <FloatPanel title="MATERIALS" onClose={() => setMaterialPanelOpen(false)} width={480}>
           <MaterialPanel open={materialPanelOpen} onClose={() => setMaterialPanelOpen(false)} meshRef={meshRef} sceneRef={sceneRef} setStatus={setStatus} />
+        </FloatPanel>}
+        {vcolorPanelOpen && <FloatPanel title="VERTEX COLOR" onClose={() => setVcolorPanelOpen(false)} width={320}>
+          <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10, color: COLORS.text, fontSize: 11, fontFamily: "monospace" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ width: 70 }}>Color</span>
+              <input type="color" value={vcPaintColor} onChange={(e) => setVcPaintColor(e.target.value)} style={{ width: 50, height: 24, background: "transparent", border: "1px solid " + COLORS.border, cursor: "pointer" }} />
+              <span style={{ color: COLORS.textDim }}>{vcPaintColor}</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ width: 70 }}>Radius</span>
+              <input type="range" min="0.05" max="3.0" step="0.05" value={vcRadius} onChange={(e) => setVcRadius(parseFloat(e.target.value))} style={{ flex: 1 }} />
+              <span style={{ width: 36, color: COLORS.textDim, textAlign: "right" }}>{vcRadius.toFixed(2)}</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ width: 70 }}>Strength</span>
+              <input type="range" min="0.05" max="1.0" step="0.05" value={vcStrength} onChange={(e) => setVcStrength(parseFloat(e.target.value))} style={{ flex: 1 }} />
+              <span style={{ width: 36, color: COLORS.textDim, textAlign: "right" }}>{vcStrength.toFixed(2)}</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ width: 70 }}>Falloff</span>
+              <select value={vcFalloff} onChange={(e) => setVcFalloff(e.target.value)} style={{ flex: 1, background: COLORS.panel, color: COLORS.text, border: "1px solid " + COLORS.border, padding: "3px 6px", fontFamily: "monospace", fontSize: 11 }}>
+                <option value="smooth">Smooth</option>
+                <option value="linear">Linear</option>
+                <option value="sharp">Sharp</option>
+                <option value="constant">Constant</option>
+              </select>
+            </div>
+            <button
+              onClick={() => {
+                const next = !vcPaintingRef.current;
+                vcPaintingRef.current = next;
+                if (next) {
+                  editModeRef.current = "paint";
+                  setStatus("V.Color paint mode ON — click on mesh to paint");
+                } else {
+                  editModeRef.current = "object";
+                  setStatus("V.Color paint mode OFF");
+                }
+                setEditMode(next ? "paint" : "object");
+              }}
+              style={{
+                padding: "8px 12px",
+                marginTop: 8,
+                background: editMode === "paint" ? "#cc4422" : COLORS.panel,
+                color: editMode === "paint" ? "#fff" : COLORS.text,
+                border: "1px solid " + (editMode === "paint" ? "#ff6600" : COLORS.border),
+                cursor: "pointer",
+                fontFamily: "monospace",
+                fontSize: 11,
+                letterSpacing: "1.5px",
+              }}
+            >
+              {editMode === "paint" ? "● PAINTING — CLICK TO STOP" : "○ ENTER PAINT MODE"}
+            </button>
+            <button
+              onClick={() => {
+                if (typeof window.fillVCLayer === "function" && meshRef.current) {
+                  window.fillVCLayer(meshRef.current, { color: vcPaintColor });
+                  if (meshRef.current.geometry.attributes.color) {
+                    meshRef.current.geometry.attributes.color.needsUpdate = true;
+                  }
+                  setStatus("V.Color filled with " + vcPaintColor);
+                } else {
+                  setStatus("Fill failed — engine bridge missing");
+                }
+              }}
+              style={{ padding: "6px 10px", background: COLORS.panel, color: COLORS.text, border: "1px solid " + COLORS.border, cursor: "pointer", fontFamily: "monospace", fontSize: 11 }}
+            >
+              Fill All
+            </button>
+          </div>
         </FloatPanel>}
         {paintPanelOpen && <FloatPanel title="TEXTURE PAINT" onClose={() => setPaintPanelOpen(false)} width={480}>
           <TexturePaintPanel open={paintPanelOpen} onClose={() => setPaintPanelOpen(false)} meshRef={meshRef} sceneRef={sceneRef} setStatus={setStatus} />
