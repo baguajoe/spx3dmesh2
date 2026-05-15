@@ -1680,6 +1680,13 @@ export default function App() {
   // SPX_EDIT_GIZMO_PROXY_V1 — edit-mode gizmo target + drag-start snapshot
   const editGizmoProxyRef = useRef(null);
   const editGizmoStartRef = useRef(null);
+  // SPX_EDIT_ROTSCALE_V1 — snapshots for rotate/scale around centroid
+  const startVertPositionsRef = useRef(new Map());
+  const startProxyTransformRef = useRef({
+    position: new THREE.Vector3(),
+    quaternion: new THREE.Quaternion(),
+    scale: new THREE.Vector3(1, 1, 1),
+  });
   const [gizmoMode, setGizmoMode] = useState("select"); // move|rotate|scale
   const [gizmoActive, setGizmoActive] = useState(false);
 
@@ -4974,6 +4981,20 @@ export default function App() {
                         })),
                       };
                       pushHistory();
+                      // SPX_EDIT_ROTSCALE_V1 — snapshot vert positions and proxy transform at drag start
+                      const _vertIds = getActiveSelectionVertIds();
+                      const _starts = new Map();
+                      for (const vid of _vertIds) {
+                        const v = _heMesh.vertices.get?.(vid) || _heMesh.vertices[vid];
+                        if (v) _starts.set(vid, new THREE.Vector3(v.x, v.y, v.z));
+                      }
+                      startVertPositionsRef.current = _starts;
+                      const _proxy = editGizmoProxyRef.current;
+                      if (_proxy) {
+                        startProxyTransformRef.current.position.copy(_proxy.position);
+                        startProxyTransformRef.current.quaternion.copy(_proxy.quaternion);
+                        startProxyTransformRef.current.scale.copy(_proxy.scale);
+                      }
                     }
                     // Proportional editing: capture start positions of all scene objects so we can apply delta with falloff.
                     if (proportionalEnabled && gizmoRef.current?.target) {
@@ -5141,20 +5162,62 @@ export default function App() {
                     pt.z = Math.round(pt.z / snapSize) * snapSize;
                   }
                   gizmoRef.current.drag(pt);
-                  // SPX_EDIT_GIZMO_PROXY_V1 — apply proxy delta to selected verts each frame
-                  if (editModeRef.current === "edit" && editGizmoStartRef.current && editGizmoProxyRef.current && heMeshRef.current) {
-                    const _start = editGizmoStartRef.current;
-                    const _cur = editGizmoProxyRef.current.position;
-                    const _dx = _cur.x - _start.proxyPos.x;
-                    const _dy = _cur.y - _start.proxyPos.y;
-                    const _dz = _cur.z - _start.proxyPos.z;
-                    const _heMesh = heMeshRef.current;
-                    _start.vertSnapshot.forEach((p0, id) => {
-                      if (!p0) return;
-                      const v = _heMesh.vertices.get?.(id) || _heMesh.vertices[id];
-                      if (v) { v.x = p0.x + _dx; v.y = p0.y + _dy; v.z = p0.z + _dz; }
-                    });
-                    rebuildMeshGeometry();
+                  // SPX_EDIT_ROTSCALE_V1 — handle translate / rotate / scale around selection centroid
+                  if (editModeRef.current === "edit" && editGizmoProxyRef.current && heMeshRef.current) {
+                    const proxy = editGizmoProxyRef.current;
+                    const starts = startVertPositionsRef.current;
+                    if (starts && starts.size > 0) {
+                      const startT = startProxyTransformRef.current;
+                      const _heMesh = heMeshRef.current;
+                      const _mode = gizmoRef.current?.mode || "move";
+
+                      if (_mode === "move" || _mode === "translate") {
+                        const dx = proxy.position.x - startT.position.x;
+                        const dy = proxy.position.y - startT.position.y;
+                        const dz = proxy.position.z - startT.position.z;
+                        for (const [vid, p0] of starts) {
+                          const v = _heMesh.vertices.get?.(vid) || _heMesh.vertices[vid];
+                          if (v) { v.x = p0.x + dx; v.y = p0.y + dy; v.z = p0.z + dz; }
+                        }
+                      } else if (_mode === "rotate") {
+                        // Rotate each vert around the start centroid by (current proxy quat * inverse start quat)
+                        const center = startT.position;
+                        const invStart = startT.quaternion.clone().invert();
+                        const deltaQ = proxy.quaternion.clone().multiply(invStart);
+                        const _v = new THREE.Vector3();
+                        for (const [vid, p0] of starts) {
+                          const v = _heMesh.vertices.get?.(vid) || _heMesh.vertices[vid];
+                          if (v) {
+                            _v.set(p0.x - center.x, p0.y - center.y, p0.z - center.z);
+                            _v.applyQuaternion(deltaQ);
+                            v.x = _v.x + center.x;
+                            v.y = _v.y + center.y;
+                            v.z = _v.z + center.z;
+                          }
+                        }
+                      } else if (_mode === "scale") {
+                        // Scale each vert from start centroid by (current scale / start scale)
+                        const center = startT.position;
+                        const sx = startT.scale.x !== 0 ? proxy.scale.x / startT.scale.x : 1;
+                        const sy = startT.scale.y !== 0 ? proxy.scale.y / startT.scale.y : 1;
+                        const sz = startT.scale.z !== 0 ? proxy.scale.z / startT.scale.z : 1;
+                        for (const [vid, p0] of starts) {
+                          const v = _heMesh.vertices.get?.(vid) || _heMesh.vertices[vid];
+                          if (v) {
+                            v.x = center.x + (p0.x - center.x) * sx;
+                            v.y = center.y + (p0.y - center.y) * sy;
+                            v.z = center.z + (p0.z - center.z) * sz;
+                          }
+                        }
+                      }
+
+                      // Rebuild render geometry from heMesh (same path Move uses)
+                      rebuildMeshGeometry();
+                      // Overlay refresh (same path Move uses)
+                      if (selectModeRef.current === "vert") buildVertexOverlay();
+                      else if (selectModeRef.current === "edge") buildEdgeOverlay();
+                      else if (selectModeRef.current === "face") buildFaceOverlay();
+                    }
                   }
                   // Proportional editing: apply falloff-scaled delta to neighbor objects within radius.
                   if (proportionalEnabled && window._propStart && gizmoRef.current?.target) {
@@ -5205,6 +5268,8 @@ export default function App() {
                 // SPX_EDIT_GIZMO_PROXY_V1 — clear snapshot and resnap proxy to new centroid
                 if (editModeRef.current === "edit") {
                   editGizmoStartRef.current = null;
+                  // SPX_EDIT_ROTSCALE_V1 — clear snapshot so next drag rebuilds fresh
+                  startVertPositionsRef.current = new Map();
                   ensureEditGizmoProxy();
                 }
                 // Auto-key: capture transform at drag-end if AUTO toggle is on.
