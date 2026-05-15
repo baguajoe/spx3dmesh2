@@ -2,6 +2,8 @@
 // SPX Mesh Editor | StreamPireX
 
 import * as THREE from 'three';
+// SPX_SUBDIV_WELD_V1 — position-weld input so index-keyed edgeMap sees shared edges
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 // ─── Catmull-Clark Core ───────────────────────────────────────────────────────
 
@@ -40,6 +42,12 @@ export function catmullClarkSubdivide(geometry, iterations = 1) {
 }
 
 function _subdividOnce(geometry) {
+  // SPX_SUBDIV_WELD_V1 — merge coincident verts so split-vert primitives
+  // (e.g. THREE.BoxGeometry, which uses 24 indices with per-face splits) are
+  // treated as a single connected mesh by the index-keyed edgeMap below.
+  // Without this, each cube face is subdivided independently and the result
+  // is 6 disconnected face-island patches.
+  geometry = mergeVertices(geometry, 1e-6);
   const pos = geometry.attributes.position;
   const idx = geometry.index ? Array.from(geometry.index.array) : null;
   if (!idx) return geometry; // non-indexed not supported yet
