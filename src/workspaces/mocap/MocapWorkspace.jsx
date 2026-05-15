@@ -154,8 +154,9 @@ function LiveCaptureTab({ onExportGlb }) {
   const [fps,             setFps]             = useState(0);
   const [landmarkCount,   setLandmarkCount]   = useState(0);
   const [smootherType,    setSmootherType]    = useState('ONE_EURO');
-  const [trackFace,       setTrackFace]       = useState(true);
-  const [trackHands,      setTrackHands]      = useState(true);
+  // SPX_MOCAP_TRACK_DEFAULTS_V1 — disabled by default to avoid WASM init crash blocking React
+  const [trackFace,       setTrackFace]       = useState(false);
+  const [trackHands,      setTrackHands]      = useState(false);
   const [showOverlay,     setShowOverlay]     = useState(true);
   const [avatarUrl,       setAvatarUrl]       = useState('/models/ybot.glb');
   const [error,           setError]           = useState(null);
