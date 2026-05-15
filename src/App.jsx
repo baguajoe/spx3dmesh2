@@ -398,6 +398,9 @@ const _hexToRgba = (hex) => {
   const b = parseInt(h.substring(4, 6), 16) / 255;
   return [r, g, b, 1.0];
 };
+// SPX_VCOLOR_FIX_V3 — enable vertexColors on the material so the painted
+// color attribute actually renders. initVCAdvanced creates the color
+// attribute but doesn't touch the material; Three.js needs vertexColors=true.
 const _ensureVCLayers = (mesh) => {
   if (!mesh) return false;
   if (!mesh._vcLayers || mesh._vcLayers.length === 0) {
@@ -406,6 +409,14 @@ const _ensureVCLayers = (mesh) => {
     }
     if (typeof window.addVCLayer === "function" && (!mesh._vcLayers || mesh._vcLayers.length === 0)) {
       window.addVCLayer(mesh, "Base");
+    }
+  }
+  // Enable vertex colors on the material (single or array).
+  const mats = Array.isArray(mesh.material) ? mesh.material : (mesh.material ? [mesh.material] : []);
+  for (const mat of mats) {
+    if (mat && mat.vertexColors !== true) {
+      mat.vertexColors = true;
+      mat.needsUpdate = true;
     }
   }
   return !!(mesh._vcLayers && mesh._vcLayers.length > 0);
