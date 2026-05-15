@@ -882,6 +882,10 @@ export default function App() {
   // SPX_VCOLOR_UI_V1 — V.Color paint panel toggle
   const [vcolorPanelOpen, setVcolorPanelOpen] = useState(false);
 
+  // SPX_SUBDIV_UI_V1 — typed subdivision level (Blender/Maya parity)
+  const [subdivPanelOpen, setSubdivPanelOpen] = useState(false);
+  const [subdivisionLevel, setSubdivisionLevel] = useState(1);
+
 
 
 
@@ -889,6 +893,7 @@ export default function App() {
     setUvPanelOpen(false);
     setMaterialPanelOpen(false);
     setVcolorPanelOpen(false);
+    setSubdivPanelOpen(false);
     setPaintPanelOpen(false);
     setClothingPanelOpen(false);
     setFabricPanelOpen(false);
@@ -4535,12 +4540,18 @@ export default function App() {
       }
       return;
     }
-    // Subdivision
+    // Subdivision — SPX_SUBDIV_UI_V1: level driven by subdivisionLevel state.
     if (fn === "subdivide_catmull") {
       const mesh = meshRef?.current; if (!mesh?.geometry) return;
-      const geo = catmullClarkSubdivide(mesh.geometry, 1);
+      pushHistory();
+      const _lvl = Math.max(1, Math.min(6, subdivisionLevel | 0));
+      const geo = catmullClarkSubdivide(mesh.geometry, _lvl);
       geo.computeVertexNormals(); mesh.geometry.dispose(); mesh.geometry = geo;
-      setStatus("Catmull-Clark subdivide applied"); return;
+      if (heMeshRef.current) {
+        heMeshRef.current = HalfEdgeMesh.fromBufferGeometry(geo);
+        setStats(heMeshRef.current.stats());
+      }
+      setStatus(`Subdivided ${_lvl}x — verts: ${geo.attributes.position.count}`); return;
     }
     // Extended modifiers
     if (fn === "mod_wave") { if (meshRef?.current?.geometry) { applyWave(meshRef.current.geometry); meshRef.current.geometry.attributes.position.needsUpdate = true; } return; }
@@ -5497,6 +5508,7 @@ export default function App() {
                 { label: "UV", fn: () => { closeAllWorkspacePanels(); setUvPanelOpen(true); } },
                 { label: "Materials", fn: () => { closeAllWorkspacePanels(); setMaterialPanelOpen(true); setPaintPanelOpen(true); } },
                 { label: "V.Color", fn: () => { closeAllWorkspacePanels(); setVcolorPanelOpen(true); } },
+                { label: "Subdivide", fn: () => { closeAllWorkspacePanels(); setSubdivPanelOpen(true); } },
                 { label: "Node Mat", fn: () => { closeAllWorkspacePanels(); setNodeEditorOpen(true); } },
                 { label: "Clothing", fn: () => { closeAllWorkspacePanels(); setClothingPanelOpen(true); setPatternPanelOpen(true); } },
                 { label: "Hair", fn: () => { closeAllWorkspacePanels(); setHairPanelOpen(true); } },
@@ -5952,6 +5964,54 @@ export default function App() {
         )}
         {materialPanelOpen && <FloatPanel title="MATERIALS" onClose={() => setMaterialPanelOpen(false)} width={480}>
           <MaterialPanel open={materialPanelOpen} onClose={() => setMaterialPanelOpen(false)} meshRef={meshRef} sceneRef={sceneRef} setStatus={setStatus} />
+        </FloatPanel>}
+        {subdivPanelOpen && <FloatPanel title="SUBDIVISION" onClose={() => setSubdivPanelOpen(false)} width={300}>
+          <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10, color: COLORS.text, fontSize: 11, fontFamily: "monospace" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ width: 70 }}>Level</span>
+              <button onClick={() => setSubdivisionLevel(Math.max(1, subdivisionLevel - 1))} style={{ width: 28, height: 24, background: COLORS.panel, color: COLORS.text, border: "1px solid " + COLORS.border, cursor: "pointer", fontFamily: "monospace" }}>-</button>
+              <input
+                type="number"
+                min="1"
+                max="6"
+                step="1"
+                value={subdivisionLevel}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  if (!isNaN(v)) setSubdivisionLevel(Math.max(1, Math.min(6, v)));
+                }}
+                style={{ width: 50, padding: "3px 6px", background: COLORS.panel, color: COLORS.text, border: "1px solid " + COLORS.border, fontFamily: "monospace", fontSize: 11, textAlign: "center" }}
+              />
+              <button onClick={() => setSubdivisionLevel(Math.min(6, subdivisionLevel + 1))} style={{ width: 28, height: 24, background: COLORS.panel, color: COLORS.text, border: "1px solid " + COLORS.border, cursor: "pointer", fontFamily: "monospace" }}>+</button>
+              <span style={{ color: COLORS.textDim, fontSize: 10 }}>
+                {meshRef.current?.geometry?.attributes?.position
+                  ? `~${(meshRef.current.geometry.attributes.position.count * Math.pow(4, subdivisionLevel)).toLocaleString()} verts`
+                  : ""}
+              </span>
+            </div>
+            <div style={{ color: COLORS.textDim, fontSize: 10, lineHeight: 1.5 }}>
+              Catmull-Clark subdivision. Each level multiplies face count by ~4. Levels 3+ may take a moment on larger meshes.
+            </div>
+            <button
+              onClick={() => {
+                handleApplyFunction("subdivide_catmull");
+                setSubdivPanelOpen(false);
+              }}
+              style={{
+                padding: "8px 12px",
+                marginTop: 4,
+                background: "#2d6a4f",
+                color: "#fff",
+                border: "1px solid #40916c",
+                cursor: "pointer",
+                fontFamily: "monospace",
+                fontSize: 11,
+                letterSpacing: "1.5px",
+              }}
+            >
+              APPLY SUBDIVISION
+            </button>
+          </div>
         </FloatPanel>}
         {vcolorPanelOpen && <FloatPanel title="VERTEX COLOR" onClose={() => setVcolorPanelOpen(false)} width={320}>
           <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10, color: COLORS.text, fontSize: 11, fontFamily: "monospace" }}>
