@@ -52,11 +52,12 @@ export default function useFaceMocap(videoRef, enabled = true) {
     if (!enabled || !videoRef?.current) return;
     setStatus('loading');
     try {
-      await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js');
-      await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js');
+      // SPX_MEDIAPIPE_PIN_V1
+      await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/face_mesh.js');
+      await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466124/camera_utils.js');
 
       const faceMesh = new window.FaceMesh({
-        locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`,
+        locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/${f}`,
       });
       faceMesh.setOptions({
         maxNumFaces: 1,

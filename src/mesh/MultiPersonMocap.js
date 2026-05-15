@@ -4,8 +4,9 @@
 
 import * as THREE from 'three';
 
-const MP_POSE_URL  = 'https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js';
-const MP_HOLISTIC  = 'https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js';
+// SPX_MEDIAPIPE_PIN_V1
+const MP_POSE_URL  = 'https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js';
+const MP_HOLISTIC  = 'https://cdn.jsdelivr.net/npm/@mediapipe/holistic@0.5.1675471629/holistic.js';
 
 // Joint mapping MediaPipe → skeleton
 export const MP_TO_JOINT = {

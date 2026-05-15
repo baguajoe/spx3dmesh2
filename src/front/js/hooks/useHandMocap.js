@@ -37,11 +37,12 @@ export default function useHandMocap(videoRef, enabled = true) {
     if (!enabled || !videoRef?.current) return;
     setStatus('loading');
     try {
-      await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js');
-      await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js');
+      // SPX_MEDIAPIPE_PIN_V1 — pin to last working pre-deprecation versions
+      await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js');
+      await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466124/camera_utils.js');
 
       const hands = new window.Hands({
-        locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`,
+        locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${f}`,
       });
       hands.setOptions({
         maxNumHands: 2,
