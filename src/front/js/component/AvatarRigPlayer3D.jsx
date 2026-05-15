@@ -503,14 +503,26 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
         }
       });
 
+      // SPX_MOCAP_ASSIMP_PREROT_V1 — walk up to AssimpFbx PreRotation helper if present
+      const resolveAssimpParent = (bone) => {
+        if (!bone) return null;
+        // Walk up through any _$AssimpFbx$_PreRotation or _$AssimpFbx$_Translation helpers
+        let target = bone;
+        while (target.parent && target.parent.name && target.parent.name.includes('_$AssimpFbx$_')) {
+          target = target.parent;
+        }
+        return target;
+      };
+
       const bones = {};
       if (skeleton) {
         for (const key of Object.keys(BONE_NAME_VARIANTS)) {
-          bones[key] = findBone(skeleton, key);
+          const raw = findBone(skeleton, key);
+          bones[key] = resolveAssimpParent(raw);
         }
         avatarRef.current.bones = bones; // Cache on avatar for animate() loop
         avatarRef.current.skeleton = skeleton;
-        console.log('[AvatarRigPlayer3D] Cached bones:',
+        console.log('[AvatarRigPlayer3D] Cached bones (with AssimpFbx resolution):',
           Object.entries(bones)
             .filter(([, b]) => b !== null)
             .map(([k, b]) => `${k}→${b.name}`)
