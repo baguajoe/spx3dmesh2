@@ -3,6 +3,7 @@
 // Wired: MultiPersonMocap, DepthEstimator, MocapRetargeter, Kalman/OneEuro/EMA smoothing
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { PoseLandmarker, FilesetResolver } from '@mediapipe/tasks-vision'; // SPX_MOCAP_TASKS_V1
 import AvatarRigPlayer3D from '../../front/js/component/AvatarRigPlayer3D.jsx';
 import VideoMocapSystem  from '../../front/js/component/VideoMocapSystem.jsx';
 import useFaceMocap      from '../../front/js/hooks/useFaceMocap.js';
@@ -317,27 +318,43 @@ function LiveCaptureTab({ onExportGlb }) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
       } else {
-        // SPX_MEDIAPIPE_POSE_PIN_V1
-        await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js');
-        await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js');
-
-        const pose = new window.Pose({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${f}` });
-        pose.setOptions({
-          modelComplexity,
-          smoothLandmarks: true,
-          enableSegmentation: false,
-          minDetectionConfidence: minDetect,
+        // SPX_MOCAP_TASKS_V1 — PoseLandmarker via tasks-vision
+        const fileset = await FilesetResolver.forVisionTasks('/wasm/mediapipe-tasks');
+        const pose = await PoseLandmarker.createFromOptions(fileset, {
+          baseOptions: {
+            modelAssetPath: '/models/mediapipe/pose_landmarker_full.task',
+            delegate: 'GPU',
+          },
+          runningMode: 'VIDEO',
+          numPoses: 1,
+          minPoseDetectionConfidence: minDetect,
+          minPosePresenceConfidence: 0.5,
           minTrackingConfidence: minTrack,
         });
-        pose.onResults(handlePoseResults);
         poseRef.current = pose;
 
-        const camera = new window.Camera(videoRef.current, {
-          onFrame: async () => { await poseRef.current?.send({ image: videoRef.current }); },
-          width: 640, height: 480,
-        });
-        await camera.start();
-        cameraRef.current = camera;
+        // Need a getUserMedia + rAF loop since tasks-vision doesn't ship a Camera helper
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+
+        const poseLoop = () => {
+          if (!poseRef.current || !videoRef.current || !videoRef.current.srcObject) return;
+          const v = videoRef.current;
+          if (v.readyState >= 2) {
+            const ts = performance.now();
+            try {
+              const result = poseRef.current.detectForVideo(v, ts);
+              const lms = result?.landmarks?.[0];
+              if (lms) {
+                // Match old shape: { poseLandmarks: [...] } so handlePoseResults still works
+                handlePoseResults({ poseLandmarks: lms });
+              }
+            } catch (e) { /* ignore */ }
+          }
+          cameraRef.current = requestAnimationFrame(poseLoop);
+        };
+        cameraRef.current = requestAnimationFrame(poseLoop);
       }
 
       if (trackFace)  startFace();
@@ -348,10 +365,15 @@ function LiveCaptureTab({ onExportGlb }) {
       multiPerson, modelComplexity, minDetect, minTrack]);
 
   const stopCapture = useCallback(() => {
-    cameraRef.current?.stop(); cameraRef.current = null;
-    poseRef.current?.close();  poseRef.current = null;
+    // SPX_MOCAP_TASKS_V1 — cameraRef is now a rAF id
+    if (cameraRef.current) cancelAnimationFrame(cameraRef.current);
+    cameraRef.current = null;
+    poseRef.current?.close?.();  poseRef.current = null;
     multiMocapRef.current?.dispose(); multiMocapRef.current = null;
-    if (videoRef.current) { videoRef.current.srcObject?.getTracks?.().forEach(t => t.stop()); videoRef.current.srcObject = null; }
+    if (videoRef.current?.srcObject) {
+      videoRef.current.srcObject.getTracks().forEach(t => t.stop());
+      videoRef.current.srcObject = null;
+    }
     stopFace(); stopHands();
     setIsCapturing(false); setLiveFrame(null); setFps(0); setLandmarkCount(0);
     setMultiSkeletons([]); setPersonCount(1); depthMapRef.current = null;

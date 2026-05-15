@@ -1,24 +1,12 @@
-// useFaceMocap.js — MediaPipe FaceMesh hook (CDN-loaded)
-// Provides: jawOpen, leftEyeOpen, rightEyeOpen, leftBrowRaise, rightBrowRaise, landmarks (468)
+// useFaceMocap.js — MediaPipe Tasks FaceLandmarker hook
+// Provides: jawOpen, leftEyeOpen, rightEyeOpen, leftBrowRaise, rightBrowRaise, landmarks (478)
+// SPX_MOCAP_TASKS_V1
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 
-const loadScript = (src) =>
-  new Promise((res, rej) => {
-    if (document.querySelector(`script[src="${src}"]`)) return res();
-    const s = document.createElement('script');
-    s.src = src; s.onload = res; s.onerror = () => rej(new Error(`Failed: ${src}`));
-    document.head.appendChild(s);
-  });
-
-const LM = {
-  UPPER_LIP_TOP: 13, LOWER_LIP_BOT: 14,
-  LEFT_EYE_TOP: 159, LEFT_EYE_BOT: 145,
-  RIGHT_EYE_TOP: 386, RIGHT_EYE_BOT: 374,
-  LEFT_EYE_OUTER: 33, LEFT_EYE_INNER: 133,
-  RIGHT_EYE_OUTER: 263, RIGHT_EYE_INNER: 362,
-  LEFT_BROW_CENTER: 66, RIGHT_BROW_CENTER: 296,
-};
+const WASM_PATH = '/wasm/mediapipe-tasks';
+const MODEL_PATH = '/models/mediapipe/face_landmarker.task';
 
 function dist(a, b) {
   return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
@@ -43,42 +31,42 @@ function extractFaceMetrics(lms) {
 }
 
 export default function useFaceMocap(videoRef, enabled = true) {
-  const faceMeshRef = useRef(null);
-  const cameraRef   = useRef(null);
+  const landmarkerRef = useRef(null);
+  const rafRef = useRef(null);
   const [faceFrame, setFaceFrame] = useState(null);
-  const [status, setStatus]       = useState('idle');
+  const [status, setStatus] = useState('idle');
 
   const start = useCallback(async () => {
     if (!enabled || !videoRef?.current) return;
     setStatus('loading');
     try {
-      // SPX_MEDIAPIPE_PIN_V1
-      await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/face_mesh.js');
-      await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js');
+      const fileset = await FilesetResolver.forVisionTasks(WASM_PATH);
+      const landmarker = await FaceLandmarker.createFromOptions(fileset, {
+        baseOptions: { modelAssetPath: MODEL_PATH, delegate: 'GPU' },
+        runningMode: 'VIDEO',
+        numFaces: 1,
+        outputFaceBlendshapes: false,
+        outputFacialTransformationMatrixes: false,
+      });
+      landmarkerRef.current = landmarker;
 
-      const faceMesh = new window.FaceMesh({
-        locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/${f}`,
-      });
-      faceMesh.setOptions({
-        maxNumFaces: 1,
-        refineLandmarks: true,
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5,
-      });
-      faceMesh.onResults((results) => {
-        if (!results.multiFaceLandmarks?.[0]) return;
-        const lms     = results.multiFaceLandmarks[0];
-        const metrics = extractFaceMetrics(lms);
-        setFaceFrame({ ...metrics, landmarks: lms, timestamp: performance.now() / 1000 });
-      });
-      faceMeshRef.current = faceMesh;
-
-      const camera = new window.Camera(videoRef.current, {
-        onFrame: async () => { await faceMesh.send({ image: videoRef.current }); },
-        width: 640, height: 480,
-      });
-      await camera.start();
-      cameraRef.current = camera;
+      const loop = () => {
+        if (!landmarkerRef.current || !videoRef.current) return;
+        const v = videoRef.current;
+        if (v.readyState >= 2) {
+          const ts = performance.now();
+          try {
+            const result = landmarkerRef.current.detectForVideo(v, ts);
+            const lms = result?.faceLandmarks?.[0];
+            if (lms) {
+              const metrics = extractFaceMetrics(lms);
+              setFaceFrame({ ...metrics, landmarks: lms, timestamp: ts / 1000 });
+            }
+          } catch (e) { /* ignore one-frame errors */ }
+        }
+        rafRef.current = requestAnimationFrame(loop);
+      };
+      rafRef.current = requestAnimationFrame(loop);
       setStatus('running');
     } catch (err) {
       console.error('[useFaceMocap]', err);
@@ -87,9 +75,10 @@ export default function useFaceMocap(videoRef, enabled = true) {
   }, [enabled, videoRef]);
 
   const stop = useCallback(() => {
-    cameraRef.current?.stop();
-    cameraRef.current  = null;
-    faceMeshRef.current = null;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    landmarkerRef.current?.close?.();
+    landmarkerRef.current = null;
     setFaceFrame(null);
     setStatus('idle');
   }, []);
