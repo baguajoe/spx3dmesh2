@@ -389,6 +389,28 @@ function LiveViewportMirror({ rendererRef, open, label }) {
 }
 
 registerAllPanels();
+
+// SPX_VCOLOR_FIX_V2 — paint/fill expect [r,g,b,a] floats; mesh needs init first
+const _hexToRgba = (hex) => {
+  const h = (hex || "#ffffff").replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16) / 255;
+  const g = parseInt(h.substring(2, 4), 16) / 255;
+  const b = parseInt(h.substring(4, 6), 16) / 255;
+  return [r, g, b, 1.0];
+};
+const _ensureVCLayers = (mesh) => {
+  if (!mesh) return false;
+  if (!mesh._vcLayers || mesh._vcLayers.length === 0) {
+    if (typeof window.initVCAdvanced === "function") {
+      window.initVCAdvanced(mesh);
+    }
+    if (typeof window.addVCLayer === "function" && (!mesh._vcLayers || mesh._vcLayers.length === 0)) {
+      window.addVCLayer(mesh, "Base");
+    }
+  }
+  return !!(mesh._vcLayers && mesh._vcLayers.length > 0);
+};
+
 export default function App() {
   const closeAllWindows = () => {
     const setters = [
@@ -3091,9 +3113,11 @@ export default function App() {
 
   // ── Knife tool ─────────────────────────────────────────────────────────────
   const onKnifeClick = useCallback((e) => {
-    // SPX_VCOLOR_FIX_V1 — applyVertexPaint was never defined; route through engine bridge
+    // SPX_VCOLOR_FIX_V2 — paintVCAdvanced(mesh, hit, { color: [r,g,b,a], radius, strength });
+    // `hit` is the full raycast result (function reads hit.point internally); color is float[4].
     if (vcPaintingRef.current && editModeRef.current === "paint") {
       if (typeof window.paintVCAdvanced === "function" && meshRef.current) {
+        if (!_ensureVCLayers(meshRef.current)) return;
         const canvas = canvasRef.current;
         const camera = cameraRef.current;
         if (canvas && camera) {
@@ -3104,9 +3128,10 @@ export default function App() {
           ray.setFromCamera(new THREE.Vector2(mx, my), camera);
           const hits = ray.intersectObject(meshRef.current, true);
           if (hits.length > 0) {
-            window.paintVCAdvanced(meshRef.current, hits[0].point, {
-              color: vcPaintColor, radius: vcRadius,
-              strength: vcStrength, falloff: vcFalloff,
+            window.paintVCAdvanced(meshRef.current, hits[0], {
+              color: _hexToRgba(vcPaintColor),
+              radius: vcRadius,
+              strength: vcStrength,
             });
             if (meshRef.current.geometry.attributes.color) {
               meshRef.current.geometry.attributes.color.needsUpdate = true;
@@ -5012,6 +5037,11 @@ export default function App() {
                 }
                 onCanvasClick(e);
                 onKnifeClick(e);
+              } else if (editModeRef.current === "paint") {
+                // SPX_VCOLOR_FIX_V2 — paint mode was routing to neither onKnifeClick
+                // nor SELECT; explicitly dispatch to onKnifeClick so the vcPainting
+                // branch fires.
+                onKnifeClick(e);
               }
             }}
             onMouseMove={e => {
@@ -5941,6 +5971,13 @@ export default function App() {
             <button
               onClick={() => {
                 const next = !vcPaintingRef.current;
+                if (next) {
+                  if (!meshRef.current) { setStatus("Paint failed — no active mesh"); return; }
+                  if (!_ensureVCLayers(meshRef.current)) {
+                    setStatus("Paint failed — could not init VC layers");
+                    return;
+                  }
+                }
                 vcPaintingRef.current = next;
                 if (next) {
                   editModeRef.current = "paint";
@@ -5967,10 +6004,18 @@ export default function App() {
             </button>
             <button
               onClick={() => {
-                if (typeof window.fillVCLayer === "function" && meshRef.current) {
-                  window.fillVCLayer(meshRef.current, { color: vcPaintColor });
+                if (!meshRef.current) { setStatus("Fill failed — no active mesh"); return; }
+                if (!_ensureVCLayers(meshRef.current)) {
+                  setStatus("Fill failed — could not init VC layers");
+                  return;
+                }
+                if (typeof window.fillVCLayer === "function") {
+                  window.fillVCLayer(meshRef.current, 0, _hexToRgba(vcPaintColor));
                   if (meshRef.current.geometry.attributes.color) {
                     meshRef.current.geometry.attributes.color.needsUpdate = true;
+                  }
+                  if (typeof window.flattenVCLayers === "function") {
+                    window.flattenVCLayers(meshRef.current);
                   }
                   setStatus("V.Color filled with " + vcPaintColor);
                 } else {
