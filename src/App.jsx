@@ -1654,36 +1654,6 @@ export default function App() {
     return () => window.removeEventListener("keydown", handleGlobalKeys, { capture: true });
   }, [selectedObject, sceneObjects, currentFrame]);
 
-  // SPX_OBJ_DELETE_V1 — Delete/Backspace removes active object in object mode
-  useEffect(() => {
-    const handler = (e) => {
-      if (editModeRef.current !== "object") return;
-      if (e.key !== "Delete" && e.key !== "Backspace") return;
-      const tag = (e.target?.tagName || "").toLowerCase();
-      if (tag === "input" || tag === "textarea" || e.target?.isContentEditable) return;
-      const obj = meshRef.current;
-      if (!obj || !sceneRef.current) return;
-      e.preventDefault();
-      e.stopPropagation();
-      pushHistory();
-      try { obj.geometry?.dispose(); } catch (_) {}
-      try {
-        if (Array.isArray(obj.material)) obj.material.forEach((m) => m?.dispose?.());
-        else obj.material?.dispose?.();
-      } catch (_) {}
-      const _activeId = activeObjId;
-      sceneRef.current.remove(obj);
-      meshRef.current = null;
-      if (gizmoRef.current) gizmoRef.current.detach();
-      setActiveObjId(null);
-      setSceneObjects((prev) => prev.filter((o) => o.id !== _activeId && o.mesh !== obj && o.mesh?.uuid !== obj.uuid));
-      refreshSelectionOutline();
-      setStatus("Object deleted");
-    };
-    window.addEventListener("keydown", handler, { capture: true });
-    return () => window.removeEventListener("keydown", handler, { capture: true });
-  }, [activeObjId, pushHistory]);
-
   useEffect(() => {
     window.deleteSelected = () => {
       if (selectedObject) {
@@ -3671,6 +3641,37 @@ export default function App() {
     sceneRef.current.add(outline);
     outlineHelperRef.current = outline;
   };
+
+  // SPX_OBJ_DELETE_V1 — Delete/Backspace removes active object in object mode
+  // (placed after pushHistory + refreshSelectionOutline so deps array doesn't TDZ)
+  useEffect(() => {
+    const handler = (e) => {
+      if (editModeRef.current !== "object") return;
+      if (e.key !== "Delete" && e.key !== "Backspace") return;
+      const tag = (e.target?.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || e.target?.isContentEditable) return;
+      const obj = meshRef.current;
+      if (!obj || !sceneRef.current) return;
+      e.preventDefault();
+      e.stopPropagation();
+      pushHistory();
+      try { obj.geometry?.dispose(); } catch (_) {}
+      try {
+        if (Array.isArray(obj.material)) obj.material.forEach((m) => m?.dispose?.());
+        else obj.material?.dispose?.();
+      } catch (_) {}
+      const _activeId = activeObjId;
+      sceneRef.current.remove(obj);
+      meshRef.current = null;
+      if (gizmoRef.current) gizmoRef.current.detach();
+      setActiveObjId(null);
+      setSceneObjects((prev) => prev.filter((o) => o.id !== _activeId && o.mesh !== obj && o.mesh?.uuid !== obj.uuid));
+      refreshSelectionOutline();
+      setStatus("Object deleted");
+    };
+    window.addEventListener("keydown", handler, { capture: true });
+    return () => window.removeEventListener("keydown", handler, { capture: true });
+  }, [activeObjId, pushHistory]);
 
   const toggleEditMode = useCallback(() => {
     setEditMode((m) => {
