@@ -2394,6 +2394,16 @@ export default function App() {
         e.preventDefault();
         setShowPerformancePanel(v => !v);
       }
+      // SPX_DESELECT_V1 — Esc clears all edit-mode selection
+      if (key === "Escape" && editModeRef.current === "edit") {
+        setSelectedVerts(new Set());
+        setSelectedEdges(new Set());
+        setSelectedFaces(new Set());
+        if (selectModeRef.current === "vert") buildVertexOverlay(new Set());
+        else if (selectModeRef.current === "edge") buildEdgeOverlay(new Set());
+        else if (selectModeRef.current === "face") buildFaceOverlay(new Set());
+        setStatus("Selection cleared");
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -3065,11 +3075,29 @@ export default function App() {
             closest = v;
           }
         });
-        if (closest) {
+        // SPX_DESELECT_V1 — empty click clears; shift toggles; click replaces
+        const _shift = !!e.shiftKey;
+        if (!closest) {
+          if (!_shift) {
+            setSelectedVerts(() => {
+              const next = new Set();
+              buildVertexOverlay(next);
+              return next;
+            });
+            setStatus("Selection cleared");
+          }
+        } else if (_shift) {
           setSelectedVerts((sv) => {
             const next = new Set(sv);
             if (next.has(closest.id)) next.delete(closest.id);
             else next.add(closest.id);
+            buildVertexOverlay(next);
+            return next;
+          });
+          setStatus(`Vertex ${closest.id} ${_shift ? "toggled" : "selected"}`);
+        } else {
+          setSelectedVerts(() => {
+            const next = new Set([closest.id]);
             buildVertexOverlay(next);
             return next;
           });
@@ -3101,7 +3129,18 @@ export default function App() {
             closest = edge;
           }
         });
-        if (closest) {
+        // SPX_DESELECT_V1 — empty click clears; shift toggles; click replaces
+        const _eshift = !!e.shiftKey;
+        if (!closest) {
+          if (!_eshift) {
+            setSelectedEdges(() => {
+              const next = new Set();
+              buildEdgeOverlay(next);
+              return next;
+            });
+            setStatus("Selection cleared");
+          }
+        } else if (_eshift) {
           setSelectedEdges((se) => {
             const next = new Set(se);
             if (next.has(closest.id)) {
@@ -3114,20 +3153,48 @@ export default function App() {
             buildEdgeOverlay(next);
             return next;
           });
+          setStatus(`Edge ${closest.id} toggled`);
+        } else {
+          setSelectedEdges(() => {
+            const next = new Set([closest.id]);
+            if (closest.twin) next.add(closest.twin.id);
+            buildEdgeOverlay(next);
+            return next;
+          });
           setStatus(`Edge ${closest.id} selected`);
         }
       } else if (selectModeRef.current === "face") {
         const hits = meshRef.current?.material ? raycaster.intersectObject(meshRef.current, true) : [];
-        if (hits.length > 0) {
+        // SPX_DESELECT_V1 — empty click clears; shift toggles; click replaces
+        const _fshift = !!e.shiftKey;
+        if (hits.length === 0) {
+          if (!_fshift) {
+            setSelectedFaces(() => {
+              const next = new Set();
+              buildFaceOverlay(next);
+              return next;
+            });
+            setStatus("Selection cleared");
+          }
+        } else {
           const faceIdx = hits[0].faceIndex;
-          setSelectedFaces((sf) => {
-            const next = new Set(sf);
-            if (next.has(faceIdx)) next.delete(faceIdx);
-            else next.add(faceIdx);
-            buildFaceOverlay(next);
-            return next;
-          });
-          setStatus(`Face ${faceIdx} selected`);
+          if (_fshift) {
+            setSelectedFaces((sf) => {
+              const next = new Set(sf);
+              if (next.has(faceIdx)) next.delete(faceIdx);
+              else next.add(faceIdx);
+              buildFaceOverlay(next);
+              return next;
+            });
+            setStatus(`Face ${faceIdx} toggled`);
+          } else {
+            setSelectedFaces(() => {
+              const next = new Set([faceIdx]);
+              buildFaceOverlay(next);
+              return next;
+            });
+            setStatus(`Face ${faceIdx} selected`);
+          }
         }
       }
     },
