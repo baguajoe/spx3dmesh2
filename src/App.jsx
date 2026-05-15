@@ -527,6 +527,8 @@ export default function App() {
   const canvasRef = useRef(null);
   const sceneRef = useRef(null);
   const meshRef = useRef(null);
+  // SPX_OBJ_SELECT_OUTLINE_V1 — Blender-style orange outline on selected object
+  const outlineHelperRef = useRef(null);
   const rendererRef = useRef(null);
   const cameraRef = useRef(null);
   const heMeshRef = useRef(null);
@@ -989,6 +991,8 @@ export default function App() {
       mixerRef.current = null;
       mixerDurationRef.current = 0;
       if (gizmoRef.current) gizmoRef.current.detach();
+      // SPX_OBJ_SELECT_OUTLINE_V1 — clear outline on deselect
+      refreshSelectionOutline();
       setStatus("Deselected");
       return;
     }
@@ -1032,6 +1036,8 @@ export default function App() {
         setStats(heMeshRef.current.stats());
       } catch (e) { }
     }
+    // SPX_OBJ_SELECT_OUTLINE_V1 — refresh orange outline on new selection
+    refreshSelectionOutline();
   };
 
   const renameSceneObject = (id, name) => {
@@ -1400,6 +1406,8 @@ export default function App() {
   }, []);
 
   useEffect(() => { editModeRef.current = editMode; }, [editMode]);
+  // SPX_OBJ_SELECT_OUTLINE_V1 — outline only renders in object mode; refresh whenever mode flips
+  useEffect(() => { refreshSelectionOutline(); }, [editMode]);
 
   // Force canvas resize when workspace changes
   useEffect(() => {
@@ -1645,6 +1653,36 @@ export default function App() {
     window.addEventListener("keydown", handleGlobalKeys, { capture: true });
     return () => window.removeEventListener("keydown", handleGlobalKeys, { capture: true });
   }, [selectedObject, sceneObjects, currentFrame]);
+
+  // SPX_OBJ_DELETE_V1 — Delete/Backspace removes active object in object mode
+  useEffect(() => {
+    const handler = (e) => {
+      if (editModeRef.current !== "object") return;
+      if (e.key !== "Delete" && e.key !== "Backspace") return;
+      const tag = (e.target?.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || e.target?.isContentEditable) return;
+      const obj = meshRef.current;
+      if (!obj || !sceneRef.current) return;
+      e.preventDefault();
+      e.stopPropagation();
+      pushHistory();
+      try { obj.geometry?.dispose(); } catch (_) {}
+      try {
+        if (Array.isArray(obj.material)) obj.material.forEach((m) => m?.dispose?.());
+        else obj.material?.dispose?.();
+      } catch (_) {}
+      const _activeId = activeObjId;
+      sceneRef.current.remove(obj);
+      meshRef.current = null;
+      if (gizmoRef.current) gizmoRef.current.detach();
+      setActiveObjId(null);
+      setSceneObjects((prev) => prev.filter((o) => o.id !== _activeId && o.mesh !== obj && o.mesh?.uuid !== obj.uuid));
+      refreshSelectionOutline();
+      setStatus("Object deleted");
+    };
+    window.addEventListener("keydown", handler, { capture: true });
+    return () => window.removeEventListener("keydown", handler, { capture: true });
+  }, [activeObjId, pushHistory]);
 
   useEffect(() => {
     window.deleteSelected = () => {
@@ -3007,8 +3045,9 @@ export default function App() {
         raycaster.setFromCamera(new THREE.Vector2(mx, my), camera);
         const objs = sceneObjectsRef.current;
         // Raycast directly against scene, filter to only real Mesh objects
+        // SPX_OBJ_SELECT_OUTLINE_V1 — exclude the selection outline mesh from picks
         const sceneHits = raycaster.intersectObjects(sceneRef.current?.children || [], true)
-          .filter(h => h.object.type === "Mesh" && h.object.isMesh);
+          .filter(h => h.object.type === "Mesh" && h.object.isMesh && !h.object.userData?.__isOutline);
         if (sceneHits.length > 0) {
           const hitMesh = sceneHits[0].object;
           // Find which sceneObject owns this mesh
@@ -3041,6 +3080,8 @@ export default function App() {
           });
           setActiveObjId(null);
           meshRef.current = null;
+          // SPX_OBJ_SELECT_OUTLINE_V1 — clear outline on empty-space click
+          refreshSelectionOutline();
         }
         return;
       }
@@ -3601,6 +3642,34 @@ export default function App() {
       editGizmoProxyRef.current = null;
     }
     editGizmoStartRef.current = null;
+  };
+
+  // SPX_OBJ_SELECT_OUTLINE_V1 — orange back-face outline on object-mode selection
+  const refreshSelectionOutline = () => {
+    if (outlineHelperRef.current && sceneRef.current) {
+      sceneRef.current.remove(outlineHelperRef.current);
+      try { outlineHelperRef.current.material?.dispose?.(); } catch (_) {}
+      outlineHelperRef.current = null;
+    }
+    const target = meshRef.current;
+    if (!target || editModeRef.current !== "object" || !sceneRef.current) return;
+    if (!target.geometry) return;
+    const outlineMat = new THREE.MeshBasicMaterial({
+      color: 0xff8800,
+      side: THREE.BackSide,
+      depthWrite: false,
+      transparent: true,
+      opacity: 0.95,
+    });
+    const outline = new THREE.Mesh(target.geometry, outlineMat);
+    outline.position.copy(target.position);
+    outline.rotation.copy(target.rotation);
+    outline.scale.copy(target.scale).multiplyScalar(1.03);
+    outline.renderOrder = -1;
+    outline.userData.__isOutline = true;
+    outline.userData._spxInfrastructure = true;
+    sceneRef.current.add(outline);
+    outlineHelperRef.current = outline;
   };
 
   const toggleEditMode = useCallback(() => {
@@ -5335,6 +5404,9 @@ export default function App() {
                   // SPX_EDIT_ROTSCALE_V1 — clear snapshot so next drag rebuilds fresh
                   startVertPositionsRef.current = new Map();
                   ensureEditGizmoProxy();
+                } else if (editModeRef.current === "object") {
+                  // SPX_OBJ_SELECT_OUTLINE_V1 — outline follows the transformed mesh
+                  refreshSelectionOutline();
                 }
                 // Auto-key: capture transform at drag-end if AUTO toggle is on.
                 // Use currentFrameRef (not currentFrame from closure) to avoid stale-closure bug.
