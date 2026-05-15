@@ -316,10 +316,11 @@ function LiveCaptureTab({ onExportGlb }) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
       } else {
-        await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js');
+        // SPX_MEDIAPIPE_POSE_PIN_V1
+        await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js');
         await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js');
 
-        const pose = new window.Pose({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${f}` });
+        const pose = new window.Pose({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${f}` });
         pose.setOptions({
           modelComplexity,
           smoothLandmarks: true,
