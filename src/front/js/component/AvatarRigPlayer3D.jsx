@@ -423,6 +423,14 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
   const avatarRef = useRef(null);
   const clockRef = useRef(null); if (!clockRef.current) clockRef.current = new THREE.Clock();
 
+  // SPX_MOCAP_LIVEFRAME_REF_V1 — mirror liveFrame into a ref so the
+  // animate() closure (which only mounts once per avatarUrl) reads
+  // the latest pose data instead of the null captured at first render.
+  const liveFrameRef = useRef(null);
+  const retargetEnabledRef = useRef(true);
+  useEffect(() => { liveFrameRef.current = liveFrame; }, [liveFrame]);
+  useEffect(() => { retargetEnabledRef.current = retargetEnabled; }, [retargetEnabled]);
+
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
@@ -436,8 +444,9 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
 
     // Camera
     const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 100);
-    camera.position.set(0, 1.0, 7);
-    camera.lookAt(0, 0.8, 0);
+    // SPX_MOCAP_CAMERA_V1 — closer framing for the avatar
+    camera.position.set(0, 1.2, 3.5);
+    camera.lookAt(0, 1.0, 0);
     cameraRef.current = camera;
 
     // Renderer — create new one just for this canvas
@@ -519,9 +528,12 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
       const delta = clockRef.current.getDelta();
 
       // Live frame retargeting - gate with liveFrame check
-      if (liveFrame && retargetEnabled && avatarRef.current?.bones) {
+      // SPX_MOCAP_LIVEFRAME_REF_V1 — read from refs to avoid stale closure
+      const _lf = liveFrameRef.current;
+      const _re = retargetEnabledRef.current;
+      if (_lf && _re && avatarRef.current?.bones) {
         const bones = avatarRef.current.bones;
-        const lm = liveFrame.landmarks || liveFrame;
+        const lm = _lf.landmarks || _lf;
 
         if (lm && lm.length >= 33) {
           const landmarkToVec3 = (landmark) => new THREE.Vector3(
