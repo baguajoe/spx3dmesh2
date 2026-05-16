@@ -6,6 +6,7 @@ import React, { useRef, useEffect, useMemo, Suspense } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'; // SPX_MOCAP_CC_BASE_V2
 import { clone as skeletonClone } from 'three/examples/jsm/utils/SkeletonUtils';
 import { OneEuroFilter } from '../utils/OneEuroFilter';
 import * as Kalidokit from 'kalidokit'; // SPX_MOCAP_KALIDOKIT_V1
@@ -472,6 +473,8 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
     // SPX_MOCAP_VRM_V1 — VRM-aware loader: register VRMLoaderPlugin so .vrm files surface as gltf.userData.vrm
     const loader = new GLTFLoader();
     loader.register((parser) => new VRMLoaderPlugin(parser));
+    // SPX_MOCAP_CC_BASE_V2 — decode EXT_meshopt_compression (used by the optimized CC_Base VRM)
+    loader.setMeshoptDecoder(MeshoptDecoder);
 
     // SPX_MOCAP_AVATAR_DEFAULT_V1 — verify Y Bot is reachable before we depend on it as fallback
     fetch('/models/ybot.glb', { method: 'HEAD' })
