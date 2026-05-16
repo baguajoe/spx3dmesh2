@@ -160,8 +160,8 @@ function LiveCaptureTab({ onExportGlb }) {
   const [trackFace,       setTrackFace]       = useState(false);
   const [trackHands,      setTrackHands]      = useState(false);
   const [showOverlay,     setShowOverlay]     = useState(true);
-  // SPX_MOCAP_VRM_V1 — VRM avatar default for live mocap (Kalidokit works natively on VRM)
-  const [avatarUrl,       setAvatarUrl]       = useState('https://cdn.glitch.global/29e07830-2317-4b15-a044-135e73c7f840/AvatarSample_B.vrm');
+  // SPX_MOCAP_VRM_V2 — verified-working VRM URL from Pixiv three-vrm official samples
+  const [avatarUrl,       setAvatarUrl]       = useState('https://raw.githubusercontent.com/pixiv/three-vrm/release/packages/three-vrm/examples/models/three-vrm-girl.vrm');
   const [error,           setError]           = useState(null);
 
   // New systems
@@ -478,15 +478,23 @@ function LiveCaptureTab({ onExportGlb }) {
     <div className="mw-live">
       <div className="mw-left">
         {/* Camera feed */}
-        <div className="mw-cam-wrap">
-          {/* SPX_MOCAP_PREVIEW_SIZE_V1 — enlarge preview, merge duplicate className */}
+        {/* SPX_MOCAP_PREVIEW_SIZE_V2 — force large preview, override CSS at wrapper + element */}
+        <div className="mw-cam-wrap" style={{ width: '100%', maxWidth: '560px', minWidth: '480px', position: 'relative' }}>
           <video
             ref={videoRef}
             className="mw-cam mw-mirror"
             autoPlay
             muted
             playsInline
-            style={{ width: '100%', maxWidth: '480px', aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: '8px' }}
+            style={{
+              width: '100%',
+              minWidth: '480px',
+              height: 'auto',
+              aspectRatio: '16 / 9',
+              objectFit: 'cover',
+              borderRadius: '8px',
+              display: 'block',
+            }}
           />
           <canvas ref={overlayRef} className="mw-cam-overlay mw-mirror" />
           {isCapturing && (
@@ -618,7 +626,7 @@ function LiveCaptureTab({ onExportGlb }) {
         <SectionLabel className="mw-section-mt">Avatar</SectionLabel>
         <div className="mw-avatar-row">
           {[
-            {label:'VRM Avatar', url:'https://cdn.glitch.global/29e07830-2317-4b15-a044-135e73c7f840/AvatarSample_B.vrm'},
+            {label:'VRM Avatar', url:'https://raw.githubusercontent.com/pixiv/three-vrm/release/packages/three-vrm/examples/models/three-vrm-girl.vrm'},
             {label:'Y Bot',      url:'/models/ybot.glb'},
           ].map(p => (
             <button key={p.label}

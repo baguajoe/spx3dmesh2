@@ -472,7 +472,8 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
     // SPX_MOCAP_VRM_V1 — VRM-aware loader: register VRMLoaderPlugin so .vrm files surface as gltf.userData.vrm
     const loader = new GLTFLoader();
     loader.register((parser) => new VRMLoaderPlugin(parser));
-    loader.load(avatarUrl || '/models/ybot.glb', (gltf) => {
+    // SPX_MOCAP_VRM_V2 — extract success path so VRM URL failure can fall back to Y Bot
+    const handleGltfLoaded = (gltf) => {
       const vrm = gltf.userData?.vrm; // SPX_MOCAP_VRM_V1
       if (vrm) {
         // VRM path — Kalidokit retargets native VRM humanoid bones
@@ -566,7 +567,19 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
       // The avatar should remain in T-pose so MediaPipe data drives the bones.
       // Auto-playing was causing arms-back/leg-up corruption from baked Mixamo idle clip.
       mixerRef.current = null;
-    }, undefined, (err) => console.error('[AvatarRigPlayer3D] Load error:', err));
+    };
+    loader.load(avatarUrl || '/models/ybot.glb', handleGltfLoaded, undefined, (err) => {
+      // SPX_MOCAP_VRM_V2 — fall back to Y Bot if VRM (or any primary) URL unreachable
+      console.warn('[AvatarRigPlayer3D] Primary avatar load failed:', err?.message || err);
+      if (avatarUrl && avatarUrl !== '/models/ybot.glb') {
+        console.log('[AvatarRigPlayer3D] Falling back to /models/ybot.glb');
+        loader.load('/models/ybot.glb', handleGltfLoaded, undefined, (err2) => {
+          console.error('[AvatarRigPlayer3D] Y Bot fallback also failed:', err2);
+        });
+      } else {
+        console.error('[AvatarRigPlayer3D] Load error (no fallback available):', err);
+      }
+    });
 
     // Animate
     function animate() {

@@ -18,9 +18,10 @@
 .mw-close:hover { background:var(--mw-danger);color:#fff;border-color:var(--mw-danger); }
 .mw-body { flex:1;overflow:hidden;display:flex;flex-direction:column; }
 .mw-live { display:flex;flex:1;overflow:hidden;height:100%; }
-.mw-left { width:300px;flex-shrink:0;background:var(--mw-panel);border-right:1px solid var(--mw-border);padding:14px;display:flex;flex-direction:column;gap:8px;overflow-y:auto; }
+/* SPX_MOCAP_PREVIEW_SIZE_V2 — widen sidebar + relax preview caps so 480px+ webcam fits */
+.mw-left { width:540px;flex-shrink:0;background:var(--mw-panel);border-right:1px solid var(--mw-border);padding:14px;display:flex;flex-direction:column;gap:8px;overflow-y:auto; }
 .mw-cam-wrap { position:relative;border-radius:10px;overflow:hidden;background:#000;border:1px solid var(--mw-border);flex-shrink:0; }
-.mw-cam { width:100%;display:block;border-radius:10px;max-height:190px;object-fit:cover; }
+.mw-cam { width:100%;display:block;border-radius:10px;object-fit:cover; }
 .mw-cam-overlay { position:absolute;inset:0;width:100%;height:100%;pointer-events:none; }
 .mw-cam-idle { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mw-muted);font-size:12px;text-align:center;padding:12px; }
 .mw-hud { position:absolute;top:8px;left:8px;right:8px;display:flex;gap:8px;align-items:center;font-size:11px;color:#aaa;background:rgba(0,0,0,0.6);padding:4px 8px;border-radius:6px;flex-wrap:wrap; }
