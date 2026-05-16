@@ -551,7 +551,7 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
       if ((!_re || !hasValidPose) && avatarRef.current?.bones) {
         const bones = avatarRef.current.bones;
         const identity = new THREE.Quaternion();
-        const resetBones = ['leftArm', 'rightArm', 'leftForeArm', 'rightForeArm', 'leftShoulder', 'rightShoulder', 'leftUpLeg', 'rightUpLeg', 'leftLeg', 'rightLeg', 'head', 'spine', 'spine1', 'spine2', 'neck'];
+        const resetBones = ['leftArm', 'rightArm', 'leftForeArm', 'rightForeArm', 'leftShoulder', 'rightShoulder', 'leftUpLeg', 'rightUpLeg', 'leftLeg', 'rightLeg', 'head', 'spine', 'spine1', 'spine2', 'neck', 'leftHand', 'rightHand'];
         for (const name of resetBones) {
           const b = bones[name];
           if (b) b.quaternion.slerp(identity, 0.1);
@@ -663,6 +663,94 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
             const hipY = -(midHip.y - 0.5) * 0.5;
             bones.hips.position.y = THREE.MathUtils.lerp(bones.hips.position.y, hipY * 0.1, LERP_SPEED);
           }
+
+          // SPX_MOCAP_HEAD_V1 — head rotation from pose nose/ears
+          try {
+            const nose = lm[0], lEar = lm[7], rEar = lm[8];
+            const lSh = lm[11], rSh = lm[12];
+            if (nose && lEar && rEar && lSh && rSh &&
+                nose.visibility > 0.5 && lEar.visibility > 0.3 && rEar.visibility > 0.3) {
+              const earMidX = (lEar.x + rEar.x) / 2;
+              const earMidY = (lEar.y + rEar.y) / 2;
+              const shWidth = Math.abs(rSh.x - lSh.x) + 0.001;
+
+              const yaw = THREE.MathUtils.clamp((nose.x - earMidX) / shWidth * 2.5, -1.0, 1.0);
+              const pitch = THREE.MathUtils.clamp((nose.y - earMidY) / shWidth * 2.0, -0.8, 0.8);
+              const roll = THREE.MathUtils.clamp(Math.atan2(rEar.y - lEar.y, rEar.x - lEar.x), -0.6, 0.6);
+
+              const headTarget = new THREE.Quaternion().setFromEuler(
+                new THREE.Euler(pitch * 0.7, -yaw * 0.7, -roll * 0.7, 'XYZ')
+              );
+              const neckTarget = new THREE.Quaternion().setFromEuler(
+                new THREE.Euler(pitch * 0.3, -yaw * 0.3, -roll * 0.3, 'XYZ')
+              );
+
+              if (bones.head) bones.head.quaternion.slerp(headTarget, LERP_SPEED);
+              if (bones.neck) bones.neck.quaternion.slerp(neckTarget, LERP_SPEED);
+            }
+          } catch (e) { /* head retarget failed, skip frame */ }
+
+          // SPX_MOCAP_WRIST_V1 — left wrist orientation from pose pinky/index landmarks
+          try {
+            const lWrist = lm[15], lPinky = lm[17], lIndex = lm[19], lElbow = lm[13];
+            if (lWrist && lPinky && lIndex && lElbow &&
+                lWrist.visibility > 0.5 && lPinky.visibility > 0.3 && lIndex.visibility > 0.3) {
+              const fwd = new THREE.Vector3(lWrist.x - lElbow.x, -(lWrist.y - lElbow.y), -(lWrist.z - lElbow.z)).normalize();
+              const right = new THREE.Vector3(lIndex.x - lPinky.x, -(lIndex.y - lPinky.y), -(lIndex.z - lPinky.z)).normalize();
+              const up = new THREE.Vector3().crossVectors(fwd, right).normalize();
+              const rightOrtho = new THREE.Vector3().crossVectors(up, fwd).normalize();
+
+              const m = new THREE.Matrix4().makeBasis(rightOrtho, up, fwd);
+              const wristTarget = new THREE.Quaternion().setFromRotationMatrix(m);
+
+              if (bones.leftHand) bones.leftHand.quaternion.slerp(wristTarget, LERP_SPEED);
+            }
+          } catch (e) { /* left wrist failed */ }
+
+          // SPX_MOCAP_WRIST_V1 — right wrist
+          try {
+            const rWrist = lm[16], rPinky = lm[18], rIndex = lm[20], rElbow = lm[14];
+            if (rWrist && rPinky && rIndex && rElbow &&
+                rWrist.visibility > 0.5 && rPinky.visibility > 0.3 && rIndex.visibility > 0.3) {
+              const fwd = new THREE.Vector3(rWrist.x - rElbow.x, -(rWrist.y - rElbow.y), -(rWrist.z - rElbow.z)).normalize();
+              const right = new THREE.Vector3(rIndex.x - rPinky.x, -(rIndex.y - rPinky.y), -(rIndex.z - rPinky.z)).normalize();
+              const up = new THREE.Vector3().crossVectors(fwd, right).normalize();
+              const rightOrtho = new THREE.Vector3().crossVectors(up, fwd).normalize();
+
+              const m = new THREE.Matrix4().makeBasis(rightOrtho, up, fwd);
+              const wristTarget = new THREE.Quaternion().setFromRotationMatrix(m);
+
+              if (bones.rightHand) bones.rightHand.quaternion.slerp(wristTarget, LERP_SPEED);
+            }
+          } catch (e) { /* right wrist failed */ }
+
+          // SPX_MOCAP_SPINE_V1 — spine bend from shoulder/hip vector tilt
+          try {
+            const lSh = lm[11], rSh = lm[12], lHip = lm[23], rHip = lm[24];
+            if (lSh && rSh && lHip && rHip &&
+                lSh.visibility > 0.5 && rSh.visibility > 0.5 &&
+                lHip.visibility > 0.5 && rHip.visibility > 0.5) {
+              const shMidX = (lSh.x + rSh.x) / 2;
+              const shMidY = (lSh.y + rSh.y) / 2;
+              const hipMidX = (lHip.x + rHip.x) / 2;
+              const hipMidY = (lHip.y + rHip.y) / 2;
+              const torsoHeight = Math.abs(hipMidY - shMidY) + 0.001;
+
+              const leanFwd = THREE.MathUtils.clamp((shMidX - hipMidX) / torsoHeight * 0.8, -0.5, 0.5);
+
+              const shSlope = Math.atan2(rSh.y - lSh.y, rSh.x - lSh.x);
+              const hipSlope = Math.atan2(rHip.y - lHip.y, rHip.x - lHip.x);
+              const sideBend = THREE.MathUtils.clamp((shSlope - hipSlope) * 0.6, -0.4, 0.4);
+
+              const spineTarget  = new THREE.Quaternion().setFromEuler(new THREE.Euler(leanFwd * 0.4, 0, -sideBend * 0.4, 'XYZ'));
+              const spine1Target = new THREE.Quaternion().setFromEuler(new THREE.Euler(leanFwd * 0.3, 0, -sideBend * 0.3, 'XYZ'));
+              const spine2Target = new THREE.Quaternion().setFromEuler(new THREE.Euler(leanFwd * 0.3, 0, -sideBend * 0.3, 'XYZ'));
+
+              if (bones.spine)  bones.spine.quaternion.slerp(spineTarget,  LERP_SPEED);
+              if (bones.spine1) bones.spine1.quaternion.slerp(spine1Target, LERP_SPEED);
+              if (bones.spine2) bones.spine2.quaternion.slerp(spine2Target, LERP_SPEED);
+            }
+          } catch (e) { /* spine retarget failed */ }
         }
       }
       mixerRef.current?.update(delta);
