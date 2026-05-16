@@ -579,6 +579,19 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
           }
 
           if (solved) {
+            // SPX_MOCAP_DIAGNOSTIC_NO_OFFSET — log Kalidokit output once per second to see actual rotation values
+            if (!window.__kalidokitLogTime || performance.now() - window.__kalidokitLogTime > 1000) {
+              window.__kalidokitLogTime = performance.now();
+              console.log('[Kalidokit]', {
+                LeftUpperArm: solved.LeftUpperArm,
+                RightUpperArm: solved.RightUpperArm,
+                LeftLowerArm: solved.LeftLowerArm,
+                RightLowerArm: solved.RightLowerArm,
+                Spine: solved.Spine,
+                Hips: solved.Hips,
+              });
+            }
+
             const applyEuler = (boneKey, euler, offset = null) => {
               const bone = bones[boneKey];
               if (!bone || !euler) return;
@@ -601,13 +614,10 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
               applyEuler('spine2', { x: solved.Spine.x * 0.10, y: solved.Spine.y * 0.05, z: solved.Spine.z * 0.10 });
             }
 
-            // Arms — VRM rest is arms-down, Mixamo rest is T-pose. Apply ±90° Z offset.
-            const leftArmOffset  = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1),  Math.PI / 2);
-            const rightArmOffset = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.PI / 2);
-
-            applyEuler('leftArm',      solved.LeftUpperArm,  leftArmOffset);
+            // SPX_MOCAP_DIAGNOSTIC_NO_OFFSET — temporary: drop all bone offsets to see raw Kalidokit output
+            applyEuler('leftArm',      solved.LeftUpperArm);
             applyEuler('leftForeArm',  solved.LeftLowerArm);
-            applyEuler('rightArm',     solved.RightUpperArm, rightArmOffset);
+            applyEuler('rightArm',     solved.RightUpperArm);
             applyEuler('rightForeArm', solved.RightLowerArm);
 
             // Wrists
