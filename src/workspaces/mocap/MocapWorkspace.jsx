@@ -138,6 +138,7 @@ function LiveCaptureTab({ onExportGlb }) {
   const overlayRef     = useRef(null);
   const poseRef        = useRef(null);
   const cameraRef      = useRef(null);
+  const poseCanvasRef  = useRef(null); // SPX_MOCAP_SQUARE_CANVAS_V1
   const pipelineRef    = useRef(null);
   const retargeterRef  = useRef(null);
   const multiMocapRef  = useRef(null);
@@ -339,24 +340,54 @@ function LiveCaptureTab({ onExportGlb }) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
 
+        // SPX_MOCAP_SQUARE_CANVAS_V1 — feed PoseLandmarker a square letterboxed canvas
+        // to avoid "NORM_RECT without IMAGE_DIMENSIONS" warning on non-square video.
+        const poseCanvas = document.createElement('canvas');
+        poseCanvas.width = 640;
+        poseCanvas.height = 640;
+        const poseCtx = poseCanvas.getContext('2d', { willReadFrequently: true });
+        poseCanvasRef.current = poseCanvas;
+
         const poseLoop = () => {
           if (!poseRef.current || !videoRef.current || !videoRef.current.srcObject) return;
           const v = videoRef.current;
           // SPX_MOCAP_POSE_READY_V1 — strict video readiness gate
           if (v.readyState === 4 && v.videoWidth > 0 && v.videoHeight > 0) {
             const ts = performance.now();
+
+            // Letterbox math: scale video to fit 640x640, preserve aspect, center
+            const srcW = v.videoWidth;
+            const srcH = v.videoHeight;
+            const dstSize = 640;
+            const scale = Math.min(dstSize / srcW, dstSize / srcH);
+            const drawW = srcW * scale;
+            const drawH = srcH * scale;
+            const dx = (dstSize - drawW) / 2;
+            const dy = (dstSize - drawH) / 2;
+
+            poseCtx.fillStyle = '#000';
+            poseCtx.fillRect(0, 0, dstSize, dstSize);
+            poseCtx.drawImage(v, 0, 0, srcW, srcH, dx, dy, drawW, drawH);
+
             try {
-              const result = poseRef.current.detectForVideo(v, ts);
+              const result = poseRef.current.detectForVideo(poseCanvas, ts);
               const lms = result?.landmarks?.[0];
               if (lms && lms.length > 0) {
-                handlePoseResults({ poseLandmarks: lms });
+                // Landmarks are normalized to 0..1 within the square canvas.
+                // Remap to original video aspect so retargeting math (which assumes
+                // input from full video frame) gets consistent coords.
+                const remapped = lms.map(p => ({
+                  x: (p.x * dstSize - dx) / drawW,
+                  y: (p.y * dstSize - dy) / drawH,
+                  z: p.z,
+                  visibility: p.visibility,
+                }));
+                handlePoseResults({ poseLandmarks: remapped });
               } else {
-                // No detection this frame — clear so retargeting can revert to rest
                 handlePoseResults({ poseLandmarks: null });
               }
             } catch (e) {
-              // Throttled error log — once per 60 frames at most
-              if (!poseLoop._errCount || poseLoop._errCount++ % 60 === 0) {
+              if (!poseLoop._errCount || poseLoop._errCount % 60 === 0) {
                 console.warn('[PoseLandmarker]', e.message);
               }
               poseLoop._errCount = (poseLoop._errCount || 0) + 1;
@@ -364,7 +395,7 @@ function LiveCaptureTab({ onExportGlb }) {
           }
           cameraRef.current = requestAnimationFrame(poseLoop);
         };
-        // Wait for video metadata before starting loop
+
         if (videoRef.current.readyState < 1) {
           videoRef.current.addEventListener('loadedmetadata', () => {
             cameraRef.current = requestAnimationFrame(poseLoop);
@@ -385,6 +416,7 @@ function LiveCaptureTab({ onExportGlb }) {
     // SPX_MOCAP_TASKS_V1 — cameraRef is now a rAF id
     if (cameraRef.current) cancelAnimationFrame(cameraRef.current);
     cameraRef.current = null;
+    poseCanvasRef.current = null; // SPX_MOCAP_SQUARE_CANVAS_V1
     poseRef.current?.close?.();  poseRef.current = null;
     multiMocapRef.current?.dispose(); multiMocapRef.current = null;
     if (videoRef.current?.srcObject) {
