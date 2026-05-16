@@ -20,6 +20,7 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
     "jszip": "^3.10.1",
+    "kalidokit": "^1.1.5",
     "mp4-muxer": "^5.2.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

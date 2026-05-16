@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { clone as skeletonClone } from 'three/examples/jsm/utils/SkeletonUtils';
 import { OneEuroFilter } from '../utils/OneEuroFilter';
+import * as Kalidokit from 'kalidokit'; // SPX_MOCAP_KALIDOKIT_V1
 
 // ─────────────────────────────────────────────────────────────
 // MEDIAPIPE POSE LANDMARK INDICES
@@ -551,221 +552,91 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
       if ((!_re || !hasValidPose) && avatarRef.current?.bones) {
         const bones = avatarRef.current.bones;
         const identity = new THREE.Quaternion();
-        const resetBones = ['leftArm', 'rightArm', 'leftForeArm', 'rightForeArm', 'leftShoulder', 'rightShoulder', 'leftUpLeg', 'rightUpLeg', 'leftLeg', 'rightLeg', 'head', 'spine', 'spine1', 'spine2', 'neck', 'leftHand', 'rightHand'];
+        const resetBones = ['hips', 'leftArm', 'rightArm', 'leftForeArm', 'rightForeArm', 'leftShoulder', 'rightShoulder', 'leftUpLeg', 'rightUpLeg', 'leftLeg', 'rightLeg', 'leftFoot', 'rightFoot', 'head', 'spine', 'spine1', 'spine2', 'neck', 'leftHand', 'rightHand'];
         for (const name of resetBones) {
           const b = bones[name];
           if (b) b.quaternion.slerp(identity, 0.1);
         }
       } else if (_lf && _re && avatarRef.current?.bones) {
+        // SPX_MOCAP_KALIDOKIT_V1 — pose retargeting via Kalidokit.Pose.solve()
+        // Replaces all prior hand-rolled math (HEAD_V2, WRIST_V1, SPINE_V1, plus original arm/leg).
+        // Kalidokit returns VRM-oriented Euler rotations; we adapt to Mixamo bone orientation.
+        const LERP_SPEED = 0.4;
         const bones = avatarRef.current.bones;
-        const lm = _lm;
+        const lm2d = _lf.landmarks;
+        const lm3d = _lf.worldLandmarks;
 
-        if (lm && lm.length >= 33) {
-          const landmarkToVec3 = (landmark) => new THREE.Vector3(
-            (landmark.x - 0.5) * 2,
-            -(landmark.y - 0.5) * 2,
-            -landmark.z * 2
-          );
-
-          const computeLimbRotation = (parentLm, childLm, restDir) => {
-            const currentDir = new THREE.Vector3().subVectors(
-              landmarkToVec3(childLm),
-              landmarkToVec3(parentLm)
-            ).normalize();
-            return new THREE.Quaternion().setFromUnitVectors(restDir, currentDir);
-          };
-
-          const isVisible = (landmark) => landmark && (landmark.visibility === undefined || landmark.visibility > 0.01);
-
-          const REST_DIRS = {
-            leftArm: new THREE.Vector3(-1, 0, 0),
-            leftForeArm: new THREE.Vector3(-1, 0, 0),
-            rightArm: new THREE.Vector3(1, 0, 0),
-            rightForeArm: new THREE.Vector3(1, 0, 0),
-            leftUpLeg: new THREE.Vector3(0, -1, 0),
-            leftLeg: new THREE.Vector3(0, -1, 0),
-            rightUpLeg: new THREE.Vector3(0, -1, 0),
-            rightLeg: new THREE.Vector3(0, -1, 0),
-          };
-
-          const LERP_SPEED = 0.4;
-
-          if (bones.leftArm && isVisible(lm[11]) && isVisible(lm[13])) {
-            const q = computeLimbRotation(lm[11], lm[13], REST_DIRS.leftArm);
-            const euler = new THREE.Euler().setFromQuaternion(q, 'XYZ');
-            bones.leftArm.rotation.x = THREE.MathUtils.lerp(bones.leftArm.rotation.x, euler.x, LERP_SPEED);
-            bones.leftArm.rotation.y = THREE.MathUtils.lerp(bones.leftArm.rotation.y, euler.y, LERP_SPEED);
-            bones.leftArm.rotation.z = THREE.MathUtils.lerp(bones.leftArm.rotation.z, euler.z, LERP_SPEED);
+        if (lm2d && lm2d.length >= 33 && lm3d && lm3d.length >= 33) {
+          let solved;
+          try {
+            solved = Kalidokit.Pose.solve(lm3d, lm2d, {
+              runtime: 'mediapipe',
+              imageSize: { width: 640, height: 640 },
+              enableLegs: true,
+            });
+          } catch (e) {
+            solved = null;
           }
 
-          if (bones.leftForeArm && isVisible(lm[13]) && isVisible(lm[15])) {
-            const q = computeLimbRotation(lm[13], lm[15], REST_DIRS.leftForeArm);
-            const euler = new THREE.Euler().setFromQuaternion(q, 'XYZ');
-            bones.leftForeArm.rotation.x = THREE.MathUtils.lerp(bones.leftForeArm.rotation.x, euler.x, LERP_SPEED);
-            bones.leftForeArm.rotation.y = THREE.MathUtils.lerp(bones.leftForeArm.rotation.y, euler.y, LERP_SPEED);
-            bones.leftForeArm.rotation.z = THREE.MathUtils.lerp(bones.leftForeArm.rotation.z, euler.z, LERP_SPEED);
-          }
-
-          if (bones.rightArm && isVisible(lm[12]) && isVisible(lm[14])) {
-            const q = computeLimbRotation(lm[12], lm[14], REST_DIRS.rightArm);
-            const euler = new THREE.Euler().setFromQuaternion(q, 'XYZ');
-            bones.rightArm.rotation.x = THREE.MathUtils.lerp(bones.rightArm.rotation.x, euler.x, LERP_SPEED);
-            bones.rightArm.rotation.y = THREE.MathUtils.lerp(bones.rightArm.rotation.y, euler.y, LERP_SPEED);
-            bones.rightArm.rotation.z = THREE.MathUtils.lerp(bones.rightArm.rotation.z, euler.z, LERP_SPEED);
-          }
-
-          if (bones.rightForeArm && isVisible(lm[14]) && isVisible(lm[16])) {
-            const q = computeLimbRotation(lm[14], lm[16], REST_DIRS.rightForeArm);
-            const euler = new THREE.Euler().setFromQuaternion(q, 'XYZ');
-            bones.rightForeArm.rotation.x = THREE.MathUtils.lerp(bones.rightForeArm.rotation.x, euler.x, LERP_SPEED);
-            bones.rightForeArm.rotation.y = THREE.MathUtils.lerp(bones.rightForeArm.rotation.y, euler.y, LERP_SPEED);
-            bones.rightForeArm.rotation.z = THREE.MathUtils.lerp(bones.rightForeArm.rotation.z, euler.z, LERP_SPEED);
-          }
-
-          if (bones.leftUpLeg && isVisible(lm[23]) && isVisible(lm[25])) {
-            const q = computeLimbRotation(lm[23], lm[25], REST_DIRS.leftUpLeg);
-            const euler = new THREE.Euler().setFromQuaternion(q, 'XYZ');
-            bones.leftUpLeg.rotation.x = THREE.MathUtils.lerp(bones.leftUpLeg.rotation.x, euler.x, LERP_SPEED);
-            bones.leftUpLeg.rotation.y = THREE.MathUtils.lerp(bones.leftUpLeg.rotation.y, euler.y, LERP_SPEED);
-            bones.leftUpLeg.rotation.z = THREE.MathUtils.lerp(bones.leftUpLeg.rotation.z, euler.z, LERP_SPEED);
-          }
-
-          if (bones.leftLeg && isVisible(lm[25]) && isVisible(lm[27])) {
-            const q = computeLimbRotation(lm[25], lm[27], REST_DIRS.leftLeg);
-            const euler = new THREE.Euler().setFromQuaternion(q, 'XYZ');
-            bones.leftLeg.rotation.x = THREE.MathUtils.lerp(bones.leftLeg.rotation.x, euler.x, LERP_SPEED);
-            bones.leftLeg.rotation.y = THREE.MathUtils.lerp(bones.leftLeg.rotation.y, euler.y, LERP_SPEED);
-            bones.leftLeg.rotation.z = THREE.MathUtils.lerp(bones.leftLeg.rotation.z, euler.z, LERP_SPEED);
-          }
-
-          if (bones.rightUpLeg && isVisible(lm[24]) && isVisible(lm[26])) {
-            const q = computeLimbRotation(lm[24], lm[26], REST_DIRS.rightUpLeg);
-            const euler = new THREE.Euler().setFromQuaternion(q, 'XYZ');
-            bones.rightUpLeg.rotation.x = THREE.MathUtils.lerp(bones.rightUpLeg.rotation.x, euler.x, LERP_SPEED);
-            bones.rightUpLeg.rotation.y = THREE.MathUtils.lerp(bones.rightUpLeg.rotation.y, euler.y, LERP_SPEED);
-            bones.rightUpLeg.rotation.z = THREE.MathUtils.lerp(bones.rightUpLeg.rotation.z, euler.z, LERP_SPEED);
-          }
-
-          if (bones.rightLeg && isVisible(lm[26]) && isVisible(lm[28])) {
-            const q = computeLimbRotation(lm[26], lm[28], REST_DIRS.rightLeg);
-            const euler = new THREE.Euler().setFromQuaternion(q, 'XYZ');
-            bones.rightLeg.rotation.x = THREE.MathUtils.lerp(bones.rightLeg.rotation.x, euler.x, LERP_SPEED);
-            bones.rightLeg.rotation.y = THREE.MathUtils.lerp(bones.rightLeg.rotation.y, euler.y, LERP_SPEED);
-            bones.rightLeg.rotation.z = THREE.MathUtils.lerp(bones.rightLeg.rotation.z, euler.z, LERP_SPEED);
-          }
-
-          if (bones.hips && isVisible(lm[23]) && isVisible(lm[24])) {
-            const midHip = {
-              x: (lm[23].x + lm[24].x) / 2,
-              y: (lm[23].y + lm[24].y) / 2,
-              z: (lm[23].z + lm[24].z) / 2,
+          if (solved) {
+            const applyEuler = (boneKey, euler, offset = null) => {
+              const bone = bones[boneKey];
+              if (!bone || !euler) return;
+              const q = new THREE.Quaternion().setFromEuler(
+                new THREE.Euler(euler.x || 0, euler.y || 0, euler.z || 0, 'XYZ')
+              );
+              if (offset) q.multiply(offset);
+              bone.quaternion.slerp(q, LERP_SPEED);
             };
-            const hipY = -(midHip.y - 0.5) * 0.5;
-            bones.hips.position.y = THREE.MathUtils.lerp(bones.hips.position.y, hipY * 0.1, LERP_SPEED);
-          }
 
-          // SPX_MOCAP_HEAD_V2 — head rotation with corrected yaw (ear z asymmetry) + pitch (nose-shoulder distance)
-          try {
-            const nose = lm[0], lEar = lm[7], rEar = lm[8];
-            const lSh = lm[11], rSh = lm[12];
-            if (nose && lEar && rEar && lSh && rSh &&
-                nose.visibility > 0.5 &&
-                lEar.visibility > 0.05 && rEar.visibility > 0.05 &&
-                lSh.visibility > 0.5 && rSh.visibility > 0.5) {
+            // Hips rotation only (drop noisy position)
+            if (solved.Hips && solved.Hips.rotation) {
+              applyEuler('hips', solved.Hips.rotation);
+            }
 
-              const shMidY = (lSh.y + rSh.y) / 2;
-              const shWidth = Math.abs(rSh.x - lSh.x) + 0.001;
+            // Spine chain
+            if (solved.Spine) {
+              applyEuler('spine',  { x: solved.Spine.x * 0.4, y: solved.Spine.y * 0.4, z: solved.Spine.z * 0.4 });
+              applyEuler('spine1', { x: solved.Spine.x * 0.3, y: solved.Spine.y * 0.3, z: solved.Spine.z * 0.3 });
+              applyEuler('spine2', { x: solved.Spine.x * 0.3, y: solved.Spine.y * 0.3, z: solved.Spine.z * 0.3 });
+            }
 
-              // YAW (turn left/right): ear z asymmetry — turning brings one ear forward (smaller z).
-              const earZDelta = (rEar.z - lEar.z);
-              const yawRaw = earZDelta * 4.0;
-              const yaw = THREE.MathUtils.clamp(yawRaw, -1.0, 1.0);
+            // Arms — VRM rest is arms-down, Mixamo rest is T-pose. Apply ±90° Z offset.
+            const leftArmOffset  = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1),  Math.PI / 2);
+            const rightArmOffset = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.PI / 2);
 
-              // PITCH (nod): nose-to-shoulder-midpoint vertical distance vs baseline.
-              const noseAboveShoulders = (shMidY - nose.y) / shWidth;
-              const PITCH_BASELINE = 1.6;
-              const pitchRaw = (PITCH_BASELINE - noseAboveShoulders) * 1.5;
-              const pitch = THREE.MathUtils.clamp(pitchRaw, -0.8, 0.8);
+            applyEuler('leftArm',      solved.LeftUpperArm,  leftArmOffset);
+            applyEuler('leftForeArm',  solved.LeftLowerArm);
+            applyEuler('rightArm',     solved.RightUpperArm, rightArmOffset);
+            applyEuler('rightForeArm', solved.RightLowerArm);
 
-              // ROLL (head tilt): only when both ears reasonably visible.
-              let roll = 0;
-              if (lEar.visibility > 0.3 && rEar.visibility > 0.3) {
-                roll = THREE.MathUtils.clamp(Math.atan2(rEar.y - lEar.y, rEar.x - lEar.x), -0.6, 0.6);
+            // Wrists
+            applyEuler('leftHand',  solved.LeftHand);
+            applyEuler('rightHand', solved.RightHand);
+
+            // Legs — VRM and Mixamo rest both legs-down, no offset.
+            applyEuler('leftUpLeg',  solved.LeftUpperLeg);
+            applyEuler('leftLeg',    solved.LeftLowerLeg);
+            applyEuler('rightUpLeg', solved.RightUpperLeg);
+            applyEuler('rightLeg',   solved.RightLowerLeg);
+
+            // Head fallback — Kalidokit.Pose.solve doesn't return Head; derive minimal yaw/pitch from 2D nose/shoulder.
+            try {
+              const nose = lm2d[0];
+              const lSh = lm2d[11], rSh = lm2d[12];
+              if (nose && lSh && rSh &&
+                  nose.visibility > 0.5 &&
+                  lSh.visibility > 0.3 && rSh.visibility > 0.3) {
+                const shMidX = (lSh.x + rSh.x) / 2;
+                const shMidY = (lSh.y + rSh.y) / 2;
+                const shWidth = Math.abs(rSh.x - lSh.x) + 0.001;
+                const yaw   = THREE.MathUtils.clamp((nose.x - shMidX) / shWidth * 1.5, -0.8, 0.8);
+                const pitch = THREE.MathUtils.clamp(((shMidY - nose.y) / shWidth - 1.6) * -1.0, -0.6, 0.6);
+                const headQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch, -yaw, 0, 'XYZ'));
+                if (bones.head) bones.head.quaternion.slerp(headQ, LERP_SPEED);
               }
-
-              const headTarget = new THREE.Quaternion().setFromEuler(
-                new THREE.Euler(pitch * 0.7, -yaw * 0.7, -roll * 0.7, 'XYZ')
-              );
-              const neckTarget = new THREE.Quaternion().setFromEuler(
-                new THREE.Euler(pitch * 0.3, -yaw * 0.3, -roll * 0.3, 'XYZ')
-              );
-
-              if (bones.head) bones.head.quaternion.slerp(headTarget, LERP_SPEED);
-              if (bones.neck) bones.neck.quaternion.slerp(neckTarget, LERP_SPEED);
-            }
-          } catch (e) { /* head retarget failed, skip frame */ }
-
-          // SPX_MOCAP_WRIST_V1 — left wrist orientation from pose pinky/index landmarks
-          try {
-            const lWrist = lm[15], lPinky = lm[17], lIndex = lm[19], lElbow = lm[13];
-            if (lWrist && lPinky && lIndex && lElbow &&
-                lWrist.visibility > 0.5 && lPinky.visibility > 0.3 && lIndex.visibility > 0.3) {
-              const fwd = new THREE.Vector3(lWrist.x - lElbow.x, -(lWrist.y - lElbow.y), -(lWrist.z - lElbow.z)).normalize();
-              const right = new THREE.Vector3(lIndex.x - lPinky.x, -(lIndex.y - lPinky.y), -(lIndex.z - lPinky.z)).normalize();
-              const up = new THREE.Vector3().crossVectors(fwd, right).normalize();
-              const rightOrtho = new THREE.Vector3().crossVectors(up, fwd).normalize();
-
-              const m = new THREE.Matrix4().makeBasis(rightOrtho, up, fwd);
-              const wristTarget = new THREE.Quaternion().setFromRotationMatrix(m);
-
-              if (bones.leftHand) bones.leftHand.quaternion.slerp(wristTarget, LERP_SPEED);
-            }
-          } catch (e) { /* left wrist failed */ }
-
-          // SPX_MOCAP_WRIST_V1 — right wrist
-          try {
-            const rWrist = lm[16], rPinky = lm[18], rIndex = lm[20], rElbow = lm[14];
-            if (rWrist && rPinky && rIndex && rElbow &&
-                rWrist.visibility > 0.5 && rPinky.visibility > 0.3 && rIndex.visibility > 0.3) {
-              const fwd = new THREE.Vector3(rWrist.x - rElbow.x, -(rWrist.y - rElbow.y), -(rWrist.z - rElbow.z)).normalize();
-              const right = new THREE.Vector3(rIndex.x - rPinky.x, -(rIndex.y - rPinky.y), -(rIndex.z - rPinky.z)).normalize();
-              const up = new THREE.Vector3().crossVectors(fwd, right).normalize();
-              const rightOrtho = new THREE.Vector3().crossVectors(up, fwd).normalize();
-
-              const m = new THREE.Matrix4().makeBasis(rightOrtho, up, fwd);
-              const wristTarget = new THREE.Quaternion().setFromRotationMatrix(m);
-
-              if (bones.rightHand) bones.rightHand.quaternion.slerp(wristTarget, LERP_SPEED);
-            }
-          } catch (e) { /* right wrist failed */ }
-
-          // SPX_MOCAP_SPINE_V1 — spine bend from shoulder/hip vector tilt
-          try {
-            const lSh = lm[11], rSh = lm[12], lHip = lm[23], rHip = lm[24];
-            if (lSh && rSh && lHip && rHip &&
-                lSh.visibility > 0.5 && rSh.visibility > 0.5 &&
-                lHip.visibility > 0.5 && rHip.visibility > 0.5) {
-              const shMidX = (lSh.x + rSh.x) / 2;
-              const shMidY = (lSh.y + rSh.y) / 2;
-              const hipMidX = (lHip.x + rHip.x) / 2;
-              const hipMidY = (lHip.y + rHip.y) / 2;
-              const torsoHeight = Math.abs(hipMidY - shMidY) + 0.001;
-
-              const leanFwd = THREE.MathUtils.clamp((shMidX - hipMidX) / torsoHeight * 0.8, -0.5, 0.5);
-
-              const shSlope = Math.atan2(rSh.y - lSh.y, rSh.x - lSh.x);
-              const hipSlope = Math.atan2(rHip.y - lHip.y, rHip.x - lHip.x);
-              const sideBend = THREE.MathUtils.clamp((shSlope - hipSlope) * 0.6, -0.4, 0.4);
-
-              const spineTarget  = new THREE.Quaternion().setFromEuler(new THREE.Euler(leanFwd * 0.4, 0, -sideBend * 0.4, 'XYZ'));
-              const spine1Target = new THREE.Quaternion().setFromEuler(new THREE.Euler(leanFwd * 0.3, 0, -sideBend * 0.3, 'XYZ'));
-              const spine2Target = new THREE.Quaternion().setFromEuler(new THREE.Euler(leanFwd * 0.3, 0, -sideBend * 0.3, 'XYZ'));
-
-              if (bones.spine)  bones.spine.quaternion.slerp(spineTarget,  LERP_SPEED);
-              if (bones.spine1) bones.spine1.quaternion.slerp(spine1Target, LERP_SPEED);
-              if (bones.spine2) bones.spine2.quaternion.slerp(spine2Target, LERP_SPEED);
-            }
-          } catch (e) { /* spine retarget failed */ }
+            } catch (e) { /* head fallback failed */ }
+          }
         }
       }
       mixerRef.current?.update(delta);

@@ -248,8 +248,9 @@ function LiveCaptureTab({ onExportGlb }) {
 
     const now = performance.now() / 1000;
     const frame = {
-      landmarks:  lms,
-      timestamp:  now,
+      landmarks:        lms,
+      worldLandmarks:   results.poseWorldLandmarks || null, // SPX_MOCAP_KALIDOKIT_V1
+      timestamp:        now,
       jawOpen:    faceFrame?.jawOpen,
       leftBlink:  faceFrame?.leftEyeOpen  != null ? 1 - faceFrame.leftEyeOpen  : undefined,
       rightBlink: faceFrame?.rightEyeOpen != null ? 1 - faceFrame.rightEyeOpen : undefined,
@@ -377,6 +378,7 @@ function LiveCaptureTab({ onExportGlb }) {
             try {
               const result = poseRef.current.detectForVideo(poseCanvas, ts);
               const lms = result?.landmarks?.[0];
+              const wlms = result?.worldLandmarks?.[0]; // SPX_MOCAP_KALIDOKIT_V1
               if (lms && lms.length > 0) {
                 // Landmarks are normalized to 0..1 within the square canvas.
                 // Remap to original video aspect so retargeting math (which assumes
@@ -387,9 +389,9 @@ function LiveCaptureTab({ onExportGlb }) {
                   z: p.z,
                   visibility: p.visibility,
                 }));
-                handlePoseResults({ poseLandmarks: remapped });
+                handlePoseResults({ poseLandmarks: remapped, poseWorldLandmarks: wlms || null });
               } else {
-                handlePoseResults({ poseLandmarks: null });
+                handlePoseResults({ poseLandmarks: null, poseWorldLandmarks: null });
               }
             } catch (e) {
               if (!poseLoop._errCount || poseLoop._errCount % 60 === 0) {
