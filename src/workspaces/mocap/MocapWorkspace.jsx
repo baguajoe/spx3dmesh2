@@ -337,7 +337,8 @@ function LiveCaptureTab({ onExportGlb }) {
         poseRef.current = pose;
 
         // Need a getUserMedia + rAF loop since tasks-vision doesn't ship a Camera helper
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+        // SPX_MOCAP_WEBCAM_HD_V1 — request HD so user sees more of the room + better detection
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } });
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
 
@@ -477,7 +478,15 @@ function LiveCaptureTab({ onExportGlb }) {
       <div className="mw-left">
         {/* Camera feed */}
         <div className="mw-cam-wrap">
-          <video ref={videoRef} className="mw-cam" autoPlay muted playsInline className="mw-mirror" />
+          {/* SPX_MOCAP_PREVIEW_SIZE_V1 — enlarge preview, merge duplicate className */}
+          <video
+            ref={videoRef}
+            className="mw-cam mw-mirror"
+            autoPlay
+            muted
+            playsInline
+            style={{ width: '100%', maxWidth: '480px', aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: '8px' }}
+          />
           <canvas ref={overlayRef} className="mw-cam-overlay mw-mirror" />
           {isCapturing && (
             <div className="mw-hud">

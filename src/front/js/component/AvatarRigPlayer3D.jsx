@@ -594,11 +594,11 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
               applyEuler('hips', solved.Hips.rotation);
             }
 
-            // Spine chain
+            // Spine chain — damped (Y especially) because Kalidokit folds head motion into Spine
             if (solved.Spine) {
-              applyEuler('spine',  { x: solved.Spine.x * 0.4, y: solved.Spine.y * 0.4, z: solved.Spine.z * 0.4 });
-              applyEuler('spine1', { x: solved.Spine.x * 0.3, y: solved.Spine.y * 0.3, z: solved.Spine.z * 0.3 });
-              applyEuler('spine2', { x: solved.Spine.x * 0.3, y: solved.Spine.y * 0.3, z: solved.Spine.z * 0.3 });
+              applyEuler('spine',  { x: solved.Spine.x * 0.15, y: solved.Spine.y * 0.10, z: solved.Spine.z * 0.15 });
+              applyEuler('spine1', { x: solved.Spine.x * 0.10, y: solved.Spine.y * 0.05, z: solved.Spine.z * 0.10 });
+              applyEuler('spine2', { x: solved.Spine.x * 0.10, y: solved.Spine.y * 0.05, z: solved.Spine.z * 0.10 });
             }
 
             // Arms — VRM rest is arms-down, Mixamo rest is T-pose. Apply ±90° Z offset.
@@ -620,9 +620,10 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
             applyEuler('rightUpLeg', solved.RightUpperLeg);
             applyEuler('rightLeg',   solved.RightLowerLeg);
 
-            // Head fallback — Kalidokit.Pose.solve doesn't return Head; derive minimal yaw/pitch from 2D nose/shoulder.
+            // SPX_MOCAP_HEAD_V3 — strengthened head fallback. Runs AFTER spine so head gets clean rotation.
             try {
               const nose = lm2d[0];
+              const lEar = lm2d[7], rEar = lm2d[8];
               const lSh = lm2d[11], rSh = lm2d[12];
               if (nose && lSh && rSh &&
                   nose.visibility > 0.5 &&
@@ -630,10 +631,32 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
                 const shMidX = (lSh.x + rSh.x) / 2;
                 const shMidY = (lSh.y + rSh.y) / 2;
                 const shWidth = Math.abs(rSh.x - lSh.x) + 0.001;
-                const yaw   = THREE.MathUtils.clamp((nose.x - shMidX) / shWidth * 1.5, -0.8, 0.8);
-                const pitch = THREE.MathUtils.clamp(((shMidY - nose.y) / shWidth - 1.6) * -1.0, -0.6, 0.6);
-                const headQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch, -yaw, 0, 'XYZ'));
+
+                // YAW: blend horizontal nose offset (always reliable) + ear-z asymmetry (when ears visible)
+                let yawRaw = (nose.x - shMidX) / shWidth * 2.0;
+                if (lEar && rEar && lEar.visibility > 0.1 && rEar.visibility > 0.1) {
+                  const earZDelta = (rEar.z - lEar.z) * 3.0;
+                  yawRaw = (yawRaw + earZDelta) * 0.5;
+                }
+                const yaw = THREE.MathUtils.clamp(yawRaw, -1.1, 1.1);
+
+                // PITCH: nose-to-shoulder vertical ratio vs baseline
+                const noseAboveShoulders = (shMidY - nose.y) / shWidth;
+                const PITCH_BASELINE = 1.6;
+                const pitchRaw = (PITCH_BASELINE - noseAboveShoulders) * 1.2;
+                const pitch = THREE.MathUtils.clamp(pitchRaw, -0.7, 0.7);
+
+                // ROLL: ear line slope (only when both ears confidently visible)
+                let roll = 0;
+                if (lEar && rEar && lEar.visibility > 0.3 && rEar.visibility > 0.3) {
+                  roll = THREE.MathUtils.clamp(Math.atan2(rEar.y - lEar.y, rEar.x - lEar.x), -0.5, 0.5);
+                }
+
+                const headQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch * 0.85, -yaw * 0.85, -roll * 0.85, 'XYZ'));
+                const neckQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch * 0.15, -yaw * 0.15, -roll * 0.15, 'XYZ'));
+
                 if (bones.head) bones.head.quaternion.slerp(headQ, LERP_SPEED);
+                if (bones.neck) bones.neck.quaternion.slerp(neckQ, LERP_SPEED);
               }
             } catch (e) { /* head fallback failed */ }
           }
