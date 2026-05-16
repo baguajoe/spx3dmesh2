@@ -365,9 +365,14 @@ function LiveCaptureTab({ onExportGlb }) {
             const dx = (dstSize - drawW) / 2;
             const dy = (dstSize - drawH) / 2;
 
+            // SPX_MOCAP_MIRROR_V1 — horizontally flip video for mirror-correct mocap
             poseCtx.fillStyle = '#000';
             poseCtx.fillRect(0, 0, dstSize, dstSize);
+            poseCtx.save();
+            poseCtx.translate(dstSize, 0);
+            poseCtx.scale(-1, 1);
             poseCtx.drawImage(v, 0, 0, srcW, srcH, dx, dy, drawW, drawH);
+            poseCtx.restore();
 
             try {
               const result = poseRef.current.detectForVideo(poseCanvas, ts);
