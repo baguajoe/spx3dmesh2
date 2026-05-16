@@ -664,19 +664,34 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
             bones.hips.position.y = THREE.MathUtils.lerp(bones.hips.position.y, hipY * 0.1, LERP_SPEED);
           }
 
-          // SPX_MOCAP_HEAD_V1 — head rotation from pose nose/ears
+          // SPX_MOCAP_HEAD_V2 — head rotation with corrected yaw (ear z asymmetry) + pitch (nose-shoulder distance)
           try {
             const nose = lm[0], lEar = lm[7], rEar = lm[8];
             const lSh = lm[11], rSh = lm[12];
             if (nose && lEar && rEar && lSh && rSh &&
-                nose.visibility > 0.5 && lEar.visibility > 0.3 && rEar.visibility > 0.3) {
-              const earMidX = (lEar.x + rEar.x) / 2;
-              const earMidY = (lEar.y + rEar.y) / 2;
+                nose.visibility > 0.5 &&
+                lEar.visibility > 0.05 && rEar.visibility > 0.05 &&
+                lSh.visibility > 0.5 && rSh.visibility > 0.5) {
+
+              const shMidY = (lSh.y + rSh.y) / 2;
               const shWidth = Math.abs(rSh.x - lSh.x) + 0.001;
 
-              const yaw = THREE.MathUtils.clamp((nose.x - earMidX) / shWidth * 2.5, -1.0, 1.0);
-              const pitch = THREE.MathUtils.clamp((nose.y - earMidY) / shWidth * 2.0, -0.8, 0.8);
-              const roll = THREE.MathUtils.clamp(Math.atan2(rEar.y - lEar.y, rEar.x - lEar.x), -0.6, 0.6);
+              // YAW (turn left/right): ear z asymmetry — turning brings one ear forward (smaller z).
+              const earZDelta = (rEar.z - lEar.z);
+              const yawRaw = earZDelta * 4.0;
+              const yaw = THREE.MathUtils.clamp(yawRaw, -1.0, 1.0);
+
+              // PITCH (nod): nose-to-shoulder-midpoint vertical distance vs baseline.
+              const noseAboveShoulders = (shMidY - nose.y) / shWidth;
+              const PITCH_BASELINE = 1.6;
+              const pitchRaw = (PITCH_BASELINE - noseAboveShoulders) * 1.5;
+              const pitch = THREE.MathUtils.clamp(pitchRaw, -0.8, 0.8);
+
+              // ROLL (head tilt): only when both ears reasonably visible.
+              let roll = 0;
+              if (lEar.visibility > 0.3 && rEar.visibility > 0.3) {
+                roll = THREE.MathUtils.clamp(Math.atan2(rEar.y - lEar.y, rEar.x - lEar.x), -0.6, 0.6);
+              }
 
               const headTarget = new THREE.Quaternion().setFromEuler(
                 new THREE.Euler(pitch * 0.7, -yaw * 0.7, -roll * 0.7, 'XYZ')
