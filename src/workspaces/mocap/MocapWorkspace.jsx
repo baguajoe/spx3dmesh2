@@ -162,7 +162,8 @@ function LiveCaptureTab({ onExportGlb }) {
   const [showOverlay,     setShowOverlay]     = useState(true);
   // SPX_MOCAP_AVATAR_DEFAULT_V1 — default to local Y Bot (always loads). User can paste VRM URL.
   // SPX_MOCAP_VRM_LOCAL_V1 — use locally-optimized SPX avatar VRM
-  const [avatarUrl,       setAvatarUrl]       = useState('/models/spx_avatar.vrm');
+  // SPX_MOCAP_CC_BASE_V1 — cachebust suffix forces fresh fetch
+  const [avatarUrl,       setAvatarUrl]       = useState('/models/spx_avatar.vrm?v=ccbase1');
   const [error,           setError]           = useState(null);
 
   // New systems
