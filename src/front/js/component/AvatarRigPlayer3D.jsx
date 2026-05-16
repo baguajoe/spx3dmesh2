@@ -461,10 +461,22 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
     mount.appendChild(renderer.domElement);
     rendererRef.current = renderer; window.__mocapScene = scene; // dev hook
 
-    // Lights
-    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-    const dir = new THREE.DirectionalLight(0xffeedd, 1.2);
-    dir.position.set(3, 5, 5); dir.castShadow = true; scene.add(dir);
+    // SPX_MOCAP_LIGHTING_V1 — proper 3-point lighting for PBR materials (CC avatar materials need this)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    scene.add(ambientLight);
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    keyLight.position.set(2, 4, 3);
+    keyLight.castShadow = true;
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    fillLight.position.set(-2, 2, -1);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.DirectionalLight(0xffffff, 0.4);
+    rimLight.position.set(0, 1, -3);
+    scene.add(rimLight);
 
     // Ground grid
     scene.add(new THREE.GridHelper(10, 10, 0x1a2a1a, 0x1a2a1a));
@@ -555,6 +567,20 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
       console.log('[AvatarRigPlayer3D] Rig type:', isCCBase ? 'CC_Base (Character Creator)' : 'mixamorig (Mixamo)');
 
       if (isCCBase) {
+        // SPX_MOCAP_LIGHTING_V1 — wake up PBR materials so CC skin/eyes render bright
+        gltf.scene.traverse((child) => {
+          if (child.isMesh && child.material) {
+            const mats = Array.isArray(child.material) ? child.material : [child.material];
+            mats.forEach((m) => {
+              m.needsUpdate = true;
+              // If material's base color is suspiciously dark, brighten to light skin tone fallback
+              if (m.color && m.color.r < 0.3) {
+                m.color.setRGB(0.85, 0.75, 0.7);
+              }
+            });
+          }
+        });
+
         // SPX_MOCAP_CC_BASE_V1 — map CC_Base bones to VRM-style keys for retargeting
         const ccBoneMap = {
           hips:           'CC_Base_Hip',
