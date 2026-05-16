@@ -542,6 +542,55 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
       model.position.set(-center.x * scale, -box2.min.y, -center.z * scale);
       avatarRef.current = model;
 
+      // SPX_MOCAP_CC_BASE_V1 — detect CC_Base naming (Character Creator export)
+      let isCCBase = false;
+      gltf.scene.traverse((obj) => {
+        if (obj.isBone && obj.name && obj.name.startsWith('CC_Base_')) {
+          isCCBase = true;
+        }
+      });
+      console.log('[AvatarRigPlayer3D] Rig type:', isCCBase ? 'CC_Base (Character Creator)' : 'mixamorig (Mixamo)');
+
+      if (isCCBase) {
+        // SPX_MOCAP_CC_BASE_V1 — map CC_Base bones to VRM-style keys for retargeting
+        const ccBoneMap = {
+          hips:           'CC_Base_Hip',
+          spine:          'CC_Base_Waist',
+          chest:          'CC_Base_Spine01',
+          upperChest:     'CC_Base_Spine02',
+          neck:           'CC_Base_NeckTwist01',
+          head:           'CC_Base_Head',
+          leftShoulder:   'CC_Base_L_Clavicle',
+          leftUpperArm:   'CC_Base_L_Upperarm',
+          leftLowerArm:   'CC_Base_L_Forearm',
+          leftHand:       'CC_Base_L_Hand',
+          rightShoulder:  'CC_Base_R_Clavicle',
+          rightUpperArm:  'CC_Base_R_Upperarm',
+          rightLowerArm:  'CC_Base_R_Forearm',
+          rightHand:      'CC_Base_R_Hand',
+          leftUpperLeg:   'CC_Base_L_Thigh',
+          leftLowerLeg:   'CC_Base_L_Calf',
+          leftFoot:       'CC_Base_L_Foot',
+          rightUpperLeg:  'CC_Base_R_Thigh',
+          rightLowerLeg:  'CC_Base_R_Calf',
+          rightFoot:      'CC_Base_R_Foot',
+        };
+        const cachedBones = {};
+        gltf.scene.traverse((obj) => {
+          if (obj.isBone) {
+            for (const [vrmKey, ccName] of Object.entries(ccBoneMap)) {
+              if (obj.name === ccName) {
+                cachedBones[vrmKey] = obj;
+              }
+            }
+          }
+        });
+        console.log('[AvatarRigPlayer3D] Cached CC_Base bones:', Object.keys(cachedBones).length, 'of', Object.keys(ccBoneMap).length);
+        avatarRef.current = { scene: gltf.scene, model, bones: cachedBones, isCC: true };
+        mixerRef.current = null;
+        return;
+      }
+
       // Cache bone references for live retargeting
       let skeleton = null;
       model.traverse((child) => {
@@ -618,7 +667,10 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
       const _lm = _lf?.landmarks || _lf?.poseLandmarks || (Array.isArray(_lf) ? _lf : null);
       const hasValidPose = !!(_lm && Array.isArray(_lm) && _lm.length >= 33);
 
-      if ((!_re || !hasValidPose) && avatarRef.current) {
+      // SPX_MOCAP_CC_BASE_V1 — CC retargeting not yet implemented, just display avatar in rest pose
+      if (avatarRef.current?.isCC) {
+        // skip retargeting; let CC avatar render in its imported rest pose
+      } else if ((!_re || !hasValidPose) && avatarRef.current) {
         const ar = avatarRef.current;
         const identity = new THREE.Quaternion();
         if (ar.isVRM && ar.vrm?.humanoid) {
