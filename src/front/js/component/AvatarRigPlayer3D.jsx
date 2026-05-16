@@ -9,6 +9,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { clone as skeletonClone } from 'three/examples/jsm/utils/SkeletonUtils';
 import { OneEuroFilter } from '../utils/OneEuroFilter';
 import * as Kalidokit from 'kalidokit'; // SPX_MOCAP_KALIDOKIT_V1
+import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm'; // SPX_MOCAP_VRM_V1
 
 // ─────────────────────────────────────────────────────────────
 // MEDIAPIPE POSE LANDMARK INDICES
@@ -468,7 +469,39 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
     scene.add(new THREE.GridHelper(10, 10, 0x1a2a1a, 0x1a2a1a));
 
     // Load avatar
-    const loader = new GLTFLoader();    loader.load(avatarUrl || '/models/ybot.glb', (gltf) => {
+    // SPX_MOCAP_VRM_V1 — VRM-aware loader: register VRMLoaderPlugin so .vrm files surface as gltf.userData.vrm
+    const loader = new GLTFLoader();
+    loader.register((parser) => new VRMLoaderPlugin(parser));
+    loader.load(avatarUrl || '/models/ybot.glb', (gltf) => {
+      const vrm = gltf.userData?.vrm; // SPX_MOCAP_VRM_V1
+      if (vrm) {
+        // VRM path — Kalidokit retargets native VRM humanoid bones
+        VRMUtils.rotateVRM0(vrm); // VRM0 avatars face -Z; rotate to face +Z
+        vrm.scene.traverse(child => {
+          if (child.isMesh || child.isSkinnedMesh) {
+            child.frustumCulled = false;
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
+        scene.add(vrm.scene);
+        // Fit to viewport like the Mixamo path
+        const box = new THREE.Box3().setFromObject(vrm.scene);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 1.8 / maxDim;
+        vrm.scene.scale.setScalar(scale);
+        const box2 = new THREE.Box3().setFromObject(vrm.scene);
+        vrm.scene.position.set(-center.x * scale, -box2.min.y, -center.z * scale);
+
+        avatarRef.current = { vrm, isVRM: true, bones: {} };
+        window.__mocapScene = scene;
+        console.log('[AvatarRigPlayer3D] VRM avatar loaded');
+        mixerRef.current = null;
+        return;
+      }
+
       const model = gltf.scene;
       // Disable frustum culling FIRST before any bounding box calc
       model.traverse(child => {
@@ -549,20 +582,31 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
       const _lm = _lf?.landmarks || _lf?.poseLandmarks || (Array.isArray(_lf) ? _lf : null);
       const hasValidPose = !!(_lm && Array.isArray(_lm) && _lm.length >= 33);
 
-      if ((!_re || !hasValidPose) && avatarRef.current?.bones) {
-        const bones = avatarRef.current.bones;
+      if ((!_re || !hasValidPose) && avatarRef.current) {
+        const ar = avatarRef.current;
         const identity = new THREE.Quaternion();
-        const resetBones = ['hips', 'leftArm', 'rightArm', 'leftForeArm', 'rightForeArm', 'leftShoulder', 'rightShoulder', 'leftUpLeg', 'rightUpLeg', 'leftLeg', 'rightLeg', 'leftFoot', 'rightFoot', 'head', 'spine', 'spine1', 'spine2', 'neck', 'leftHand', 'rightHand'];
-        for (const name of resetBones) {
-          const b = bones[name];
-          if (b) b.quaternion.slerp(identity, 0.1);
+        if (ar.isVRM && ar.vrm?.humanoid) {
+          // SPX_MOCAP_VRM_V1 — rest-pose reset via VRM humanoid bone names
+          const vrmBones = ['head','neck','spine','chest','upperChest','hips',
+            'leftUpperArm','leftLowerArm','leftHand','rightUpperArm','rightLowerArm','rightHand',
+            'leftUpperLeg','leftLowerLeg','leftFoot','rightUpperLeg','rightLowerLeg','rightFoot'];
+          for (const name of vrmBones) {
+            const b = ar.vrm.humanoid.getNormalizedBoneNode(name);
+            if (b) b.quaternion.slerp(identity, 0.1);
+          }
+        } else if (ar.bones) {
+          const bones = ar.bones;
+          const resetBones = ['hips', 'leftArm', 'rightArm', 'leftForeArm', 'rightForeArm', 'leftShoulder', 'rightShoulder', 'leftUpLeg', 'rightUpLeg', 'leftLeg', 'rightLeg', 'leftFoot', 'rightFoot', 'head', 'spine', 'spine1', 'spine2', 'neck', 'leftHand', 'rightHand'];
+          for (const name of resetBones) {
+            const b = bones[name];
+            if (b) b.quaternion.slerp(identity, 0.1);
+          }
         }
-      } else if (_lf && _re && avatarRef.current?.bones) {
+      } else if (_lf && _re && avatarRef.current && (avatarRef.current.isVRM || avatarRef.current.bones)) {
         // SPX_MOCAP_KALIDOKIT_V1 — pose retargeting via Kalidokit.Pose.solve()
         // Replaces all prior hand-rolled math (HEAD_V2, WRIST_V1, SPINE_V1, plus original arm/leg).
-        // Kalidokit returns VRM-oriented Euler rotations; we adapt to Mixamo bone orientation.
         const LERP_SPEED = 0.4;
-        const bones = avatarRef.current.bones;
+        const ar = avatarRef.current;
         const lm2d = _lf.landmarks;
         const lm3d = _lf.worldLandmarks;
 
@@ -578,7 +622,64 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
             solved = null;
           }
 
-          if (solved) {
+          if (solved && ar.isVRM && ar.vrm) {
+            // SPX_MOCAP_VRM_V1 — Kalidokit native VRM retargeting
+            if (!window.__kalidokitLogTime || performance.now() - window.__kalidokitLogTime > 1000) {
+              window.__kalidokitLogTime = performance.now();
+              console.log('[Kalidokit VRM]', solved);
+            }
+
+            const rigVRM = (boneName, euler, dampener = 1, easing = LERP_SPEED) => {
+              if (!euler) return;
+              const bone = ar.vrm.humanoid?.getNormalizedBoneNode(boneName);
+              if (!bone) return;
+              const q = new THREE.Quaternion().setFromEuler(
+                new THREE.Euler(
+                  (euler.x || 0) * dampener,
+                  (euler.y || 0) * dampener,
+                  (euler.z || 0) * dampener,
+                  'XYZ'
+                )
+              );
+              bone.quaternion.slerp(q, easing);
+            };
+
+            rigVRM('hips',           solved.Hips?.rotation, 0.7);
+            rigVRM('spine',          solved.Spine, 0.45);
+            rigVRM('chest',          solved.Spine, 0.25);
+            rigVRM('upperChest',     solved.Spine, 0.25);
+
+            rigVRM('leftUpperArm',   solved.LeftUpperArm);
+            rigVRM('leftLowerArm',   solved.LeftLowerArm);
+            rigVRM('rightUpperArm',  solved.RightUpperArm);
+            rigVRM('rightLowerArm',  solved.RightLowerArm);
+
+            rigVRM('leftHand',       solved.LeftHand);
+            rigVRM('rightHand',      solved.RightHand);
+
+            rigVRM('leftUpperLeg',   solved.LeftUpperLeg);
+            rigVRM('leftLowerLeg',   solved.LeftLowerLeg);
+            rigVRM('rightUpperLeg',  solved.RightUpperLeg);
+            rigVRM('rightLowerLeg',  solved.RightLowerLeg);
+
+            // Head from 2D landmarks (Kalidokit.Pose doesn't return Head)
+            try {
+              const nose = lm2d[0];
+              const lSh = lm2d[11], rSh = lm2d[12];
+              if (nose && lSh && rSh &&
+                  nose.visibility > 0.5 && lSh.visibility > 0.3 && rSh.visibility > 0.3) {
+                const shMidX = (lSh.x + rSh.x) / 2;
+                const shMidY = (lSh.y + rSh.y) / 2;
+                const shWidth = Math.abs(rSh.x - lSh.x) + 0.001;
+                const yaw = THREE.MathUtils.clamp((nose.x - shMidX) / shWidth * 2.0, -1.0, 1.0);
+                const noseAbove = (shMidY - nose.y) / shWidth;
+                const pitch = THREE.MathUtils.clamp((1.6 - noseAbove) * -1.0, -0.7, 0.7);
+                rigVRM('head', { x: pitch, y: -yaw, z: 0 }, 0.85);
+                rigVRM('neck', { x: pitch, y: -yaw, z: 0 }, 0.15);
+              }
+            } catch (e) { /* head fallback failed */ }
+          } else if (solved && ar.bones) {
+            const bones = ar.bones;
             // SPX_MOCAP_DIAGNOSTIC_NO_OFFSET — log Kalidokit output once per second to see actual rotation values
             if (!window.__kalidokitLogTime || performance.now() - window.__kalidokitLogTime > 1000) {
               window.__kalidokitLogTime = performance.now();
@@ -671,6 +772,10 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
             } catch (e) { /* head fallback failed */ }
           }
         }
+      }
+      // SPX_MOCAP_VRM_V1 — VRM needs per-frame update for spring bones / blendshapes
+      if (avatarRef.current?.isVRM && avatarRef.current.vrm) {
+        avatarRef.current.vrm.update(delta);
       }
       mixerRef.current?.update(delta);
       renderer.render(scene, camera);

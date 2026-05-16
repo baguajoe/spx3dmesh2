@@ -160,7 +160,8 @@ function LiveCaptureTab({ onExportGlb }) {
   const [trackFace,       setTrackFace]       = useState(false);
   const [trackHands,      setTrackHands]      = useState(false);
   const [showOverlay,     setShowOverlay]     = useState(true);
-  const [avatarUrl,       setAvatarUrl]       = useState('/models/ybot.glb');
+  // SPX_MOCAP_VRM_V1 — VRM avatar default for live mocap (Kalidokit works natively on VRM)
+  const [avatarUrl,       setAvatarUrl]       = useState('https://cdn.glitch.global/29e07830-2317-4b15-a044-135e73c7f840/AvatarSample_B.vrm');
   const [error,           setError]           = useState(null);
 
   // New systems
@@ -616,7 +617,10 @@ function LiveCaptureTab({ onExportGlb }) {
         {/* Avatar */}
         <SectionLabel className="mw-section-mt">Avatar</SectionLabel>
         <div className="mw-avatar-row">
-          {[{label:'Y Bot', url:'/models/ybot.glb'}].map(p => (
+          {[
+            {label:'VRM Avatar', url:'https://cdn.glitch.global/29e07830-2317-4b15-a044-135e73c7f840/AvatarSample_B.vrm'},
+            {label:'Y Bot',      url:'/models/ybot.glb'},
+          ].map(p => (
             <button key={p.label}
               className={`mw-avatar-btn${avatarUrl===p.url?' mw-avatar-btn--active':''}`} style={{background:avatarUrl===p.url?'#00ffc822':'#0a1628',
                 border:`1px solid ${avatarUrl===p.url?'#00ffc8':'#1a2a3a'}`,
@@ -624,14 +628,14 @@ function LiveCaptureTab({ onExportGlb }) {
               onClick={() => setAvatarUrl(p.url)}>{p.label}</button>
           ))}
           <label className="mw-avatar-upload-btn">
-            📂 Upload GLB
-            <input type="file" accept=".glb,.gltf" className="spx-hidden" onChange={e => {
+            📂 Upload VRM/GLB
+            <input type="file" accept=".vrm,.glb,.gltf" className="spx-hidden" onChange={e => {
               const f = e.target.files?.[0]; if (!f) return;
               setAvatarUrl(URL.createObjectURL(f));
             }} />
           </label>
         </div>
-        <input className="mw-input" value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="GLB URL or path" />
+        <input className="mw-input" value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="VRM/GLB URL or path" />
 
         {/* Capture buttons */}
         <div className="mw-btn-row mw-btn-row--mt">
