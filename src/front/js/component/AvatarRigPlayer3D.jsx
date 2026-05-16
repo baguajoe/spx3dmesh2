@@ -543,9 +543,22 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
       // SPX_MOCAP_LIVEFRAME_REF_V1 — read from refs to avoid stale closure
       const _lf = liveFrameRef.current;
       const _re = retargetEnabledRef.current;
-      if (_lf && _re && avatarRef.current?.bones) {
+
+      // SPX_MOCAP_REST_GUARD_V1 — revert to rest pose when no valid pose data
+      const _lm = _lf?.landmarks || _lf?.poseLandmarks || (Array.isArray(_lf) ? _lf : null);
+      const hasValidPose = !!(_lm && Array.isArray(_lm) && _lm.length >= 33);
+
+      if ((!_re || !hasValidPose) && avatarRef.current?.bones) {
         const bones = avatarRef.current.bones;
-        const lm = _lf.landmarks || _lf;
+        const identity = new THREE.Quaternion();
+        const resetBones = ['leftArm', 'rightArm', 'leftForeArm', 'rightForeArm', 'leftShoulder', 'rightShoulder', 'leftUpLeg', 'rightUpLeg', 'leftLeg', 'rightLeg', 'head', 'spine', 'spine1', 'spine2', 'neck'];
+        for (const name of resetBones) {
+          const b = bones[name];
+          if (b) b.quaternion.slerp(identity, 0.1);
+        }
+      } else if (_lf && _re && avatarRef.current?.bones) {
+        const bones = avatarRef.current.bones;
+        const lm = _lm;
 
         if (lm && lm.length >= 33) {
           const landmarkToVec3 = (landmark) => new THREE.Vector3(

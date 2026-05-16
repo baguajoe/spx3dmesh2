@@ -227,7 +227,8 @@ function LiveCaptureTab({ onExportGlb }) {
       multiPerson, multiSkeletons, showDepthMap]);
 
   const handlePoseResults = useCallback(async (results) => {
-    if (!results.poseLandmarks) return;
+    // SPX_MOCAP_POSE_READY_V1 — propagate "no pose this frame" so avatar can revert to rest
+    if (!results.poseLandmarks) { setLiveFrame(null); return; }
     let lms = results.poseLandmarks;
 
     // Smooth
@@ -341,20 +342,36 @@ function LiveCaptureTab({ onExportGlb }) {
         const poseLoop = () => {
           if (!poseRef.current || !videoRef.current || !videoRef.current.srcObject) return;
           const v = videoRef.current;
-          if (v.readyState >= 2) {
+          // SPX_MOCAP_POSE_READY_V1 — strict video readiness gate
+          if (v.readyState === 4 && v.videoWidth > 0 && v.videoHeight > 0) {
             const ts = performance.now();
             try {
               const result = poseRef.current.detectForVideo(v, ts);
               const lms = result?.landmarks?.[0];
-              if (lms) {
-                // Match old shape: { poseLandmarks: [...] } so handlePoseResults still works
+              if (lms && lms.length > 0) {
                 handlePoseResults({ poseLandmarks: lms });
+              } else {
+                // No detection this frame — clear so retargeting can revert to rest
+                handlePoseResults({ poseLandmarks: null });
               }
-            } catch (e) { /* ignore */ }
+            } catch (e) {
+              // Throttled error log — once per 60 frames at most
+              if (!poseLoop._errCount || poseLoop._errCount++ % 60 === 0) {
+                console.warn('[PoseLandmarker]', e.message);
+              }
+              poseLoop._errCount = (poseLoop._errCount || 0) + 1;
+            }
           }
           cameraRef.current = requestAnimationFrame(poseLoop);
         };
-        cameraRef.current = requestAnimationFrame(poseLoop);
+        // Wait for video metadata before starting loop
+        if (videoRef.current.readyState < 1) {
+          videoRef.current.addEventListener('loadedmetadata', () => {
+            cameraRef.current = requestAnimationFrame(poseLoop);
+          }, { once: true });
+        } else {
+          cameraRef.current = requestAnimationFrame(poseLoop);
+        }
       }
 
       if (trackFace)  startFace();
