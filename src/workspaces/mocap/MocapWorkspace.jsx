@@ -161,7 +161,8 @@ function LiveCaptureTab({ onExportGlb }) {
   const [trackHands,      setTrackHands]      = useState(false);
   const [showOverlay,     setShowOverlay]     = useState(true);
   // SPX_MOCAP_AVATAR_DEFAULT_V1 — default to local Y Bot (always loads). User can paste VRM URL.
-  const [avatarUrl,       setAvatarUrl]       = useState('/models/ybot.glb');
+  // SPX_MOCAP_VRM_LOCAL_V1 — use locally-optimized SPX avatar VRM
+  const [avatarUrl,       setAvatarUrl]       = useState('/models/spx_avatar.vrm');
   const [error,           setError]           = useState(null);
 
   // New systems

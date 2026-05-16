@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# SPX_MOCAP_VRM_LOCAL_V1 — keep original uncompressed VRM out of git
+/spx_avatar.vrm
