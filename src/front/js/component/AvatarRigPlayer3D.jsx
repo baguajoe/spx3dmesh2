@@ -472,10 +472,21 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
     // SPX_MOCAP_VRM_V1 — VRM-aware loader: register VRMLoaderPlugin so .vrm files surface as gltf.userData.vrm
     const loader = new GLTFLoader();
     loader.register((parser) => new VRMLoaderPlugin(parser));
+
+    // SPX_MOCAP_AVATAR_DEFAULT_V1 — verify Y Bot is reachable before we depend on it as fallback
+    fetch('/models/ybot.glb', { method: 'HEAD' })
+      .then(r => console.log('[AvatarRigPlayer3D] Y Bot HEAD check:', r.status, r.statusText))
+      .catch(e => console.error('[AvatarRigPlayer3D] Y Bot not reachable:', e));
+
+    const finalUrl = avatarUrl || '/models/ybot.glb';
+    console.log('[AvatarRigPlayer3D] Loading avatar from:', finalUrl);
+
     // SPX_MOCAP_VRM_V2 — extract success path so VRM URL failure can fall back to Y Bot
     const handleGltfLoaded = (gltf) => {
+      console.log('[AvatarRigPlayer3D] GLTF loaded successfully');
       const vrm = gltf.userData?.vrm; // SPX_MOCAP_VRM_V1
       if (vrm) {
+        console.log('[AvatarRigPlayer3D] VRM avatar detected');
         // VRM path — Kalidokit retargets native VRM humanoid bones
         VRMUtils.rotateVRM0(vrm); // VRM0 avatars face -Z; rotate to face +Z
         vrm.scene.traverse(child => {
@@ -503,6 +514,7 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
         return;
       }
 
+      console.log('[AvatarRigPlayer3D] GLB avatar (Mixamo path)');
       const model = gltf.scene;
       // Disable frustum culling FIRST before any bounding box calc
       model.traverse(child => {
@@ -568,18 +580,29 @@ const AvatarRigPlayer3D = ({ recordedFrames, avatarUrl, liveFrame, smoothingEnab
       // Auto-playing was causing arms-back/leg-up corruption from baked Mixamo idle clip.
       mixerRef.current = null;
     };
-    loader.load(avatarUrl || '/models/ybot.glb', handleGltfLoaded, undefined, (err) => {
-      // SPX_MOCAP_VRM_V2 — fall back to Y Bot if VRM (or any primary) URL unreachable
-      console.warn('[AvatarRigPlayer3D] Primary avatar load failed:', err?.message || err);
-      if (avatarUrl && avatarUrl !== '/models/ybot.glb') {
+    // SPX_MOCAP_AVATAR_DEFAULT_V1 — bulletproof load with progress + fallback chain
+    const handleLoadError = (err) => {
+      console.error('[AvatarRigPlayer3D] Avatar load FAILED for:', finalUrl);
+      console.error('[AvatarRigPlayer3D] Error:', err?.message || err);
+      if (finalUrl !== '/models/ybot.glb') {
         console.log('[AvatarRigPlayer3D] Falling back to /models/ybot.glb');
-        loader.load('/models/ybot.glb', handleGltfLoaded, undefined, (err2) => {
-          console.error('[AvatarRigPlayer3D] Y Bot fallback also failed:', err2);
-        });
+        loader.load(
+          '/models/ybot.glb',
+          handleGltfLoaded,
+          (prog) => console.log('[AvatarRigPlayer3D] Fallback progress:', prog.loaded, '/', prog.total),
+          (err2) => console.error('[AvatarRigPlayer3D] Y Bot fallback ALSO failed:', err2)
+        );
       } else {
-        console.error('[AvatarRigPlayer3D] Load error (no fallback available):', err);
+        console.error('[AvatarRigPlayer3D] Y Bot itself failed to load. Check /models/ybot.glb exists in public/');
       }
-    });
+    };
+
+    loader.load(
+      finalUrl,
+      handleGltfLoaded,
+      (prog) => console.log('[AvatarRigPlayer3D] Primary progress:', prog.loaded, '/', prog.total),
+      handleLoadError
+    );
 
     // Animate
     function animate() {

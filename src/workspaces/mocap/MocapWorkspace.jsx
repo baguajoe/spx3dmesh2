@@ -160,8 +160,8 @@ function LiveCaptureTab({ onExportGlb }) {
   const [trackFace,       setTrackFace]       = useState(false);
   const [trackHands,      setTrackHands]      = useState(false);
   const [showOverlay,     setShowOverlay]     = useState(true);
-  // SPX_MOCAP_VRM_V2 — verified-working VRM URL from Pixiv three-vrm official samples
-  const [avatarUrl,       setAvatarUrl]       = useState('https://raw.githubusercontent.com/pixiv/three-vrm/release/packages/three-vrm/examples/models/three-vrm-girl.vrm');
+  // SPX_MOCAP_AVATAR_DEFAULT_V1 — default to local Y Bot (always loads). User can paste VRM URL.
+  const [avatarUrl,       setAvatarUrl]       = useState('/models/ybot.glb');
   const [error,           setError]           = useState(null);
 
   // New systems
